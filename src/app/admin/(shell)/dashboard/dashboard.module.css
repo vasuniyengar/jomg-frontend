@@ -1,0 +1,8 @@
+/**
+ * Dashboard-specific layout helpers (tokens + shared chrome live in globals + shell.css).
+ * Most dashboard UI reuses global classes from shell.css (.tournament-hero, .div-reg-grid, …).
+ */
+
+.pageRoot {
+  min-height: 0;
+}

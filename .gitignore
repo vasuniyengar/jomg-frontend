@@ -39,3 +39,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+04-dashboard-page-4.html
+10-players-list-page-10.html
