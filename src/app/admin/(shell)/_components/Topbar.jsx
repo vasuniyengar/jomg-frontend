@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { labelForPath } from "./route-labels";
 import { useTheme } from "./ThemeProvider";
+import { clearAuthSession, getStoredUser } from "@/lib/auth";
+import { organizerLogout } from "@/lib/api";
 
 const DARK_SWATCHES = [
   { name: "Graphite", palette: "", gradient: "linear-gradient(135deg,#34383e 50%,#23262a 50%)" },
@@ -58,9 +60,25 @@ function LogoSvg() {
 }
 
 export default function Topbar() {
+  const router = useRouter();
   const pathname = usePathname();
   const { theme, palette, setPalette, toggleTheme } = useTheme();
   const swatches = theme === "dark" ? DARK_SWATCHES : LIGHT_SWATCHES;
+  const user = getStoredUser();
+  const userName = user?.firstname || "Admin";
+  const userInitials = userName.slice(0, 2).toUpperCase();
+
+  const handleSignOut = async (event) => {
+    event.preventDefault();
+    try {
+      await organizerLogout();
+    } catch {
+      // Proceed with local cleanup even when logout API fails.
+    } finally {
+      clearAuthSession();
+      router.push("/admin/login");
+    }
+  };
 
   return (
     <header className="topbar">
@@ -164,9 +182,14 @@ export default function Topbar() {
         />
       </div>
 
-      <Link href="/admin/login" className="topbar-user" title="Sign out">
-        <div className="user-avatar">AD</div>
-        <span className="user-name">Admin</span>
+      <Link
+        href="/admin/login"
+        className="topbar-user"
+        title="Sign out"
+        onClick={handleSignOut}
+      >
+        <div className="user-avatar">{userInitials}</div>
+        <span className="user-name">{userName}</span>
         <span style={{ fontSize: "11px", color: "var(--text-ter)", marginLeft: "2px" }}>↩</span>
       </Link>
     </header>
