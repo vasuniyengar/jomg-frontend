@@ -1,14 +1,53 @@
+"use client";
+
 import Link from "next/link";
 import styles from "./dashboard.module.css";
+import { useEffect, useMemo, useState } from "react";
+import { buildDashboardSummary, fetchHostTournaments } from "@/lib/dashboard";
 
 export default function DashboardPage() {
+  const [tournaments, setTournaments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+    const loadDashboard = async () => {
+      try {
+        const data = await fetchHostTournaments();
+        if (mounted) {
+          setTournaments(data);
+        }
+      } catch (err) {
+        if (mounted) {
+          setError(err.message || "Failed to load dashboard");
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadDashboard();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const summary = useMemo(() => buildDashboardSummary(tournaments), [tournaments]);
+  const firstTournament = summary.firstTournament;
+  const title = firstTournament?.name || "No tournaments yet";
+  const location = firstTournament?.location || "Add your first tournament";
+  const tournamentStatus = firstTournament?.status || "draft";
+
   return (
     <div className={`screen ${styles.pageRoot}`} id="screen-dashboard">
       <div className="page-header">
         <div className="page-title-group">
           <div className="page-eyebrow">Phase 1 · Setup</div>
           <div className="page-title">Dashboard</div>
-          <div className="page-sub">Overview &amp; alerts · Austin Open 2025</div>
+          <div className="page-sub">Overview &amp; alerts · {title}</div>
         </div>
         <div className="page-actions">
           <div
@@ -21,7 +60,7 @@ export default function DashboardPage() {
               title="Tournament status"
             >
               <span className="status-dot" />
-              <span className="status-label">Draft</span>
+              <span className="status-label">{tournamentStatus}</span>
               <span className="status-caret">▾</span>
             </div>
           </div>
@@ -39,7 +78,7 @@ export default function DashboardPage() {
               }}
             >
               <span className="tournament-status-badge tsb-draft">
-                ○ DRAFT
+                ○ {String(tournamentStatus).toUpperCase()}
               </span>
               <span className="dupr-badge">DUPR Rated</span>
             </div>
@@ -49,12 +88,12 @@ export default function DashboardPage() {
               style={{ textDecoration: "none", color: "inherit" }}
               title="Edit tournament info"
             >
-              Austin Pickleball Open 2025{" "}
+              {title}{" "}
               <span style={{ fontSize: "14px", opacity: 0.4 }}>✏️</span>
             </Link>
             <div className="tournament-meta-row">
               <div className="tournament-meta-item">
-                📍 <strong>Austin Sports Complex, TX</strong>
+                📍 <strong>{location}</strong>
               </div>
               <div className="tournament-meta-item">
                 📅 <strong>Apr 19–22, 2025</strong>
@@ -105,20 +144,31 @@ export default function DashboardPage() {
         <div className="metrics-row">
           <div className="metric">
             <div className="metric-label">Registered Players</div>
-            <div className="metric-value">120</div>
-            <div className="metric-delta delta-up">↑ 8 this week</div>
+            <div className="metric-value">{summary.registeredPlayers}</div>
+            <div className="metric-delta delta-up">
+              {summary.capacityPlayers > 0
+                ? `${summary.capacityPlayers} max capacity`
+                : "Create a tournament to begin"}
+            </div>
           </div>
           <div className="metric">
             <div className="metric-label">Check-In Rate</div>
-            <div className="metric-value">94%</div>
-            <div className="metric-delta delta-up">↑ 2%</div>
+            <div className="metric-value">{summary.checkInRate}%</div>
+            <div className="metric-delta delta-up">Estimated from registrations</div>
           </div>
           <div className="metric">
-            <div className="metric-label">Revenue</div>
-            <div className="metric-value">$6.4k</div>
-            <div className="metric-delta delta-up">↑ 18% vs last</div>
+            <div className="metric-label">Tournaments</div>
+            <div className="metric-value">{tournaments.length}</div>
+            <div className="metric-delta delta-up">
+              {summary.activeCount} active · {summary.draftCount} draft
+            </div>
           </div>
         </div>
+
+        {loading ? (
+          <div className="alert alert-warn">Loading dashboard data...</div>
+        ) : null}
+        {error ? <div className="alert alert-err">{error}</div> : null}
 
         <div className="card" style={{ marginBottom: "20px" }}>
           <div className="card-header">
