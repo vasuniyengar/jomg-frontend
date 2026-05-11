@@ -1,13 +1,13 @@
 export const initialPlayers = [
   {
-    "id": "u1777778844551-0",
+    "id": "u1778165115099-0",
     "initials": "AT",
     "avatar": "linear-gradient(135deg,#64748b 0%,#334155 100%)",
-    "name": "Alex Turner",
-    "email": "alex@example.com",
+    "name": "joe mazulla",
+    "email": "gmail@gmail.com",
     "gender": "M",
     "age": 34,
-    "date": "5/2/2026",
+    "date": "5/7/2026",
     "phone": "(512) 555-0100",
     "partner": "Sam Lee",
     "partnerId": null,
@@ -16,7 +16,28 @@ export const initialPlayers = [
     "paid": "✓ Paid",
     "paidClass": "pill-approved",
     "status": "✓ Confirmed",
-    "statusClass": "pill-approved"
+    "statusClass": "pill-approved",
+    "_failed": false
+  },
+  {
+    "id": "u1778106409932-0",
+    "initials": "MI",
+    "avatar": "linear-gradient(135deg,#64748b 0%,#334155 100%)",
+    "name": "Mukundan Iyengar",
+    "email": "Mukundan@gmail.com",
+    "gender": "F",
+    "age": 34,
+    "date": "5/6/2026",
+    "phone": "(512) 555-0100",
+    "partner": "Sam Lee",
+    "partnerId": null,
+    "division": "MXD 14.0",
+    "dupr": "4.20",
+    "paid": "✓ Paid",
+    "paidClass": "pill-approved",
+    "status": "✓ Confirmed",
+    "statusClass": "pill-approved",
+    "_failed": false
   },
   {
     "id": "p5",
@@ -35,7 +56,8 @@ export const initialPlayers = [
     "paid": "◐ Partial",
     "paidClass": "pill-pending",
     "status": "✓ Confirmed",
-    "statusClass": "pill-approved"
+    "statusClass": "pill-approved",
+    "_failed": false
   },
   {
     "id": "p1",
@@ -54,7 +76,8 @@ export const initialPlayers = [
     "paid": "✓ Paid",
     "paidClass": "pill-approved",
     "status": "✓ Confirmed",
-    "statusClass": "pill-approved"
+    "statusClass": "pill-approved",
+    "_failed": false
   },
   {
     "id": "p2",
@@ -73,7 +96,8 @@ export const initialPlayers = [
     "paid": "✓ Paid",
     "paidClass": "pill-approved",
     "status": "✓ Confirmed",
-    "statusClass": "pill-approved"
+    "statusClass": "pill-approved",
+    "_failed": false
   },
   {
     "id": "p9",
@@ -92,7 +116,8 @@ export const initialPlayers = [
     "paid": "✓ Paid",
     "paidClass": "pill-approved",
     "status": "✓ Confirmed",
-    "statusClass": "pill-approved"
+    "statusClass": "pill-approved",
+    "_failed": false
   },
   {
     "id": "p10",
@@ -111,7 +136,8 @@ export const initialPlayers = [
     "paid": "★ Comp",
     "paidClass": "pill-comp",
     "status": "⏳ Pending",
-    "statusClass": "pill-pending"
+    "statusClass": "pill-pending",
+    "_failed": false
   },
   {
     "id": "p11",
@@ -130,6 +156,7 @@ export const initialPlayers = [
     "paid": "◐ Partial",
     "paidClass": "pill-pending",
     "status": "⏳ Pending",
-    "statusClass": "pill-pending"
+    "statusClass": "pill-pending",
+    "_failed": false
   }
 ];

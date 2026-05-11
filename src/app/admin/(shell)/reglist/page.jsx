@@ -18,7 +18,9 @@ export default function Page() {
   const [uploadMessage, setUploadMessage] = useState("");
   const [uploadError, setUploadError] = useState("");
   const [pendingUploadRows, setPendingUploadRows] = useState([]);
+  const [importMessage, setImportMessage] = useState("");
   const [selected, setSelected] = useState({
+    
     division: [],
     dupr: [],
     payment: [],
@@ -64,10 +66,14 @@ const closeDelete = () => {
     setSaveStatus("saving");
  
     
-    const updatedPlayers = players.map((p) =>
-      p.id === editForm.id ? { ...editForm } : p
-    );
+   const updatedPlayers = players.map((p) =>
+    p.id === editForm.id ? { ...editForm, _failed: false } : p  // ← reset _failed
+  );
     setPlayers(updatedPlayers);
+  setSaveStatus("saved");
+  setTimeout(closeEdit, 800);
+
+
  
     
     try {
@@ -87,6 +93,44 @@ const closeDelete = () => {
       setSaveStatus("error");
     }
   };
+
+ const handleImport = async () => {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch("http://localhost:4000/api/players/import-players", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+    // body: JSON.stringify({ players: initialPlayers }),
+     body: JSON.stringify({ players }), 
+  });
+
+  const result = await response.json();
+  setUploadMessage(result.message);
+  // setUploadMessage(result.message);
+  // if(result.data?.failed?.length > 0){
+  //   const failedEmails = result.data.failed.map(f => f.name);
+  //   setPlayers(prev=> prev.map(p=>({
+  //     ...p,
+  //     _failed: failedEmails.includes(p.name)
+  //   })));
+  // }
+
+  const failedNames = result.data?.failed?.map(f => f.name) || [];
+
+setPlayers(prev => prev.map(p => ({
+  ...p,
+  _failed: failedNames.length > 0 ? failedNames.includes(p.name) : false
+})));
+
+
+  console.log(result);
+
+};
+
+
   const handleDelete = async () => {
   setSaveStatus("saving");
   const updatedPlayers = players.filter((p) => p.id !== deletingPlayer.id);
@@ -120,6 +164,19 @@ const closeDelete = () => {
     document.addEventListener("click", onDocClick);
     return () => document.removeEventListener("click", onDocClick);
   }, []);
+ useEffect(() => {
+  const fetchPlayers = async () => {
+    const response = await fetch("http://localhost:4000/api/players/get-players");
+    const result = await response.json();
+    if (result.data) {
+      result.data.forEach((player) => {
+        console.log(player.email);
+      });
+    }
+  };
+
+  fetchPlayers();
+}, []);
  
   const options = {
     division: [
@@ -518,6 +575,17 @@ const closeDelete = () => {
           </button>
           <Link className="btn btn-primary btn-md" href="/admin/create">+ Add Player</Link>
           <button className="btn btn-ghost btn-md" type="button" onClick={() => setShowBulkUpload((v) => !v)}>⬆ Bulk Upload</button>
+          <button className="btn btn-primary btn-md" type="button" onClick={handleImport}>
+  💾 Save All Players
+</button>
+{importMessage && (
+  <span style={{ fontSize: "13px", color: "#00c84a", alignSelf: "center" }}>
+    {importMessage}
+  </span>
+)}
+
+
+
         </div>
       </div>
  
@@ -615,11 +683,12 @@ const closeDelete = () => {
                   <th>Paid</th>
                   <th>Status</th>
                   <th></th>
+                 
                 </tr>
               </thead>
               <tbody>
-                {filteredPlayers.map((p) => (
-                  <tr key={p.id} id={`row-${p.id}`}>
+{filteredPlayers.map((p) => (
+  <tr key={p.id} id={`row-${p.id}`} style={{ background: p._failed ? "rgba(239,68,68,0.15)" : undefined }}>
                     <td>
                       <span className="player-avatar-row" style={{ background: p.avatar }}>{p.initials}</span>
                     </td>
