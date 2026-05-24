@@ -53,7 +53,7 @@ export default function LoginPage() {
         },
       });
 
-      router.push("/admin/dashboard");
+      router.push("/admin/tournaments");
     } catch (error) {
       setErrorMessage(mapLoginError(error));
     } finally {

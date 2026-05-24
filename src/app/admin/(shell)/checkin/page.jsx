@@ -1,5 +1,5 @@
-import ComingSoon from "../_components/ComingSoon";
+import CheckInScreen from "./_components/CheckInScreen";
 
 export default function Page() {
-  return <ComingSoon name="Player Check-In" />;
+  return <CheckInScreen />;
 }

@@ -1,0 +1,333 @@
+import { parseOrganizerPayload } from "./tournaments";
+
+export const SCORING_OPTIONS = [
+  "1 game to 11, win by 1",
+  "1 game to 11, win by 2",
+  "1 game to 15, win by 1",
+  "1 game to 15, win by 2",
+  "1 game to 21, win by 1",
+  "1 game to 21, win by 2",
+  "Best of 3 to 11, win by 1",
+  "Best of 3 to 11, win by 2",
+  "Best of 3 to 15, win by 1",
+  "Best of 3 to 15, win by 2",
+  "Best of 3 to 21, win by 2",
+  "Best of 5 to 11, win by 2",
+  "Best of 5 to 15, win by 2",
+  "Rally scoring to 21, win by 2",
+  "Rally scoring to 25, win by 2",
+  "Timed match — 20 min, point capped",
+  "Timed match — 30 min, point capped",
+];
+
+export const SEEDING_METHOD_OPTIONS = [
+  "DUPR Rating (highest rating = 1 seed)",
+  "Pool Play Record (wins/losses)",
+  "Pool Play Record + Point Differential",
+  "Head-to-Head Priority",
+  "Manual Assignment",
+  "Random Draw",
+  "Registration Order (first-come first-seeded)",
+  "UTR Rating",
+  "Prior Tournament Finish",
+];
+
+export const PLAY_ENV_OPTIONS = [
+  "Indoor",
+  "Outdoor Open",
+  "Outdoor Covered",
+  "Mixed Outdoor (Open & Covered)",
+  "Uncovered Outdoor",
+  "Mixed — Indoor & Outdoor",
+  "Not Confirmed",
+];
+
+export const NET_SETUP_OPTIONS = [
+  "Permanent",
+  "Temporary",
+  "Permanent / Temporary",
+  "Unknown",
+];
+
+const ADVANCE_TIER_COLORS = [
+  "linear-gradient(135deg,#10b981,#059669)",
+  "linear-gradient(135deg,#3b82f6,#2563eb)",
+  "linear-gradient(135deg,#f59e0b,#d97706)",
+  "linear-gradient(135deg,#8b5cf6,#7c3aed)",
+];
+
+export function advanceTierBadgeStyle(index) {
+  return ADVANCE_TIER_COLORS[index % ADVANCE_TIER_COLORS.length];
+}
+
+let tierIdCounter = 0;
+export function newTierId() {
+  tierIdCounter += 1;
+  return `tier-${Date.now()}-${tierIdCounter}`;
+}
+
+export function defaultPayForOption() {
+  return { enabled: false, mode: "optional" };
+}
+
+export function defaultAdvanceTiers() {
+  return [
+    {
+      id: newTierId(),
+      label: "Early Bird",
+      pricePerPlayer: 50,
+      activeUntil: "",
+    },
+    {
+      id: newTierId(),
+      label: "Advance Rate",
+      pricePerPlayer: 55,
+      activeUntil: "",
+    },
+    {
+      id: newTierId(),
+      label: "Pre-Deadline",
+      pricePerPlayer: 65,
+      activeUntil: "",
+    },
+  ];
+}
+
+export function defaultBundles() {
+  return [
+    { id: newTierId(), divisionCount: 2, mode: "pct", value: 10 },
+    { id: newTierId(), divisionCount: 3, mode: "pct", value: 15 },
+  ];
+}
+
+export function defaultMlpSettings() {
+  return {
+    mensDoubles: "1 game to 11, win by 2",
+    womensDoubles: "1 game to 11, win by 2",
+    mixed1: "1 game to 11, win by 2",
+    mixed2: "1 game to 11, win by 2",
+    dreamBreaker: "1 game to 21, win by 1",
+    rotation: "Singles rally — 1 server switches every 4 pts",
+    trigger: "Only when games tied 2–2",
+    rosterSize: "6 players (2M + 2F starters + 1M + 1F sub)",
+    gameOrder: "Women's D → Men's D → Mixed 1 → Mixed 2",
+    pointsPerGameWon: 1,
+    scoringType: "Traditional (side-out)",
+    warmUpMinutes: 3,
+    substitutions: true,
+    coachOnCourt: false,
+    teamTimeouts: true,
+  };
+}
+
+export function defaultMatchScoring() {
+  return {
+    pool: "1 game to 15, win by 2",
+    playoff: "1 game to 15, win by 2",
+    semi: "1 game to 15, win by 2",
+    gold: "Best of 3 to 11, win by 2",
+    bronze: "1 game to 15, win by 2",
+  };
+}
+
+export function defaultTournamentSettings() {
+  return {
+    masterPush: false,
+    numCourts: 8,
+    playEnv: "Outdoor Open",
+    netSetup: "Permanent",
+    officialBall: "",
+    officialBallUrl: "",
+    paymentPhone: "",
+    settingsConfirmed: false,
+    settingsConfirmedAt: null,
+    sectionPush: {
+      pricing: false,
+      playRules: false,
+      dupr: false,
+    },
+    pricing: {
+      payForPartner: defaultPayForOption(),
+      payForTeam: defaultPayForOption(),
+      advanceTiers: defaultAdvanceTiers(),
+      bundles: defaultBundles(),
+      prizes: {
+        first: 500,
+        second: 250,
+        third: 100,
+        medalsAwards: true,
+      },
+    },
+    playRules: {
+      mlpFormat: false,
+      mlp: defaultMlpSettings(),
+      matchScoring: defaultMatchScoring(),
+      scoringType: "Traditional (side-out)",
+      suddenDeathAt: "",
+      suddenDeathWinAt: "",
+      warmUpMinutes: 3,
+      seedingMethod: SEEDING_METHOD_OPTIONS[0],
+      autoGeneratePools: true,
+      tiebreakerTo5: false,
+      switchSidesAtHalf: true,
+      top1SeedBye: true,
+      top12AdvanceToSemis: false,
+      allowRefereeRequests: true,
+      bronzeMatch: true,
+    },
+    notifications: {
+      matchNotifications: true,
+      liveScoring: true,
+      emailNotifications: true,
+      courtAssignmentText: false,
+    },
+    visibility: {
+      publicTournamentPage: true,
+      privateOnly: false,
+      showDivisionsPublicly: true,
+      spectatorScoreboard: true,
+      passwordProtected: false,
+      registrationPassword: "",
+      waitlistEnabled: true,
+    },
+  };
+}
+
+function mergePayFor(src, defaults) {
+  return {
+    enabled: src?.enabled ?? defaults.enabled,
+    mode: src?.mode === "mandatory" ? "mandatory" : "optional",
+  };
+}
+
+function mergeAdvanceTiers(src, defaults) {
+  const list = Array.isArray(src) && src.length ? src : defaults;
+  return list.map((t, i) => ({
+    id: t.id || newTierId(),
+    label: t.label ?? defaults[i]?.label ?? `Tier ${i + 1}`,
+    pricePerPlayer: Number(t.pricePerPlayer ?? t.price ?? defaults[i]?.pricePerPlayer ?? 0),
+    activeUntil: t.activeUntil ?? t.activeUntil ?? "",
+  }));
+}
+
+function mergeBundles(src, defaults) {
+  const list = Array.isArray(src) && src.length ? src : defaults;
+  return list.map((b, i) => ({
+    id: b.id || newTierId(),
+    divisionCount: Number(b.divisionCount ?? b.count ?? defaults[i]?.divisionCount ?? 2),
+    mode: b.mode === "flat" ? "flat" : "pct",
+    value: Number(b.value ?? defaults[i]?.value ?? 0),
+  }));
+}
+
+export function mergeTournamentSettings(organizerInfo) {
+  const parsed = parseOrganizerPayload(organizerInfo);
+  const defaults = defaultTournamentSettings();
+
+  const settings = {
+    masterPush: parsed.masterPush ?? defaults.masterPush,
+    numCourts: parsed.numCourts ?? defaults.numCourts,
+    playEnv: parsed.playEnv ?? defaults.playEnv,
+    netSetup: parsed.netSetup ?? defaults.netSetup,
+    officialBall: parsed.officialBall ?? defaults.officialBall,
+    officialBallUrl: parsed.officialBallUrl ?? defaults.officialBallUrl,
+    paymentPhone: parsed.paymentPhone ?? defaults.paymentPhone,
+    settingsConfirmed: parsed.settingsConfirmed ?? defaults.settingsConfirmed,
+    settingsConfirmedAt: parsed.settingsConfirmedAt ?? defaults.settingsConfirmedAt,
+    sectionPush: {
+      pricing: parsed.sectionPush?.pricing ?? defaults.sectionPush.pricing,
+      playRules: parsed.sectionPush?.playRules ?? defaults.sectionPush.playRules,
+      dupr: parsed.sectionPush?.dupr ?? defaults.sectionPush.dupr,
+    },
+    pricing: {
+      payForPartner: mergePayFor(parsed.pricing?.payForPartner, defaults.pricing.payForPartner),
+      payForTeam: mergePayFor(parsed.pricing?.payForTeam, defaults.pricing.payForTeam),
+      advanceTiers: mergeAdvanceTiers(
+        parsed.pricing?.advanceTiers,
+        defaults.pricing.advanceTiers
+      ),
+      bundles: mergeBundles(parsed.pricing?.bundles, defaults.pricing.bundles),
+      prizes: {
+        first: Number(parsed.pricing?.prizes?.first ?? defaults.pricing.prizes.first),
+        second: Number(parsed.pricing?.prizes?.second ?? defaults.pricing.prizes.second),
+        third: Number(parsed.pricing?.prizes?.third ?? defaults.pricing.prizes.third),
+        medalsAwards:
+          parsed.pricing?.prizes?.medalsAwards ?? defaults.pricing.prizes.medalsAwards,
+      },
+    },
+    playRules: {
+      mlpFormat: parsed.playRules?.mlpFormat ?? defaults.playRules.mlpFormat,
+      mlp: { ...defaults.playRules.mlp, ...(parsed.playRules?.mlp || {}) },
+      matchScoring: {
+        ...defaults.playRules.matchScoring,
+        ...(parsed.playRules?.matchScoring || {}),
+      },
+      scoringType: parsed.playRules?.scoringType ?? defaults.playRules.scoringType,
+      suddenDeathAt: parsed.playRules?.suddenDeathAt ?? defaults.playRules.suddenDeathAt,
+      suddenDeathWinAt:
+        parsed.playRules?.suddenDeathWinAt ?? defaults.playRules.suddenDeathWinAt,
+      warmUpMinutes: Number(
+        parsed.playRules?.warmUpMinutes ?? defaults.playRules.warmUpMinutes
+      ),
+      seedingMethod: parsed.playRules?.seedingMethod ?? defaults.playRules.seedingMethod,
+      autoGeneratePools:
+        parsed.playRules?.autoGeneratePools ?? defaults.playRules.autoGeneratePools,
+      tiebreakerTo5: parsed.playRules?.tiebreakerTo5 ?? defaults.playRules.tiebreakerTo5,
+      switchSidesAtHalf:
+        parsed.playRules?.switchSidesAtHalf ?? defaults.playRules.switchSidesAtHalf,
+      top1SeedBye: parsed.playRules?.top1SeedBye ?? defaults.playRules.top1SeedBye,
+      top12AdvanceToSemis:
+        parsed.playRules?.top12AdvanceToSemis ?? defaults.playRules.top12AdvanceToSemis,
+      allowRefereeRequests:
+        parsed.playRules?.allowRefereeRequests ?? defaults.playRules.allowRefereeRequests,
+      bronzeMatch: parsed.playRules?.bronzeMatch ?? defaults.playRules.bronzeMatch,
+    },
+    notifications: {
+      ...defaults.notifications,
+      ...(parsed.notifications || {}),
+    },
+    visibility: {
+      ...defaults.visibility,
+      ...(parsed.visibility || {}),
+    },
+  };
+
+  return {
+    organizer: {
+      name: parsed.name || "",
+      email: parsed.email || "",
+      phone: parsed.phone || "",
+    },
+    settings,
+  };
+}
+
+export function buildOrganizerInfoFromSettings(organizer, settings) {
+  return {
+    name: organizer.name,
+    email: organizer.email,
+    phone: organizer.phone || "",
+    ...settings,
+  };
+}
+
+export function computeBundleSavingsPreview(baseFee, bundle) {
+  const base = Number(baseFee) || 0;
+  const count = Number(bundle.divisionCount) || 2;
+  const rawTotal = base * count;
+  const value = Number(bundle.value) || 0;
+
+  if (bundle.mode === "flat") {
+    const pays = value;
+    const saves = Math.max(0, rawTotal - pays);
+    return `At $${base}/div: bundle price $${pays.toFixed(2)}${
+      saves > 0
+        ? ` (saves $${saves.toFixed(2)})`
+        : ""
+    }`;
+  }
+
+  const discount = (rawTotal * value) / 100;
+  const pays = rawTotal - discount;
+  return `At $${base}/div: pays $${pays.toFixed(2)} (saves $${discount.toFixed(2)})`;
+}

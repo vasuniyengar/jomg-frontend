@@ -1,0 +1,54 @@
+.page {
+  min-height: calc(100vh - 56px);
+}
+
+.podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 0;
+}
+
+.podiumPlace {
+  text-align: center;
+  flex: 1;
+  max-width: 140px;
+}
+
+.podiumName {
+  font-weight: 700;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.podiumBlock {
+  font-size: 32px;
+  padding: 16px 8px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: var(--badge-bg);
+  border: 1px solid var(--border);
+}
+
+.podium1 .podiumBlock {
+  min-height: 100px;
+  background: linear-gradient(180deg, var(--primary-dim), var(--badge-bg));
+}
+
+.podium2 .podiumBlock {
+  min-height: 72px;
+}
+
+.podium3 .podiumBlock {
+  min-height: 56px;
+}
+
+.errorBanner {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 85, 85, 0.1);
+  border: 1px solid rgba(255, 85, 85, 0.35);
+  color: #ff8a80;
+  font-size: 13px;
+  margin-bottom: 12px;
+}

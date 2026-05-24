@@ -1,9 +1,6 @@
-import { apiRequest } from "./api";
+import { fetchHostTournaments } from "./tournaments";
 
-export async function fetchHostTournaments() {
-  const response = await apiRequest("/api/tournaments/host");
-  return response?.data || [];
-}
+export { fetchHostTournaments };
 
 export function buildDashboardSummary(tournaments) {
   const list = Array.isArray(tournaments) ? tournaments : [];

@@ -13,11 +13,42 @@ export default function DashboardPage() {
   useEffect(() => {
     let mounted = true;
     const loadDashboard = async () => {
+      const loadStart = Date.now();
+      // #region agent log
+      fetch("http://127.0.0.1:7896/ingest/3c01d13f-ed86-4d8b-94d5-44668d28043d", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "4a201a" },
+        body: JSON.stringify({
+          sessionId: "4a201a",
+          runId: "pre-fix",
+          hypothesisId: "H2-H5",
+          location: "dashboard/page.jsx:loadStart",
+          message: "Dashboard load start",
+          data: {},
+          timestamp: loadStart,
+        }),
+      }).catch(() => {});
+      // #endregion
       try {
         const data = await fetchHostTournaments();
         if (mounted) {
           setTournaments(data);
         }
+        // #region agent log
+        fetch("http://127.0.0.1:7896/ingest/3c01d13f-ed86-4d8b-94d5-44668d28043d", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "4a201a" },
+          body: JSON.stringify({
+            sessionId: "4a201a",
+            runId: "pre-fix",
+            hypothesisId: "H2-H5",
+            location: "dashboard/page.jsx:loadDone",
+            message: "Dashboard load done",
+            data: { count: data?.length ?? 0, durationMs: Date.now() - loadStart },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
       } catch (err) {
         if (mounted) {
           setError(err.message || "Failed to load dashboard");
