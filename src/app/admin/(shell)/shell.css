@@ -1672,3 +1672,14 @@ a.qa-card {
     gap: 10px;
   }
 }
+
+/* Tournaments hub — full-width without sidebar */
+.hub-mode .sidebar {
+  display: none;
+}
+.hub-mode .body-area {
+  overflow-y: auto;
+}
+.hub-mode .main {
+  overflow: visible;
+}

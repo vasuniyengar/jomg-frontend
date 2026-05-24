@@ -1,0 +1,103 @@
+.page {
+  min-height: calc(100vh - 56px);
+}
+
+.scoreGrid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 24px;
+  align-items: center;
+  margin: 24px 0;
+}
+
+.scoreTeam {
+  text-align: center;
+}
+
+.scoreTeamName {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.scoreInputWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.scoreBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--badge-bg);
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.scoreNum {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 800;
+  min-width: 64px;
+  text-align: center;
+  color: var(--primary-text);
+}
+
+.scoreVs {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-sec);
+  text-align: center;
+}
+
+.errorBanner {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 85, 85, 0.1);
+  border: 1px solid rgba(255, 85, 85, 0.35);
+  color: #ff8a80;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+@media print {
+  .noPrint {
+    display: none !important;
+  }
+
+  .printSheet {
+    padding: 24px;
+    color: #000;
+    background: #fff;
+  }
+
+  .printSheet h1 {
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .printMeta {
+    font-size: 12px;
+    margin-bottom: 20px;
+  }
+
+  .printScores {
+    display: flex;
+    justify-content: space-around;
+    font-size: 36px;
+    font-weight: bold;
+    margin: 32px 0;
+  }
+
+  .printSig {
+    margin-top: 48px;
+    border-top: 1px solid #ccc;
+    padding-top: 8px;
+    font-size: 11px;
+  }
+}

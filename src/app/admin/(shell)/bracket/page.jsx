@@ -1,5 +1,5 @@
-import ComingSoon from "../_components/ComingSoon";
+import BracketProgressionScreen from "./_components/BracketProgressionScreen";
 
 export default function Page() {
-  return <ComingSoon name="Bracket Progression" />;
+  return <BracketProgressionScreen />;
 }

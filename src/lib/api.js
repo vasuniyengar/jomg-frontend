@@ -45,6 +45,25 @@ apiClient.interceptors.response.use(
 );
 
 export async function apiRequest(path, options = {}) {
+  const apiStart = Date.now();
+  const method = options.method || "GET";
+  // #region agent log
+  if (typeof window !== "undefined") {
+    fetch("http://127.0.0.1:7896/ingest/3c01d13f-ed86-4d8b-94d5-44668d28043d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "4a201a" },
+      body: JSON.stringify({
+        sessionId: "4a201a",
+        runId: "pre-fix",
+        hypothesisId: "H2-H5",
+        location: "api.js:apiRequest:start",
+        message: "API request start",
+        data: { path, method },
+        timestamp: apiStart,
+      }),
+    }).catch(() => {});
+  }
+  // #endregion
   let requestData = options.body;
   if (typeof options.body === "string") {
     try {
@@ -67,6 +86,24 @@ export async function apiRequest(path, options = {}) {
     err.payload = response.data;
     throw err;
   }
+
+  // #region agent log
+  if (typeof window !== "undefined") {
+    fetch("http://127.0.0.1:7896/ingest/3c01d13f-ed86-4d8b-94d5-44668d28043d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "4a201a" },
+      body: JSON.stringify({
+        sessionId: "4a201a",
+        runId: "pre-fix",
+        hypothesisId: "H2-H5",
+        location: "api.js:apiRequest:done",
+        message: "API request done",
+        data: { path, method, durationMs: Date.now() - apiStart, status: response.status },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }
+  // #endregion
 
   return response.data;
 }
