@@ -38,3 +38,8 @@ export async function checkInAllPlayers(tournamentId, bracketId, { playerIds, ev
   );
   return response?.data;
 }
+
+/** Check in one player and partner (when partnerId provided and not yet checked in). */
+export async function checkInPlayers(tournamentId, bracketId, { playerIds, eventId }) {
+  return checkInAllPlayers(tournamentId, bracketId, { playerIds, eventId });
+}

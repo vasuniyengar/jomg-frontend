@@ -9,8 +9,17 @@ function formatCheckInTime(iso) {
   return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
-export default function CheckInRow({ row, onCheckIn, onUndo }) {
+export default function CheckInRow({ row, onCheckIn, onCheckInTeam, onUndo }) {
   const checkedIn = row.checkInStatus === "checked_in";
+  const hasPartner = Boolean(row.partnerId && row.partnerName);
+
+  const handleCheckInClick = () => {
+    if (hasPartner && onCheckInTeam) {
+      onCheckInTeam(row);
+    } else {
+      onCheckIn?.(row);
+    }
+  };
 
   return (
     <div
@@ -21,7 +30,9 @@ export default function CheckInRow({ row, onCheckIn, onUndo }) {
       <div className={`${live.checkinDot} ${checkedIn ? live.checkinDotIn : live.checkinDotOut}`} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className={live.checkinPlayerName}>{row.name}</div>
-        <div className={live.checkinPartner}>{row.email}</div>
+        <div className={live.checkinPartner}>
+          {row.partnerName ? `w/ ${row.partnerName}` : row.email}
+        </div>
       </div>
       <span className={live.checkinTeam}>{row.bracketName}</span>
       {checkedIn ? (
@@ -40,10 +51,10 @@ export default function CheckInRow({ row, onCheckIn, onUndo }) {
         <button
           type="button"
           className="btn btn-primary btn-sm"
-          style={{ fontSize: 11, padding: "4px 12px" }}
-          onClick={() => onCheckIn?.(row)}
+          style={{ fontSize: 11, padding: "4px 12px", flexShrink: 0 }}
+          onClick={handleCheckInClick}
         >
-          Check in
+          {hasPartner ? "Check In Team" : "Check in"}
         </button>
       )}
     </div>

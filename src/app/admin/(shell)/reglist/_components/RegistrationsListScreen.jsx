@@ -295,6 +295,12 @@ export default function RegistrationsListScreen() {
         </div>
         <div className="page-actions">
           <Link
+            href={tournamentAdminPath("/admin/checkin", tournamentId)}
+            className="btn btn-ghost btn-md"
+          >
+            Player Check-In →
+          </Link>
+          <Link
             href={tournamentAdminPath("/admin/divisions", tournamentId)}
             className="btn btn-ghost btn-md"
           >
