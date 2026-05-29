@@ -4,6 +4,7 @@ import Link from "next/link";
 import styles from "./dashboard.module.css";
 import { useEffect, useMemo, useState } from "react";
 import { buildDashboardSummary, fetchHostTournaments } from "@/lib/dashboard";
+import { tournamentAdminPath } from "@/lib/tournaments";
 
 export default function DashboardPage() {
   const [tournaments, setTournaments] = useState([]);
@@ -182,11 +183,24 @@ export default function DashboardPage() {
                 : "Create a tournament to begin"}
             </div>
           </div>
-          <div className="metric">
-            <div className="metric-label">Check-In Rate</div>
-            <div className="metric-value">{summary.checkInRate}%</div>
-            <div className="metric-delta delta-up">Estimated from registrations</div>
-          </div>
+          {firstTournament?.id ? (
+            <Link
+              href={tournamentAdminPath("/admin/checkin", firstTournament.id)}
+              className="metric"
+              style={{ textDecoration: "none", color: "inherit" }}
+              title="Open Player Check-In"
+            >
+              <div className="metric-label">Check-In Rate</div>
+              <div className="metric-value">{summary.checkInRate}%</div>
+              <div className="metric-delta delta-up">Open check-in →</div>
+            </Link>
+          ) : (
+            <div className="metric">
+              <div className="metric-label">Check-In Rate</div>
+              <div className="metric-value">{summary.checkInRate}%</div>
+              <div className="metric-delta delta-up">Estimated from registrations</div>
+            </div>
+          )}
           <div className="metric">
             <div className="metric-label">Tournaments</div>
             <div className="metric-value">{tournaments.length}</div>
