@@ -183,78 +183,129 @@ export default function RegistrationsListScreen() {
     }
   };
 
+  // const handleTemplateDownload = () => {
+  //   const templateRows = [
+  //     [
+  //       "name",
+  //       "email",
+  //       "gender",
+  //       "age",
+  //       "phone",
+  //       "partner",
+  //       "division",
+  //       "dupr",
+  //       "pay_for_partner",
+  //     ],
+  //     [
+  //       "Alex Turner",
+  //       "alex@example.com",
+  //       "M",
+  //       "34",
+  //       "(512) 555-0100",
+  //       "Sam Lee",
+  //       "MXD 14.0",
+  //       "4.20",
+  //       "yes",
+  //     ],
+  //   ];
+  //   const ws = XLSX.utils.aoa_to_sheet(templateRows);
+  //   const wb = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(wb, ws, "Players");
+  //   XLSX.writeFile(wb, "players-upload-template.xlsx");
+  // };
   const handleTemplateDownload = () => {
-    const templateRows = [
-      [
-        "name",
-        "email",
-        "gender",
-        "age",
-        "phone",
-        "partner",
-        "division",
-        "dupr",
-        "pay_for_partner",
-      ],
-      [
-        "Alex Turner",
-        "alex@example.com",
-        "M",
-        "34",
-        "(512) 555-0100",
-        "Sam Lee",
-        "MXD 14.0",
-        "4.20",
-        "yes",
-      ],
-    ];
-    const ws = XLSX.utils.aoa_to_sheet(templateRows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Players");
-    XLSX.writeFile(wb, "players-upload-template.xlsx");
-  };
+  const templateRows = [
+    ["name", "team_name", "gender", "role (starter or bench)", "email", "phone", "instagram", "facebook", "DuprID", "division","paymentMethod","paymentStatus","rosterNumber"],
+    ["Alex Turner", "Team Thunderbolts", "M", "starter", "alex@example.com", "(512) 555-0100", "@alexturner", "facebook.com/alexturner", "4.20", "MXD 14.0","Stripe","unpaid","M1"],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(templateRows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Players");
+  XLSX.writeFile(wb, "players-upload-template.xlsx");
+};
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadError("");
-    setUploadMessage("");
-    setPendingUploadRows([]);
-    try {
-      const buffer = await file.arrayBuffer();
-      const wb = XLSX.read(buffer, { type: "array" });
-      const sheet = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-      const normalized = rows
-        .map((r) => {
-          const name = String(r.name || r.Name || "").trim();
-          if (!name) return null;
-          const partner = String(r.partner || r.Partner || "").trim();
-          const payRaw = String(r.pay_for_partner || r.payForPartner || "").toLowerCase();
-          return {
-            name,
-            email: String(r.email || r.Email || "").trim(),
-            gender: String(r.gender || r.Gender || "M").trim(),
-            age: Number(r.age || r.Age || 30) || 30,
-            phone: String(r.phone || r.Phone || "").trim(),
-            partner: partner || "-",
-            division: String(r.division || r.Division || "").trim(),
-            dupr: String(r.dupr || r.DUPR || "").trim(),
-            pay_for_partner: payRaw === "no" ? "no" : partner && partner !== "-" ? "yes" : "no",
-          };
-        })
-        .filter(Boolean);
-      if (!normalized.length) {
-        setUploadError("No valid rows found. Use the template format.");
-        return;
-      }
-      setPendingUploadRows(normalized);
-      setUploadMessage(`${normalized.length} rows ready. Click Submit Upload.`);
-    } catch {
-      setUploadError("Upload failed. Please use the provided Excel template.");
+  // const handleFileUpload = async (e) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+  //   setUploadError("");
+  //   setUploadMessage("");
+  //   setPendingUploadRows([]);
+  //   try {
+  //     const buffer = await file.arrayBuffer();
+  //     const wb = XLSX.read(buffer, { type: "array" });
+  //     const sheet = wb.Sheets[wb.SheetNames[0]];
+  //     const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+  //     const normalized = rows
+  //       .map((r) => {
+  //         const name = String(r.name || r.Name || "").trim();
+  //         if (!name) return null;
+  //         const partner = String(r.partner || r.Partner || "").trim();
+  //         const payRaw = String(r.pay_for_partner || r.payForPartner || "").toLowerCase();
+  //         return {
+  //           name,
+  //           email: String(r.email || r.Email || "").trim(),
+  //           gender: String(r.gender || r.Gender || "M").trim(),
+  //           age: Number(r.age || r.Age || 30) || 30,
+  //           phone: String(r.phone || r.Phone || "").trim(),
+  //           partner: partner || "-",
+  //           division: String(r.division || r.Division || "").trim(),
+  //           dupr: String(r.dupr || r.DUPR || "").trim(),
+  //           pay_for_partner: payRaw === "no" ? "no" : partner && partner !== "-" ? "yes" : "no",
+  //         };
+  //       })
+  //       .filter(Boolean);
+  //     if (!normalized.length) {
+  //       setUploadError("No valid rows found. Use the template format.");
+  //       return;
+  //     }
+  //     setPendingUploadRows(normalized);
+  //     setUploadMessage(`${normalized.length} rows ready. Click Submit Upload.`);
+  //   } catch {
+  //     setUploadError("Upload failed. Please use the provided Excel template.");
+  //   }
+  // };
+const handleFileUpload = async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  setUploadError("");
+  setUploadMessage("");
+  setPendingUploadRows([]);
+  try {
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: "array" });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+    const normalized = rows
+      .map((r) => {
+        const name = String(r.name || r.Name || "").trim();
+        if (!name) return null;
+        return {
+          name,
+          team_name: String(r.team_name || r.TeamName || "").trim(),
+          gender: String(r.gender || r.Gender || "M").trim(),
+          role: String(r["role (starter or bench)"] || r.role || r.Role || "starter").trim(),
+          email: String(r.email || r.Email || "").trim(),
+          phone: String(r.phone || r.Phone || "").trim(),
+          instagram: String(r.instagram || r.Instagram || "").trim(),
+          facebook: String(r.facebook || r.Facebook || "").trim(),
+          duprId: String(r.DuprID || r.duprId || r.dupr || "").trim(),
+          division: String(r.division || r.Division || "").trim(),
+          paymentMethod: String(r.paymentMethod || r.payment_method || r.PaymentMethod || "").trim(),  
+          paymentStatus: String(r.paymentStatus || r.payment_status || r.PaymentStatus || "unpaid").trim(),
+          rosterNumber: String(r.rosterNumber || r.roster_number || r.RosterNumber || "").trim(), 
+        };
+      })
+      .filter(Boolean);
+    if (!normalized.length) {
+      setUploadError("No valid rows found. Use the template format.");
+      return;
     }
-  };
-
+    setPendingUploadRows(normalized);
+    setUploadMessage(`${normalized.length} rows ready. Click Submit Upload.`);
+  } catch {
+    setUploadError("Upload failed. Please use the provided Excel template.");
+  }
+};
   const handleSubmitUpload = async () => {
     if (!pendingUploadRows.length || !tournamentId) return;
     setUploading(true);
