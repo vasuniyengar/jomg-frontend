@@ -130,6 +130,43 @@ export function defaultMatchScoring() {
   };
 }
 
+export function defaultTournamentInfo() {
+  return {
+    refundPolicy: {
+      fullWindow:
+        "Players or clubs receive a full refund up until the week before the tournament date. No refunds are issued after that.",
+      replacement: "Players with a replacement can swap by reaching out to us.",
+      questions: "Reach out to JOMG Pickleball at info@jomgpickleball.com.",
+    },
+    spectators: { ticketFee: 0, maxCapacity: "" },
+    duprRequirementsText: "",
+    duprRequirementsManual: false,
+    sponsors: [],
+    organizerOverride: false,
+  };
+}
+
+export function generateDuprRequirementsText(duprRecorded, duprEnforced, requireSkillRating) {
+  if (duprRecorded && duprEnforced) {
+    return "A verified DUPR rating is required to register. All players must have an active DUPR profile, and divisions are gated by DUPR rating. Match results will be submitted to DUPR.";
+  }
+  if (duprRecorded && !duprEnforced) {
+    return "Open to all verified DUPR ratings. Matches count toward official DUPR ratings. Players without DUPR can sign up with a self-reported level.";
+  }
+  if (!duprRecorded && duprEnforced) {
+    return "A verified DUPR profile is required to register, but match results will not be submitted to DUPR.";
+  }
+  if (requireSkillRating) {
+    return "Open registration with self-reported skill level when DUPR is unavailable.";
+  }
+  return "Open to all skill levels. DUPR is optional for registration.";
+}
+
+export function stripHtmlForValidation(html) {
+  if (!html) return "";
+  return String(html).replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+}
+
 export function defaultTournamentSettings() {
   return {
     masterPush: false,
@@ -190,6 +227,7 @@ export function defaultTournamentSettings() {
       registrationPassword: "",
       waitlistEnabled: true,
     },
+    tournamentInfo: defaultTournamentInfo(),
   };
 }
 
@@ -289,6 +327,21 @@ export function mergeTournamentSettings(organizerInfo) {
     visibility: {
       ...defaults.visibility,
       ...(parsed.visibility || {}),
+    },
+    tournamentInfo: {
+      ...defaults.tournamentInfo,
+      ...(parsed.tournamentInfo || {}),
+      refundPolicy: {
+        ...defaults.tournamentInfo.refundPolicy,
+        ...(parsed.tournamentInfo?.refundPolicy || {}),
+      },
+      spectators: {
+        ...defaults.tournamentInfo.spectators,
+        ...(parsed.tournamentInfo?.spectators || {}),
+      },
+      sponsors: Array.isArray(parsed.tournamentInfo?.sponsors)
+        ? parsed.tournamentInfo.sponsors
+        : defaults.tournamentInfo.sponsors,
     },
   };
 

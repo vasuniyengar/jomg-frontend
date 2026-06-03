@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./login.module.css";
 import { apiRequest } from "@/lib/api";
-import { saveAuthSession } from "@/lib/auth";
+import { isAuthenticated, saveAuthSession } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,6 +13,14 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [redirecting, setRedirecting] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      setRedirecting(true);
+      router.replace("/admin/dashboard");
+    }
+  }, [router]);
 
   const mapLoginError = (error) => {
     if (!error) {
@@ -24,8 +32,14 @@ export default function LoginPage() {
     if (error.status === 403) {
       return error.message || "You do not have access to this account.";
     }
+    if (error.status === 0 || error.code === "ERR_NETWORK" || error.code === "ECONNABORTED") {
+      return (
+        error.message ||
+        "Cannot reach the API server. Ensure the backend is running on port 4000."
+      );
+    }
     if (error.status === 500) {
-      return "Server issue. Please try again in a moment.";
+      return error.message || "Server issue. Please try again in a moment.";
     }
     return error.message || "Unable to sign in";
   };
@@ -53,13 +67,23 @@ export default function LoginPage() {
         },
       });
 
-      router.push("/admin/tournaments");
+      router.replace("/admin/dashboard");
     } catch (error) {
       setErrorMessage(mapLoginError(error));
     } finally {
       setLoading(false);
     }
   };
+
+  if (redirecting) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.card} style={{ textAlign: "center", color: "var(--text-sec)" }}>
+          Redirecting…
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>

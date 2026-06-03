@@ -48,6 +48,70 @@ export async function updateTournament(tournamentId, payload) {
   return response?.tournamentData || response?.data;
 }
 
+export async function deleteTournament(tournamentId) {
+  return apiRequest(`/api/tournaments/${tournamentId}`, {
+    method: "DELETE",
+  });
+}
+
+export function buildWizardFormFromTournament(tournament) {
+  const org = parseOrganizerPayload(tournament?.organizerInfo);
+  const toInputDate = (v) => {
+    if (!v) return "";
+    const s = typeof v === "string" ? v : new Date(v).toISOString();
+    return s.slice(0, 10);
+  };
+  return {
+    name: tournament?.name || "",
+    clubId: tournament?.clubId ? String(tournament.clubId) : "",
+    slug: tournament?.slug || "",
+    description: tournament?.description || "",
+    organizerName: org?.name || "",
+    organizerEmail: org?.email || "",
+    organizerPhone: org?.phone || "",
+    venue: tournament?.venue || "",
+    location: tournament?.location || "",
+    timezone: tournament?.timezone || "",
+    startDate: toInputDate(tournament?.startDate),
+    endDate: toInputDate(tournament?.endDate),
+    registrationOpenDate: toInputDate(tournament?.registrationOpenDate),
+    registrationCloseDate: toInputDate(tournament?.registrationCloseDate),
+    refundDeadline: toInputDate(tournament?.refundDeadline),
+    refundFee: tournament?.refundFee != null ? String(tournament.refundFee) : "",
+    duprRecorded: tournament?.duprRecorded ?? true,
+    duprEnforced: tournament?.duprEnforced ?? false,
+    requireSkillRating: tournament?.requireSkillRating ?? false,
+  };
+}
+
+export function buildWizardApiPayload(form, { status } = {}) {
+  const slug = form.slug.trim() || slugifyTournamentName(form.name);
+  return {
+    name: form.name.trim(),
+    clubId: Number(form.clubId),
+    slug,
+    description: form.description.trim(),
+    venue: form.venue.trim(),
+    location: form.location.trim(),
+    timezone: form.timezone || null,
+    startDate: toIsoDate(form.startDate),
+    endDate: toIsoDate(form.endDate),
+    registrationOpenDate: toIsoDate(form.registrationOpenDate),
+    registrationCloseDate: toIsoDate(form.registrationCloseDate),
+    refundDeadline: form.refundDeadline ? toIsoDate(form.refundDeadline) : null,
+    refundFee: form.refundFee ? Number(form.refundFee) : 0,
+    duprRecorded: form.duprRecorded,
+    duprEnforced: form.duprEnforced,
+    requireSkillRating: form.requireSkillRating,
+    ...(status ? { status } : {}),
+    organizerInfo: {
+      name: form.organizerName.trim(),
+      email: form.organizerEmail.trim(),
+      phone: form.organizerPhone.trim() || "",
+    },
+  };
+}
+
 export function tournamentAdminPath(path, tournamentId) {
   if (!tournamentId) return path;
   const sep = path.includes("?") ? "&" : "?";
@@ -122,8 +186,10 @@ export function buildTournamentUpdatePayload(tournament, overrides = {}) {
     duprEnforced: overrides.duprEnforced ?? tournament.duprEnforced ?? false,
     requireSkillRating:
       overrides.requireSkillRating ?? tournament.requireSkillRating ?? false,
-    status: tournament.status,
-    slug: tournament.slug,
+    status: overrides.status ?? tournament.status,
+    slug: overrides.slug ?? tournament.slug,
+    tournamentTumbnail:
+      overrides.tournamentTumbnail ?? tournament.tournamentTumbnail ?? null,
     organizerInfo: buildOrganizerInfoFromSettings(organizer, settings),
   };
 }
@@ -198,6 +264,45 @@ export function countByHubStatus(tournaments) {
     if (key && counts[key] !== undefined) counts[key] += 1;
   }
   return counts;
+}
+
+export function displayStatus(status, settingsConfirmed = false) {
+  switch (status) {
+    case "draft":
+      return settingsConfirmed ? "Draft" : "Draft";
+    case "active":
+      return "Published";
+    case "ongoing":
+      return "Live";
+    case "completed":
+      return "Completed";
+    default:
+      return status || "Draft";
+  }
+}
+
+export function statusBadgeClass(status) {
+  switch (status) {
+    case "active":
+      return "tsb-published";
+    case "ongoing":
+      return "tsb-live";
+    case "completed":
+      return "tsb-completed";
+    default:
+      return "tsb-draft";
+  }
+}
+
+export async function pushTournamentSettingsApi(tournamentId, payload) {
+  const response = await apiRequest(
+    `/api/tournaments/${tournamentId}/settings/push`,
+    {
+      method: "POST",
+      body: payload,
+    }
+  );
+  return response?.data;
 }
 
 export function tournamentLocationLabel(tournament) {

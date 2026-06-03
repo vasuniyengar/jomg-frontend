@@ -32,7 +32,13 @@ function PayForRow({ title, description, option, onChange }) {
   );
 }
 
-export default function PricingPrizesCard({ settings, entryFee, onSettingsChange, onEntryFeeChange }) {
+export default function PricingPrizesCard({
+  settings,
+  entryFee,
+  onSettingsChange,
+  onEntryFeeChange,
+  onEnableSectionPush,
+}) {
   const pricing = settings.pricing;
 
   const patchPricing = (patch) => {
@@ -91,7 +97,12 @@ export default function PricingPrizesCard({ settings, entryFee, onSettingsChange
             Entry fee, advance pricing, bundles &amp; prizes
           </div>
         </div>
-        <SectionPushHeader sectionKey="pricing" settings={settings} onChange={onSettingsChange} />
+        <SectionPushHeader
+          sectionKey="pricing"
+          settings={settings}
+          onChange={onSettingsChange}
+          onEnablePush={onEnableSectionPush}
+        />
       </div>
 
       <SectionEyebrow>Entry Fee</SectionEyebrow>

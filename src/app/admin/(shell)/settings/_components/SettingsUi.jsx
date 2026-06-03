@@ -23,7 +23,7 @@ export function ToggleRow({ title, description, checked, onChange, children }) {
   );
 }
 
-export function SectionPushHeader({ sectionKey, settings, onChange }) {
+export function SectionPushHeader({ sectionKey, settings, onChange, onEnablePush }) {
   const on = settings.sectionPush?.[sectionKey];
   const labelId = `lbl-${sectionKey}`;
   return (
@@ -46,11 +46,16 @@ export function SectionPushHeader({ sectionKey, settings, onChange }) {
       </div>
       <MiniToggle
         checked={!!on}
-        onChange={(v) =>
-          onChange({
+        onChange={(v) => {
+          const patch = {
             sectionPush: { ...settings.sectionPush, [sectionKey]: v },
-          })
-        }
+          };
+          if (v && onEnablePush) {
+            onEnablePush(sectionKey, patch);
+          } else {
+            onChange(patch);
+          }
+        }}
         label={`Apply ${sectionKey} to all divisions`}
       />
     </div>

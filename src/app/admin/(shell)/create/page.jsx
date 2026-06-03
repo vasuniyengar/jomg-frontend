@@ -1,5 +1,5 @@
-import ComingSoon from "../_components/ComingSoon";
+import TournamentInfoScreen from "./_components/TournamentInfoScreen";
 
 export default function Page() {
-  return <ComingSoon name="Tournament Info" />;
+  return <TournamentInfoScreen />;
 }
