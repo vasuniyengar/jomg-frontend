@@ -3,7 +3,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "../tournaments.module.css";
-import { createTournament, fetchClubs, slugifyTournamentName } from "@/lib/tournaments";
+import DescriptionRteEditor from "../../_components/DescriptionRteEditor";
+import {
+  defaultTournamentInfo,
+  mergeTournamentSettings,
+  stripHtmlForValidation,
+} from "@/lib/tournamentSettings";
+import {
+  buildOrganizerInfoPayload,
+  buildTournamentUpdatePayload,
+  buildWizardApiPayload,
+  buildWizardFormFromTournament,
+  createTournament,
+  fetchClubs,
+  fetchTournamentById,
+  mergeTournamentSettingsExtras,
+  slugifyTournamentName,
+  updateTournament,
+} from "@/lib/tournaments";
 
 const TIMEZONES = [
   { value: "", label: "Auto-detect from address" },
@@ -36,18 +53,44 @@ const INITIAL_FORM = {
   duprRecorded: true,
   duprEnforced: false,
   requireSkillRating: false,
+  refundFullWindow: defaultTournamentInfo().refundPolicy.fullWindow,
+  refundReplacement: defaultTournamentInfo().refundPolicy.replacement,
+  refundQuestions: defaultTournamentInfo().refundPolicy.questions,
 };
+
+function buildWizardOrganizerExtras(form, existingOrganizerInfo) {
+  const { settings } = mergeTournamentSettings(existingOrganizerInfo);
+  return {
+    ...settings,
+    tournamentInfo: {
+      ...settings.tournamentInfo,
+      refundPolicy: {
+        fullWindow: form.refundFullWindow,
+        replacement: form.refundReplacement,
+        questions: form.refundQuestions,
+      },
+    },
+  };
+}
 
 function toIsoDate(value) {
   if (!value) return undefined;
   return value;
 }
 
-export default function CreateTournamentWizard({ open, onClose, onCreated }) {
+export default function CreateTournamentWizard({
+  open,
+  onClose,
+  onCreated,
+  editTournamentId = null,
+}) {
   const router = useRouter();
+  const isEdit = Boolean(editTournamentId);
   const [step, setStep] = useState(1);
   const [clubs, setClubs] = useState([]);
   const [form, setForm] = useState(INITIAL_FORM);
+  const [editStatus, setEditStatus] = useState("draft");
+  const [loadingTournament, setLoadingTournament] = useState(false);
   const [stepError, setStepError] = useState("");
   const [dateError, setDateError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -56,6 +99,11 @@ export default function CreateTournamentWizard({ open, onClose, onCreated }) {
 
   useEffect(() => {
     if (!open) return;
+    if (!isEdit) {
+      setForm(INITIAL_FORM);
+      setStep(1);
+      setEditStatus("draft");
+    }
     let mounted = true;
     setClubsLoadError("");
     fetchClubs()
@@ -73,7 +121,37 @@ export default function CreateTournamentWizard({ open, onClose, onCreated }) {
     return () => {
       mounted = false;
     };
-  }, [open]);
+  }, [open, isEdit]);
+
+  useEffect(() => {
+    if (!open || !editTournamentId) return;
+    let mounted = true;
+    setLoadingTournament(true);
+    setSubmitError("");
+    fetchTournamentById(editTournamentId)
+      .then((t) => {
+        if (!mounted || !t) return;
+        setEditStatus(t.status || "draft");
+        const base = buildWizardFormFromTournament(t);
+        const { settings } = mergeTournamentSettings(t.organizerInfo);
+        setForm({
+          ...base,
+          refundFullWindow: settings.tournamentInfo.refundPolicy.fullWindow,
+          refundReplacement: settings.tournamentInfo.refundPolicy.replacement,
+          refundQuestions: settings.tournamentInfo.refundPolicy.questions,
+        });
+        setStep(1);
+      })
+      .catch((err) => {
+        if (mounted) setSubmitError(err.message || "Failed to load tournament");
+      })
+      .finally(() => {
+        if (mounted) setLoadingTournament(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [open, editTournamentId]);
 
   const selectedClub = useMemo(
     () => clubs.find((c) => String(c.id) === String(form.clubId)),
@@ -148,7 +226,7 @@ export default function CreateTournamentWizard({ open, onClose, onCreated }) {
       if (
         !form.name.trim() ||
         !form.clubId ||
-        !form.description.trim() ||
+        !stripHtmlForValidation(form.description) ||
         !form.organizerName.trim() ||
         !form.organizerEmail.trim()
       ) {
@@ -185,40 +263,52 @@ export default function CreateTournamentWizard({ open, onClose, onCreated }) {
     setSubmitting(true);
     setSubmitError("");
     try {
-      const slug = form.slug.trim() || slugifyTournamentName(form.name);
-      const payload = {
-        name: form.name.trim(),
-        clubId: Number(form.clubId),
-        slug,
-        description: form.description.trim(),
-        venue: form.venue.trim(),
-        location: form.location.trim(),
-        timezone: form.timezone || null,
-        startDate: toIsoDate(form.startDate),
-        endDate: toIsoDate(form.endDate),
-        registrationOpenDate: toIsoDate(form.registrationOpenDate),
-        registrationCloseDate: toIsoDate(form.registrationCloseDate),
-        refundDeadline: form.refundDeadline ? toIsoDate(form.refundDeadline) : null,
-        refundFee: form.refundFee ? Number(form.refundFee) : 0,
-        duprRecorded: form.duprRecorded,
-        duprEnforced: form.duprEnforced,
-        requireSkillRating: form.requireSkillRating,
-        status: "draft",
-        organizerInfo: {
-          name: form.organizerName.trim(),
-          email: form.organizerEmail.trim(),
-          phone: form.organizerPhone.trim() || "",
-        },
-      };
+      const payload = buildWizardApiPayload(form, {
+        status: isEdit ? editStatus : "draft",
+      });
 
-      const created = await createTournament(payload);
+      if (isEdit) {
+        const existing = await fetchTournamentById(editTournamentId);
+        const { extras } = mergeTournamentSettingsExtras(existing?.organizerInfo);
+        const updatePayload = buildTournamentUpdatePayload(
+          {
+            ...existing,
+            ...payload,
+            clubId: payload.clubId,
+          },
+          {
+            duprRecorded: payload.duprRecorded,
+            duprEnforced: payload.duprEnforced,
+            requireSkillRating: payload.requireSkillRating,
+            organizerInfo: buildOrganizerInfoPayload(
+              payload.organizerInfo,
+              buildWizardOrganizerExtras(form, existing?.organizerInfo)
+            ),
+          }
+        );
+        const updated = await updateTournament(editTournamentId, updatePayload);
+        await onCreated?.(updated);
+        onClose();
+        return;
+      }
+
+      const createPayload = {
+        ...payload,
+        organizerInfo: buildOrganizerInfoPayload(
+          payload.organizerInfo,
+          buildWizardOrganizerExtras(form, null)
+        ),
+      };
+      const created = await createTournament(createPayload);
       await onCreated?.(created);
       onClose();
       if (created?.id) {
         router.push(`/admin/settings?tournamentId=${created.id}`);
       }
     } catch (err) {
-      setSubmitError(err.message || "Failed to create tournament");
+      setSubmitError(
+        err.message || `Failed to ${isEdit ? "update" : "create"} tournament`
+      );
     } finally {
       setSubmitting(false);
     }
@@ -238,9 +328,13 @@ export default function CreateTournamentWizard({ open, onClose, onCreated }) {
       <div className={styles.wizardPanel}>
         <div className={styles.wizardHeader}>
           <div>
-            <div className={styles.wizardTitle}>Create New Tournament</div>
+            <div className={styles.wizardTitle}>
+              {isEdit ? "Edit Tournament" : "Create New Tournament"}
+            </div>
             <div className={styles.wizardSub}>
-              Fill in the basics — you can add divisions and settings after
+              {isEdit
+                ? "Update tournament details"
+                : "Fill in the basics — you can add divisions and settings after"}
             </div>
           </div>
           <button type="button" className={styles.wizardClose} onClick={onClose} aria-label="Close">
@@ -265,7 +359,13 @@ export default function CreateTournamentWizard({ open, onClose, onCreated }) {
           })}
         </div>
 
-        {step === 1 && (
+        {loadingTournament ? (
+          <div className={styles.wizardBody} style={{ color: "var(--text-sec)" }}>
+            Loading tournament…
+          </div>
+        ) : null}
+
+        {!loadingTournament && step === 1 && (
           <div className={styles.wizardBody}>
             <div className="form-group">
               <label className="form-label">
@@ -322,12 +422,10 @@ export default function CreateTournamentWizard({ open, onClose, onCreated }) {
               <label className="form-label">
                 Description <span style={{ color: "#ff5555" }}>*</span>
               </label>
-              <textarea
-                className="form-textarea"
-                rows={4}
+              <DescriptionRteEditor
                 value={form.description}
-                onChange={(e) => updateField("description", e.target.value)}
-                placeholder="Tell players about this event…"
+                onChange={(html) => updateField("description", html)}
+                minHeight={100}
               />
             </div>
             <div className={styles.orgCard}>
@@ -374,7 +472,7 @@ export default function CreateTournamentWizard({ open, onClose, onCreated }) {
           </div>
         )}
 
-        {step === 2 && (
+        {!loadingTournament && step === 2 && (
           <div className={styles.wizardBody}>
             <div className="form-group">
               <label className="form-label">
@@ -461,6 +559,34 @@ export default function CreateTournamentWizard({ open, onClose, onCreated }) {
                 />
               </div>
             </div>
+            <div className={styles.sectionLabel}>Refund Policy</div>
+            <div className="form-group">
+              <label className="form-label">Full Refund Window</label>
+              <textarea
+                className="form-textarea"
+                rows={3}
+                value={form.refundFullWindow}
+                onChange={(e) => updateField("refundFullWindow", e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Replacement Players</label>
+              <textarea
+                className="form-textarea"
+                rows={2}
+                value={form.refundReplacement}
+                onChange={(e) => updateField("refundReplacement", e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Questions</label>
+              <textarea
+                className="form-textarea"
+                rows={2}
+                value={form.refundQuestions}
+                onChange={(e) => updateField("refundQuestions", e.target.value)}
+              />
+            </div>
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Refund Deadline</label>
@@ -488,7 +614,7 @@ export default function CreateTournamentWizard({ open, onClose, onCreated }) {
           </div>
         )}
 
-        {step === 3 && (
+        {!loadingTournament && step === 3 && (
           <div className={styles.wizardBody}>
             <div className={styles.duprBanner}>
               <strong>DUPR</strong> — Rating &amp; verification defaults for this tournament.
@@ -539,7 +665,7 @@ export default function CreateTournamentWizard({ open, onClose, onCreated }) {
           </div>
         )}
 
-        {step === 4 && (
+        {!loadingTournament && step === 4 && (
           <div className={styles.wizardBody}>
             <div className={styles.finishCard}>
               <div className={styles.finishEmoji}>🎉</div>
@@ -572,9 +698,13 @@ export default function CreateTournamentWizard({ open, onClose, onCreated }) {
             disabled={submitting}
           >
             {submitting
-              ? "Creating…"
+              ? isEdit
+                ? "Saving…"
+                : "Creating…"
               : step === 4
-                ? "✨ Create & Open Settings →"
+                ? isEdit
+                  ? "Save Changes"
+                  : "✨ Create & Open Settings →"
                 : "Next →"}
           </button>
         </div>

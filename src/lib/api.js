@@ -1,7 +1,13 @@
 import axios from "axios";
+import { clearAuthSession } from "./auth";
+
+function stripEnvUrl(value) {
+  if (!value) return value;
+  return String(value).trim().replace(/^["']|["']$/g, "");
+}
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+  stripEnvUrl(process.env.NEXT_PUBLIC_API_BASE_URL) || "http://127.0.0.1:4000";
 
 function resolveToken() {
   if (typeof window === "undefined") {
@@ -32,38 +38,41 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message =
-      error?.response?.data?.message ||
-      (error.code === "ECONNABORTED"
+    const status = error?.response?.status;
+    const requestUrl = error?.config?.url || "";
+    const isSignInRequest =
+      requestUrl.includes("/organizer/signin") ||
+      requestUrl.includes("/admin/signin");
+
+    if (
+      status === 401 &&
+      !isSignInRequest &&
+      typeof window !== "undefined" &&
+      !window.location.pathname.startsWith("/admin/login")
+    ) {
+      clearAuthSession();
+      window.location.replace("/admin/login");
+    }
+
+    const apiMessage = error?.response?.data?.message;
+    const message = apiMessage
+      ? apiMessage
+      : error.code === "ECONNABORTED"
         ? "Request timed out. Please try again."
-        : "Something went wrong. Please try again.");
+        : error.code === "ERR_NETWORK"
+          ? "Cannot reach the API server. Check that the backend is running and NEXT_PUBLIC_API_BASE_URL is correct."
+          : error.message || "Something went wrong. Please try again.";
     const normalizedError = new Error(message);
-    normalizedError.status = error?.response?.status || 500;
+    normalizedError.status =
+      error?.response?.status ??
+      (error.code === "ECONNABORTED" || error.code === "ERR_NETWORK" ? 0 : 500);
+    normalizedError.code = error.code;
     normalizedError.payload = error?.response?.data || null;
     return Promise.reject(normalizedError);
   }
 );
 
 export async function apiRequest(path, options = {}) {
-  const apiStart = Date.now();
-  const method = options.method || "GET";
-  // #region agent log
-  if (typeof window !== "undefined") {
-    fetch("http://127.0.0.1:7896/ingest/3c01d13f-ed86-4d8b-94d5-44668d28043d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "4a201a" },
-      body: JSON.stringify({
-        sessionId: "4a201a",
-        runId: "pre-fix",
-        hypothesisId: "H2-H5",
-        location: "api.js:apiRequest:start",
-        message: "API request start",
-        data: { path, method },
-        timestamp: apiStart,
-      }),
-    }).catch(() => {});
-  }
-  // #endregion
   let requestData = options.body;
   if (typeof options.body === "string") {
     try {
@@ -86,24 +95,6 @@ export async function apiRequest(path, options = {}) {
     err.payload = response.data;
     throw err;
   }
-
-  // #region agent log
-  if (typeof window !== "undefined") {
-    fetch("http://127.0.0.1:7896/ingest/3c01d13f-ed86-4d8b-94d5-44668d28043d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "4a201a" },
-      body: JSON.stringify({
-        sessionId: "4a201a",
-        runId: "pre-fix",
-        hypothesisId: "H2-H5",
-        location: "api.js:apiRequest:done",
-        message: "API request done",
-        data: { path, method, durationMs: Date.now() - apiStart, status: response.status },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }
-  // #endregion
 
   return response.data;
 }

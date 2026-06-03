@@ -5,13 +5,27 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import * as XLSX from "xlsx";
 import TournamentPicker from "../../_components/TournamentPicker";
+import AddPlayerModal from "./AddPlayerModal";
 import {
   MAX_PAYMENT_EMAILS,
+  bulkUpdateRegistrationPayments,
   bulkUploadPlayers,
+  fetchDivisions,
   fetchRegisteredPlayers,
   resendPaymentEmails,
+  updateRegistrationPayment,
 } from "@/lib/divisions";
+import {
+  buildBulkUploadTemplateAoA,
+  normalizeBulkUploadRow,
+} from "@/lib/bulkUpload";
 import { fetchHostTournaments, tournamentAdminPath } from "@/lib/tournaments";
+
+function formatDupr(value) {
+  if (value == null || value === "") return "—";
+  const n = Number(value);
+  return Number.isFinite(n) ? n.toFixed(2) : "—";
+}
 
 function paymentMeta(paymentStatus) {
   if (paymentStatus === "paid") return { label: "✓ Paid", cls: "pill-approved" };
@@ -57,9 +71,13 @@ function mapApiPlayersToRows(apiList) {
       age: p.age || "—",
       date: new Date().toLocaleDateString("en-US"),
       phone: p.phoneNumber || "—",
-      partner: "—",
+      partner: event?.partnerName || "—",
       division: event?.bracketName || "—",
-      dupr: "—",
+      dupr: formatDupr(p.duprRating),
+      duprId: p.duprId || event?.duprId || "",
+      clubName: event?.clubName || "",
+      rosterNumber: event?.rosterNumber || "",
+      playerRole: event?.playerRole || "",
       paid: paid.label,
       paidClass: paid.cls,
       status: "✓ Confirmed",
@@ -86,12 +104,20 @@ export default function RegistrationsListScreen() {
   const [resending, setResending] = useState(false);
   const [resendMessage, setResendMessage] = useState("");
   const [resendError, setResendError] = useState("");
+  const [paymentFilter, setPaymentFilter] = useState("all");
+  const [paymentUpdating, setPaymentUpdating] = useState(false);
+  const [paymentMessage, setPaymentMessage] = useState("");
+  const [paymentError, setPaymentError] = useState("");
+  const [addPlayerOpen, setAddPlayerOpen] = useState(false);
+  const [divisions, setDivisions] = useState([]);
 
   const loadPlayers = useCallback(async () => {
     if (!tournamentId) return;
     setLoading(true);
     try {
-      const data = await fetchRegisteredPlayers(tournamentId);
+      const statusArg =
+        paymentFilter === "all" ? undefined : { paymentStatus: paymentFilter };
+      const data = await fetchRegisteredPlayers(tournamentId, statusArg);
       setPlayers(mapApiPlayersToRows(data));
       setSelectedIds(new Set());
     } catch {
@@ -99,7 +125,7 @@ export default function RegistrationsListScreen() {
     } finally {
       setLoading(false);
     }
-  }, [tournamentId]);
+  }, [tournamentId, paymentFilter]);
 
   useEffect(() => {
     fetchHostTournaments().then(setTournaments).catch(() => setTournaments([]));
@@ -108,6 +134,16 @@ export default function RegistrationsListScreen() {
   useEffect(() => {
     loadPlayers();
   }, [loadPlayers]);
+
+  useEffect(() => {
+    if (!tournamentId) {
+      setDivisions([]);
+      return;
+    }
+    fetchDivisions(tournamentId)
+      .then(setDivisions)
+      .catch(() => setDivisions([]));
+  }, [tournamentId]);
 
   const filteredPlayers = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -120,6 +156,11 @@ export default function RegistrationsListScreen() {
     );
   }, [search, players]);
 
+  const selectablePlayers = useMemo(
+    () => filteredPlayers.filter((p) => p.registrationId),
+    [filteredPlayers]
+  );
+
   const eligiblePlayers = useMemo(
     () => filteredPlayers.filter((p) => p.canResendEmail && p.registrationId),
     [filteredPlayers]
@@ -130,9 +171,14 @@ export default function RegistrationsListScreen() {
     [eligiblePlayers, selectedIds]
   );
 
-  const allEligibleSelected =
-    eligiblePlayers.length > 0 &&
-    eligiblePlayers.every((p) => selectedIds.has(p.registrationId));
+  const selectedForPayment = useMemo(
+    () => selectablePlayers.filter((p) => selectedIds.has(p.registrationId)),
+    [selectablePlayers, selectedIds]
+  );
+
+  const allSelectableSelected =
+    selectablePlayers.length > 0 &&
+    selectablePlayers.every((p) => selectedIds.has(p.registrationId));
 
   const unpaidCount = useMemo(
     () => players.filter((p) => p.paidClass === "pill-live").length,
@@ -152,12 +198,54 @@ export default function RegistrationsListScreen() {
     });
   };
 
-  const toggleSelectAllEligible = () => {
-    if (allEligibleSelected) {
+  const toggleSelectAll = () => {
+    if (allSelectableSelected) {
       setSelectedIds(new Set());
       return;
     }
-    setSelectedIds(new Set(eligiblePlayers.map((p) => p.registrationId)));
+    setSelectedIds(new Set(selectablePlayers.map((p) => p.registrationId)));
+  };
+
+  const handleBulkPayment = async (paymentStatus) => {
+    if (!tournamentId || !selectedForPayment.length) return;
+    setPaymentUpdating(true);
+    setPaymentMessage("");
+    setPaymentError("");
+    try {
+      const result = await bulkUpdateRegistrationPayments(tournamentId, {
+        registrationIds: selectedForPayment.map((p) => p.registrationId),
+        paymentStatus,
+        syncPartner: true,
+      });
+      const updated = result?.updated?.length ?? selectedForPayment.length;
+      setPaymentMessage(
+        `Updated payment status to ${paymentStatus} for ${updated} registration(s).`
+      );
+      await loadPlayers();
+    } catch (err) {
+      setPaymentError(err.message || "Failed to update payment status");
+    } finally {
+      setPaymentUpdating(false);
+    }
+  };
+
+  const handleRowPayment = async (player, paymentStatus) => {
+    if (!tournamentId || !player.registrationId) return;
+    setPaymentUpdating(true);
+    setPaymentMessage("");
+    setPaymentError("");
+    try {
+      await updateRegistrationPayment(tournamentId, player.registrationId, {
+        paymentStatus,
+        syncPartner: true,
+      });
+      setPaymentMessage(`Marked ${player.name} as ${paymentStatus}.`);
+      await loadPlayers();
+    } catch (err) {
+      setPaymentError(err.message || "Failed to update payment");
+    } finally {
+      setPaymentUpdating(false);
+    }
   };
 
   const handleResendPaymentEmails = async () => {
@@ -183,129 +271,35 @@ export default function RegistrationsListScreen() {
     }
   };
 
-  // const handleTemplateDownload = () => {
-  //   const templateRows = [
-  //     [
-  //       "name",
-  //       "email",
-  //       "gender",
-  //       "age",
-  //       "phone",
-  //       "partner",
-  //       "division",
-  //       "dupr",
-  //       "pay_for_partner",
-  //     ],
-  //     [
-  //       "Alex Turner",
-  //       "alex@example.com",
-  //       "M",
-  //       "34",
-  //       "(512) 555-0100",
-  //       "Sam Lee",
-  //       "MXD 14.0",
-  //       "4.20",
-  //       "yes",
-  //     ],
-  //   ];
-  //   const ws = XLSX.utils.aoa_to_sheet(templateRows);
-  //   const wb = XLSX.utils.book_new();
-  //   XLSX.utils.book_append_sheet(wb, ws, "Players");
-  //   XLSX.writeFile(wb, "players-upload-template.xlsx");
-  // };
   const handleTemplateDownload = () => {
-  const templateRows = [
-    ["name", "team_name", "gender", "role (starter or bench)", "email", "phone", "instagram", "facebook", "DuprID", "division","paymentMethod","paymentStatus","rosterNumber"],
-    ["Alex Turner", "Team Thunderbolts", "M", "starter", "alex@example.com", "(512) 555-0100", "@alexturner", "facebook.com/alexturner", "4.20", "MXD 14.0","Stripe","unpaid","M1"],
-  ];
-  const ws = XLSX.utils.aoa_to_sheet(templateRows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Players");
-  XLSX.writeFile(wb, "players-upload-template.xlsx");
-};
+    const ws = XLSX.utils.aoa_to_sheet(buildBulkUploadTemplateAoA());
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Players");
+    XLSX.writeFile(wb, "players-upload-template.xlsx");
+  };
 
-  // const handleFileUpload = async (e) => {
-  //   const file = e.target.files?.[0];
-  //   if (!file) return;
-  //   setUploadError("");
-  //   setUploadMessage("");
-  //   setPendingUploadRows([]);
-  //   try {
-  //     const buffer = await file.arrayBuffer();
-  //     const wb = XLSX.read(buffer, { type: "array" });
-  //     const sheet = wb.Sheets[wb.SheetNames[0]];
-  //     const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-  //     const normalized = rows
-  //       .map((r) => {
-  //         const name = String(r.name || r.Name || "").trim();
-  //         if (!name) return null;
-  //         const partner = String(r.partner || r.Partner || "").trim();
-  //         const payRaw = String(r.pay_for_partner || r.payForPartner || "").toLowerCase();
-  //         return {
-  //           name,
-  //           email: String(r.email || r.Email || "").trim(),
-  //           gender: String(r.gender || r.Gender || "M").trim(),
-  //           age: Number(r.age || r.Age || 30) || 30,
-  //           phone: String(r.phone || r.Phone || "").trim(),
-  //           partner: partner || "-",
-  //           division: String(r.division || r.Division || "").trim(),
-  //           dupr: String(r.dupr || r.DUPR || "").trim(),
-  //           pay_for_partner: payRaw === "no" ? "no" : partner && partner !== "-" ? "yes" : "no",
-  //         };
-  //       })
-  //       .filter(Boolean);
-  //     if (!normalized.length) {
-  //       setUploadError("No valid rows found. Use the template format.");
-  //       return;
-  //     }
-  //     setPendingUploadRows(normalized);
-  //     setUploadMessage(`${normalized.length} rows ready. Click Submit Upload.`);
-  //   } catch {
-  //     setUploadError("Upload failed. Please use the provided Excel template.");
-  //   }
-  // };
-const handleFileUpload = async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  setUploadError("");
-  setUploadMessage("");
-  setPendingUploadRows([]);
-  try {
-    const buffer = await file.arrayBuffer();
-    const wb = XLSX.read(buffer, { type: "array" });
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-    const normalized = rows
-      .map((r) => {
-        const name = String(r.name || r.Name || "").trim();
-        if (!name) return null;
-        return {
-          name,
-          team_name: String(r.team_name || r.TeamName || "").trim(),
-          gender: String(r.gender || r.Gender || "M").trim(),
-          role: String(r["role (starter or bench)"] || r.role || r.Role || "starter").trim(),
-          email: String(r.email || r.Email || "").trim(),
-          phone: String(r.phone || r.Phone || "").trim(),
-          instagram: String(r.instagram || r.Instagram || "").trim(),
-          facebook: String(r.facebook || r.Facebook || "").trim(),
-          duprId: String(r.DuprID || r.duprId || r.dupr || "").trim(),
-          division: String(r.division || r.Division || "").trim(),
-          paymentMethod: String(r.paymentMethod || r.payment_method || r.PaymentMethod || "").trim(),  
-          paymentStatus: String(r.paymentStatus || r.payment_status || r.PaymentStatus || "unpaid").trim(),
-          rosterNumber: String(r.rosterNumber || r.roster_number || r.RosterNumber || "").trim(), 
-        };
-      })
-      .filter(Boolean);
-    if (!normalized.length) {
-      setUploadError("No valid rows found. Use the template format.");
-      return;
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError("");
+    setUploadMessage("");
+    setPendingUploadRows([]);
+    try {
+      const buffer = await file.arrayBuffer();
+      const wb = XLSX.read(buffer, { type: "array" });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+      const normalized = rows.map(normalizeBulkUploadRow).filter(Boolean);
+      if (!normalized.length) {
+        setUploadError("No valid rows found. Use the template format.");
+        return;
+      }
+      setPendingUploadRows(normalized);
+      setUploadMessage(`${normalized.length} rows ready. Click Submit Upload.`);
+    } catch {
+      setUploadError("Upload failed. Please use the provided Excel template.");
     }
-    setPendingUploadRows(normalized);
-    setUploadMessage(`${normalized.length} rows ready. Click Submit Upload.`);
-  } catch {
-    setUploadError("Upload failed. Please use the provided Excel template.");
-  }
-};
+  };
   const handleSubmitUpload = async () => {
     if (!pendingUploadRows.length || !tournamentId) return;
     setUploading(true);
@@ -313,13 +307,27 @@ const handleFileUpload = async (e) => {
     try {
       const result = await bulkUploadPlayers(tournamentId, pendingUploadRows, true);
       const created = result?.created?.length || 0;
+      const skipped = result?.skipped?.length || 0;
       const errCount = result?.errors?.length || 0;
       const emailsQueued = result?.emailsQueued ?? 0;
       setUploadMessage(
-        `Registered ${created} player(s).${emailsQueued ? ` Payment emails queued (${emailsQueued}).` : ""}${errCount ? ` ${errCount} issue(s) — see details below.` : ""}`
+        `Registered ${created} player(s).${skipped ? ` ${skipped} skipped.` : ""}${emailsQueued ? ` Payment emails queued (${emailsQueued}).` : ""}${errCount ? ` ${errCount} issue(s) — see details below.` : ""}`
       );
+      const detailLines = [];
+      if (result?.skipped?.length) {
+        detailLines.push(
+          ...result.skipped.map(
+            (s) => `Row ${s.row}${s.email ? ` (${s.email})` : ""}: ${s.reason}`
+          )
+        );
+      }
       if (result?.errors?.length) {
-        setUploadError(result.errors.map((e) => `Row ${e.row}: ${e.reason}`).join("\n"));
+        detailLines.push(
+          ...result.errors.map((e) => `Row ${e.row}: ${e.reason}`)
+        );
+      }
+      if (detailLines.length) {
+        setUploadError(detailLines.join("\n"));
       }
       setPendingUploadRows([]);
       await loadPlayers();
@@ -378,6 +386,13 @@ const handleFileUpload = async (e) => {
           <button
             type="button"
             className="btn btn-ghost btn-md"
+            onClick={() => setAddPlayerOpen(true)}
+          >
+            + Add Player
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-md"
             onClick={() => setShowBulkUpload((v) => !v)}
           >
             ⬆ Bulk Upload
@@ -397,6 +412,19 @@ const handleFileUpload = async (e) => {
             style={{ marginBottom: 12, whiteSpace: "pre-wrap" }}
           >
             {resendError}
+          </div>
+        ) : null}
+        {paymentMessage ? (
+          <div className="bulk-upload-success" style={{ marginBottom: 12 }}>
+            {paymentMessage}
+          </div>
+        ) : null}
+        {paymentError ? (
+          <div
+            className="bulk-upload-error"
+            style={{ marginBottom: 12, whiteSpace: "pre-wrap" }}
+          >
+            {paymentError}
           </div>
         ) : null}
 
@@ -448,8 +476,11 @@ const handleFileUpload = async (e) => {
               </div>
             ) : null}
             <p className="form-hint">
-              Division names must match Manage Divisions exactly. Set payment mobile in
-              Tournament Settings before upload.
+              Required: name, email, division (match Manage Divisions exactly). MLP: team_name,
+              role (starter/bench), rosterNumber. Doubles: partner, pay_for_partner (yes/no).
+              DUPR rating in dupr or numeric DuprID; account ID in DuprID when not numeric.
+              paymentStatus: paid/unpaid/refunded. Set payment mobile in Tournament Settings
+              before sending payment emails.
             </p>
           </div>
         ) : null}
@@ -484,6 +515,38 @@ const handleFileUpload = async (e) => {
               {unpaidCount}
             </span>
           </div>
+          <div style={{ marginLeft: "auto", display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {[
+              { id: "all", label: "All" },
+              { id: "unpaid", label: "Unpaid" },
+              { id: "paid", label: "Paid" },
+            ].map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                className={`btn btn-sm ${paymentFilter === f.id ? "btn-primary" : "btn-ghost"}`}
+                onClick={() => setPaymentFilter(f.id)}
+              >
+                {f.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              disabled={!selectedForPayment.length || paymentUpdating}
+              onClick={() => handleBulkPayment("paid")}
+            >
+              Mark paid ({selectedForPayment.length})
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              disabled={!selectedForPayment.length || paymentUpdating}
+              onClick={() => handleBulkPayment("unpaid")}
+            >
+              Mark unpaid
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -498,18 +561,23 @@ const handleFileUpload = async (e) => {
                   <th style={{ width: 36 }}>
                     <input
                       type="checkbox"
-                      checked={allEligibleSelected}
-                      disabled={!eligiblePlayers.length}
-                      onChange={toggleSelectAllEligible}
-                      title="Select all unpaid players eligible for payment email"
-                      aria-label="Select all eligible"
+                      checked={allSelectableSelected}
+                      disabled={!selectablePlayers.length}
+                      onChange={toggleSelectAll}
+                      title="Select all players in list"
+                      aria-label="Select all"
                     />
                   </th>
                   <th style={{ width: 44 }} />
                   <th>Player</th>
                   <th>Gender & Age</th>
                   <th>Phone</th>
+                  <th>Partner</th>
                   <th>Division</th>
+                  <th>DUPR</th>
+                  <th>DUPR ID</th>
+                  <th>Club</th>
+                  <th>Roster</th>
                   <th>Paid</th>
                   <th>Payment email</th>
                   <th>Status</th>
@@ -524,11 +592,14 @@ const handleFileUpload = async (e) => {
                         checked={
                           p.registrationId ? selectedIds.has(p.registrationId) : false
                         }
-                        disabled={!p.canResendEmail || !p.registrationId}
+                        disabled={!p.registrationId}
                         onChange={() =>
                           p.registrationId && toggleSelect(p.registrationId)
                         }
-                        title={p.resendDisabledReason || "Select to resend payment email"}
+                        title={
+                          p.resendDisabledReason ||
+                          "Select for bulk payment or payment email"
+                        }
                         aria-label={`Select ${p.name}`}
                       />
                     </td>
@@ -549,9 +620,35 @@ const handleFileUpload = async (e) => {
                       </span>
                     </td>
                     <td>{p.phone}</td>
+                    <td>{p.partner}</td>
                     <td>{p.division}</td>
+                    <td>{p.dupr}</td>
+                    <td>{p.duprId || "—"}</td>
+                    <td>{p.clubName || "—"}</td>
+                    <td>{p.rosterNumber || "—"}</td>
                     <td>
-                      <span className={`pill ${p.paidClass}`}>{p.paid}</span>
+                      <button
+                        type="button"
+                        className={`pill ${p.paidClass}`}
+                        style={{
+                          border: "none",
+                          cursor: p.registrationId ? "pointer" : "default",
+                        }}
+                        disabled={!p.registrationId || paymentUpdating}
+                        title={
+                          p.paymentStatus === "paid"
+                            ? "Click to mark unpaid"
+                            : "Click to mark paid"
+                        }
+                        onClick={() =>
+                          handleRowPayment(
+                            p,
+                            p.paymentStatus === "paid" ? "unpaid" : "paid"
+                          )
+                        }
+                      >
+                        {p.paid}
+                      </button>
                     </td>
                     <td>
                       <span
@@ -574,8 +671,8 @@ const handleFileUpload = async (e) => {
                 ))}
                 {!loading && !filteredPlayers.length ? (
                   <tr>
-                    <td colSpan={9} style={{ padding: 24, color: "var(--text-sec)" }}>
-                      No players yet. Add divisions, then bulk upload.
+                    <td colSpan={14} style={{ padding: 24, color: "var(--text-sec)" }}>
+                      No players yet. Add divisions, then add or bulk upload players.
                     </td>
                   </tr>
                 ) : null}
@@ -584,6 +681,14 @@ const handleFileUpload = async (e) => {
           </div>
         </div>
       </div>
+
+      <AddPlayerModal
+        open={addPlayerOpen}
+        onClose={() => setAddPlayerOpen(false)}
+        tournamentId={tournamentId}
+        divisions={divisions}
+        onAdded={loadPlayers}
+      />
     </div>
   );
 }

@@ -12,6 +12,9 @@ import {
   tournamentAdminPath,
   updateTournament,
 } from "@/lib/tournaments";
+import { fetchDivisions } from "@/lib/divisions";
+import { pushTournamentSettings } from "@/lib/dashboard";
+import OverrideConfirmModal from "./OverrideConfirmModal";
 import MasterPushBanner from "./sections/MasterPushBanner";
 import CourtsInfoCard from "./sections/CourtsInfoCard";
 import PricingPrizesCard from "./sections/PricingPrizesCard";
@@ -38,6 +41,11 @@ export default function TournamentSettingsScreen() {
   const [requireSkillRating, setRequireSkillRating] = useState(false);
   const [settings, setSettings] = useState(() => mergeTournamentSettings(null).settings);
   const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [divisions, setDivisions] = useState([]);
+  const [overrideOpen, setOverrideOpen] = useState(false);
+  const [overrideSection, setOverrideSection] = useState(null);
+  const [pendingSectionPatch, setPendingSectionPatch] = useState(null);
+  const [pushing, setPushing] = useState(false);
 
   const patchSettings = useCallback((patch) => {
     setSettings((prev) => ({ ...prev, ...patch }));
@@ -78,6 +86,12 @@ export default function TournamentSettingsScreen() {
         }
 
         applyTournament(data);
+        try {
+          const divs = await fetchDivisions(tournamentId);
+          if (!cancelled) setDivisions(divs);
+        } catch {
+          if (!cancelled) setDivisions([]);
+        }
       } catch (err) {
         if (!cancelled) {
           setError(err.message || "Failed to load tournament");
@@ -167,8 +181,68 @@ export default function TournamentSettingsScreen() {
     }
   };
 
-  const unconfirmSettings = () => {
-    patchSettings({ settingsConfirmed: false, settingsConfirmedAt: null });
+  const handleSectionEnablePush = (sectionKey, patch) => {
+    if (!divisions.length) {
+      patchSettings(patch);
+      return;
+    }
+    setPendingSectionPatch(patch);
+    setOverrideSection(sectionKey);
+    setOverrideOpen(true);
+  };
+
+  const runPush = async ({ sections, bracketIds }) => {
+    if (!tournament) return;
+    setPushing(true);
+    setError("");
+    try {
+      await persistSettings(
+        pendingSectionPatch
+          ? { ...settings, ...pendingSectionPatch }
+          : settings
+      );
+      await pushTournamentSettings(tournament.id, { sections, bracketIds });
+      setSaveMessage("Settings pushed to selected divisions.");
+      setTimeout(() => setSaveMessage(""), 3000);
+      setOverrideOpen(false);
+      setPendingSectionPatch(null);
+    } catch (err) {
+      setError(err.message || "Failed to push settings");
+    } finally {
+      setPushing(false);
+    }
+  };
+
+  const unconfirmSettings = async () => {
+    if (!tournament) return;
+    const prevSettings = settings;
+    const nextSettings = {
+      ...settings,
+      settingsConfirmed: false,
+      settingsConfirmedAt: null,
+    };
+    setSettings(nextSettings);
+    setSaving(true);
+    setError("");
+    try {
+      const payload = buildTournamentUpdatePayload(tournament, {
+        entryFee,
+        duprRecorded,
+        duprEnforced,
+        requireSkillRating,
+        settings: nextSettings,
+        status: tournament.status === "active" ? "draft" : tournament.status,
+      });
+      const updated = await updateTournament(tournament.id, payload);
+      applyTournament(updated);
+      setSaveMessage("Settings unlocked. Tournament reverted to draft if it was published.");
+      setTimeout(() => setSaveMessage(""), 4000);
+    } catch (err) {
+      setSettings(prevSettings);
+      setError(err.message || "Failed to unlock settings");
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -236,14 +310,20 @@ export default function TournamentSettingsScreen() {
           entryFee={entryFee}
           onSettingsChange={patchSettings}
           onEntryFeeChange={setEntryFee}
+          onEnableSectionPush={handleSectionEnablePush}
         />
-        <PlayRulesCard settings={settings} onSettingsChange={patchSettings} />
+        <PlayRulesCard
+          settings={settings}
+          onSettingsChange={patchSettings}
+          onEnableSectionPush={handleSectionEnablePush}
+        />
         <DuprIntegrationCard
           settings={settings}
           duprRecorded={duprRecorded}
           duprEnforced={duprEnforced}
           requireSkillRating={requireSkillRating}
           onSettingsChange={patchSettings}
+          onEnableSectionPush={handleSectionEnablePush}
           onDuprRecorded={setDuprRecorded}
           onDuprEnforced={setDuprEnforced}
           onRequireSkillRating={setRequireSkillRating}
@@ -262,6 +342,18 @@ export default function TournamentSettingsScreen() {
           onUnconfirm={unconfirmSettings}
         />
       </div>
+
+      <OverrideConfirmModal
+        open={overrideOpen}
+        section={overrideSection}
+        divisions={divisions}
+        pushing={pushing}
+        onCancel={() => {
+          setOverrideOpen(false);
+          setPendingSectionPatch(null);
+        }}
+        onConfirm={runPush}
+      />
     </div>
   );
 }

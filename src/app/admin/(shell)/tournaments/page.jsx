@@ -4,12 +4,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./tournaments.module.css";
 import CreateTournamentWizard from "./_components/CreateTournamentWizard";
+import DeleteTournamentConfirmModal from "./_components/DeleteTournamentConfirmModal";
 import {
   countByHubStatus,
+  deleteTournament,
   fetchHostTournaments,
   formatRevenue,
   formatTournamentDates,
   hubStatusMeta,
+  tournamentAdminPath,
   tournamentLocationLabel,
 } from "@/lib/tournaments";
 
@@ -20,6 +23,27 @@ const FILTERS = [
   { id: "draft", label: "Drafts" },
   { id: "completed", label: "Completed" },
 ];
+
+const HUB_LAYOUTS = [
+  { id: "table", label: "Table" },
+  { id: "gallery", label: "Gallery" },
+  { id: "compact", label: "Compact" },
+];
+
+const HUB_LAYOUT_KEY = "jomg_hub_layout";
+
+function tournamentInitials(name) {
+  const parts = String(name || "T")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!parts.length) return "T";
+  return parts
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+}
 
 function HubLogo() {
   return (
@@ -57,8 +81,6 @@ function HubLogo() {
   );
 }
 
-const TOURNAMENTS_PAGE_MOUNT = typeof performance !== "undefined" ? performance.now() : 0;
-
 export default function TournamentsPage() {
   const router = useRouter();
   const [tournaments, setTournaments] = useState([]);
@@ -68,55 +90,64 @@ export default function TournamentsPage() {
   const [search, setSearch] = useState("");
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardKey, setWizardKey] = useState(0);
+  const [editTournamentId, setEditTournamentId] = useState(null);
+  const [hubLayout, setHubLayout] = useState("table");
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = window.localStorage.getItem(HUB_LAYOUT_KEY);
+    if (saved && HUB_LAYOUTS.some((l) => l.id === saved)) {
+      setHubLayout(saved);
+    }
+  }, []);
+
+  const changeHubLayout = (layoutId) => {
+    setHubLayout(layoutId);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(HUB_LAYOUT_KEY, layoutId);
+    }
+  };
 
   const openWizard = () => {
+    setEditTournamentId(null);
     setWizardKey((k) => k + 1);
     setWizardOpen(true);
   };
 
-  const closeWizard = () => setWizardOpen(false);
+  const openEditWizard = (tournament) => {
+    setEditTournamentId(tournament.id);
+    setWizardKey((k) => k + 1);
+    setWizardOpen(true);
+  };
+
+  const closeWizard = () => {
+    setWizardOpen(false);
+    setEditTournamentId(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!pendingDelete?.id) return;
+    setDeleting(true);
+    setError("");
+    try {
+      await deleteTournament(pendingDelete.id);
+      setPendingDelete(null);
+      await loadTournaments();
+    } catch (err) {
+      setError(err.message || "Failed to delete tournament");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const loadTournaments = useCallback(async () => {
-    const loadStart = Date.now();
-    // #region agent log
-    fetch("http://127.0.0.1:7896/ingest/3c01d13f-ed86-4d8b-94d5-44668d28043d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "4a201a" },
-      body: JSON.stringify({
-        sessionId: "4a201a",
-        runId: "pre-fix",
-        hypothesisId: "H2-H4",
-        location: "tournaments/page.jsx:loadStart",
-        message: "loadTournaments start",
-        data: {
-          search,
-          msSincePageModuleLoad:
-            typeof performance !== "undefined" ? Math.round(performance.now() - TOURNAMENTS_PAGE_MOUNT) : null,
-        },
-        timestamp: loadStart,
-      }),
-    }).catch(() => {});
-    // #endregion
     setLoading(true);
     setError("");
     try {
       const data = await fetchHostTournaments({ search });
       setTournaments(data);
-      // #region agent log
-      fetch("http://127.0.0.1:7896/ingest/3c01d13f-ed86-4d8b-94d5-44668d28043d", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "4a201a" },
-        body: JSON.stringify({
-          sessionId: "4a201a",
-          runId: "pre-fix",
-          hypothesisId: "H2",
-          location: "tournaments/page.jsx:loadDone",
-          message: "loadTournaments done",
-          data: { count: data?.length ?? 0, durationMs: Date.now() - loadStart },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
     } catch (err) {
       setError(err.message || "Failed to load tournaments");
       setTournaments([]);
@@ -124,27 +155,6 @@ export default function TournamentsPage() {
       setLoading(false);
     }
   }, [search]);
-
-  // #region agent log
-  useEffect(() => {
-    fetch("http://127.0.0.1:7896/ingest/3c01d13f-ed86-4d8b-94d5-44668d28043d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "4a201a" },
-      body: JSON.stringify({
-        sessionId: "4a201a",
-        runId: "pre-fix",
-        hypothesisId: "H4",
-        location: "tournaments/page.jsx:mount",
-        message: "TournamentsPage mounted",
-        data: {
-          msSincePageModuleLoad:
-            typeof performance !== "undefined" ? Math.round(performance.now() - TOURNAMENTS_PAGE_MOUNT) : null,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }, []);
-  // #endregion
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -169,36 +179,53 @@ export default function TournamentsPage() {
   }, [tournaments, filter]);
 
   const handleRowClick = (tournament) => {
-    if (tournament.hubStatus === "draft") {
-      router.push(`/admin/settings?tournamentId=${tournament.id}`);
-      return;
-    }
-    router.push("/admin/dashboard");
+    router.push(tournamentAdminPath("/admin/dashboard", tournament.id));
   };
 
   const renderActions = (tournament) => {
     const status = tournament.hubStatus;
-    if (status === "active" || status === "upcoming") {
+    if (status === "draft" || status === "upcoming") {
+      return (
+        <>
+          <button
+            type="button"
+            className="hub-mini-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              openEditWizard(tournament);
+            }}
+            title="Edit tournament"
+          >
+            Edit
+          </button>
+          {status === "draft" ? (
+            <button
+              type="button"
+              className="hub-mini-btn danger"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPendingDelete(tournament);
+              }}
+              title="Delete draft"
+            >
+              ✕ Delete
+            </button>
+          ) : null}
+        </>
+      );
+    }
+    if (status === "active") {
       return (
         <button
           type="button"
           className="hub-mini-btn"
-          onClick={(e) => e.stopPropagation()}
-          title="Share public link"
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(tournamentAdminPath("/admin/settings", tournament.id));
+          }}
+          title="Tournament settings"
         >
-          Share
-        </button>
-      );
-    }
-    if (status === "draft") {
-      return (
-        <button
-          type="button"
-          className="hub-mini-btn danger"
-          onClick={(e) => e.stopPropagation()}
-          title="Delete draft"
-        >
-          ✕ Delete
+          Settings
         </button>
       );
     }
@@ -254,6 +281,21 @@ export default function TournamentsPage() {
               <span className={styles.filterCount}>{counts[f.id] ?? 0}</span>
             </button>
           ))}
+          <span className={styles.toolbarDivider} aria-hidden />
+          <div className={styles.layoutSwitcher} role="tablist" aria-label="View">
+            {HUB_LAYOUTS.map((l) => (
+              <button
+                key={l.id}
+                type="button"
+                role="tab"
+                aria-selected={hubLayout === l.id}
+                className={`${styles.layoutBtn} ${hubLayout === l.id ? styles.layoutBtnActive : ""}`}
+                onClick={() => changeHubLayout(l.id)}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {loading && <div className={styles.loadingState}>Loading tournaments…</div>}
@@ -261,6 +303,143 @@ export default function TournamentsPage() {
 
         {!loading && !error && (
           <>
+            {hubLayout === "gallery" ? (
+              <div className={styles.hubGallery}>
+                {filteredRows.map((t) => {
+                  const meta = hubStatusMeta(t.hubStatus);
+                  const cardStatusClass =
+                    t.hubStatus === "completed"
+                      ? styles.hgCardCompleted
+                      : t.hubStatus === "active"
+                        ? styles.hgCardLive
+                        : t.hubStatus === "upcoming"
+                          ? styles.hgCardUpcoming
+                          : styles.hgCardDraft;
+                  const bannerClass =
+                    t.hubStatus === "active"
+                      ? styles.hgBannerLive
+                      : t.hubStatus === "upcoming"
+                        ? styles.hgBannerUpcoming
+                        : t.hubStatus === "completed"
+                          ? styles.hgBannerCompleted
+                          : styles.hgBannerDraft;
+
+                  return (
+                    <div
+                      key={t.id}
+                      className={`${styles.hgCard} ${cardStatusClass} ${
+                        t.hubStatus === "completed" ? styles.hgCardCompletedBorder : ""
+                      }`}
+                      onClick={() => handleRowClick(t)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleRowClick(t);
+                      }}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div
+                        className={
+                          t.tournamentTumbnail
+                            ? styles.hgBanner
+                            : `${styles.hgBanner} ${styles.hgBannerPlaceholder} ${bannerClass}`
+                        }
+                        style={
+                          t.tournamentTumbnail
+                            ? { backgroundImage: `url(${t.tournamentTumbnail})` }
+                            : undefined
+                        }
+                      >
+                        {!t.tournamentTumbnail ? (
+                          <span className={styles.hgBannerInitials}>
+                            {tournamentInitials(t.name)}
+                          </span>
+                        ) : null}
+                        <span className={`pill ${meta.pill} ${styles.hgStatusPill}`}>
+                          {meta.label}
+                        </span>
+                      </div>
+                      <div className={styles.hgBody}>
+                        <div className={styles.hgName}>{t.name}</div>
+                        <div className={styles.hgFacility}>
+                          📍 {tournamentLocationLabel(t)}
+                        </div>
+                        <div className={styles.hgDates}>
+                          {formatTournamentDates(t.startDate, t.endDate)}
+                        </div>
+                        <div className={styles.hgDates}>
+                          {t.players > 0 ? `${t.players} players` : "— players"} ·{" "}
+                          {t.revenue > 0 ? formatRevenue(t.revenue) : "— revenue"} ·{" "}
+                          {t.divisions ?? 0} divs
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            {hubLayout === "compact" ? (
+              <div className={styles.hubCompact}>
+                {filteredRows.map((t) => {
+                  const meta = hubStatusMeta(t.hubStatus);
+                  const rowClass =
+                    t.hubStatus === "active"
+                      ? styles.hcRowLive
+                      : t.hubStatus === "upcoming"
+                        ? styles.hcRowUpcoming
+                        : t.hubStatus === "completed"
+                          ? styles.hcRowCompleted
+                          : styles.hcRowDraft;
+
+                  return (
+                    <div
+                      key={t.id}
+                      className={`${styles.hcRow} ${rowClass} ${
+                        t.hubStatus === "completed" ? styles.hcRowCompleted : ""
+                      }`}
+                      onClick={() => handleRowClick(t)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleRowClick(t);
+                      }}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <span className={styles.hcDot} />
+                      <div className={styles.hcName}>
+                        {t.name}
+                        <span className={styles.hcStatus}>{meta.label}</span>
+                      </div>
+                      <div className={styles.hcLoc}>{tournamentLocationLabel(t)}</div>
+                      <div className={styles.hcDates}>
+                        {formatTournamentDates(t.startDate, t.endDate)}
+                      </div>
+                      <div
+                        className={`${styles.hcNum} ${t.players > 0 ? "" : styles.hcNumMuted}`}
+                      >
+                        {t.players > 0 ? t.players : "—"}
+                      </div>
+                      <div
+                        className={`${styles.hcNum} ${t.revenue > 0 ? "" : styles.hcNumMuted}`}
+                      >
+                        {t.revenue > 0 ? formatRevenue(t.revenue) : "—"}
+                      </div>
+                      <button
+                        type="button"
+                        className={styles.hcAction}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRowClick(t);
+                        }}
+                      >
+                        Open
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            {hubLayout === "table" ? (
             <div className={`table-wrap ${styles.hubTable}`}>
               <table id="hub-table">
                 <thead>
@@ -336,6 +515,7 @@ export default function TournamentsPage() {
                 </tbody>
               </table>
             </div>
+            ) : null}
 
             {!filteredRows.length && (
               <div className={styles.emptyState}>{tournaments.length
@@ -349,11 +529,22 @@ export default function TournamentsPage() {
       <CreateTournamentWizard
         key={wizardKey}
         open={wizardOpen}
+        editTournamentId={editTournamentId}
         onClose={closeWizard}
         onCreated={async () => {
           setFilter("all");
           await loadTournaments();
         }}
+      />
+
+      <DeleteTournamentConfirmModal
+        open={Boolean(pendingDelete)}
+        tournament={pendingDelete}
+        deleting={deleting}
+        onCancel={() => {
+          if (!deleting) setPendingDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );

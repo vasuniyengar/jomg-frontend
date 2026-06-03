@@ -24,7 +24,7 @@ function ScoringSelect({ value, onChange, id }) {
   );
 }
 
-export default function PlayRulesCard({ settings, onSettingsChange }) {
+export default function PlayRulesCard({ settings, onSettingsChange, onEnableSectionPush }) {
   const playRules = settings.playRules;
 
   const patchPlayRules = (patch) => {
@@ -55,7 +55,12 @@ export default function PlayRulesCard({ settings, onSettingsChange }) {
             Scoring, timing, seeding &amp; advancement defaults
           </div>
         </div>
-        <SectionPushHeader sectionKey="playRules" settings={settings} onChange={onSettingsChange} />
+        <SectionPushHeader
+          sectionKey="playRules"
+          settings={settings}
+          onChange={onSettingsChange}
+          onEnablePush={onEnableSectionPush}
+        />
       </div>
 
       <div className={styles.mlpPanel}>

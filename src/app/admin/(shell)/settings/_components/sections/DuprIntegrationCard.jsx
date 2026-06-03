@@ -12,6 +12,7 @@ export default function DuprIntegrationCard({
   onDuprRecorded,
   onDuprEnforced,
   onRequireSkillRating,
+  onEnableSectionPush,
   clubDuprId = "CLB-08821",
 }) {
   return (
@@ -21,7 +22,12 @@ export default function DuprIntegrationCard({
           <span className="card-title">DUPR Integration</span>
           <span className={styles.duprBadge}>DUPR</span>
         </div>
-        <SectionPushHeader sectionKey="dupr" settings={settings} onChange={onSettingsChange} />
+        <SectionPushHeader
+          sectionKey="dupr"
+          settings={settings}
+          onChange={onSettingsChange}
+          onEnablePush={onEnableSectionPush}
+        />
       </div>
       <div className="form-group" style={{ maxWidth: 420, marginTop: 16 }}>
         <label className="form-label">Club DUPR ID</label>

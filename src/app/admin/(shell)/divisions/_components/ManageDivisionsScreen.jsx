@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import TournamentPicker from "../../_components/TournamentPicker";
+import DeleteDivisionConfirmModal from "./DeleteDivisionConfirmModal";
+import DivisionFormModal from "./DivisionFormModal";
 import styles from "../divisions.module.css";
 import {
   createDivision,
@@ -13,28 +15,49 @@ import {
   fetchDivisions,
   updateDivision,
 } from "@/lib/divisions";
+import {
+  buildDivisionSavePayload,
+  DEFAULT_DIVISION_FORM,
+  divisionAccentColor,
+  scoringConfigFromDivision,
+} from "@/lib/divisionForm";
 import { getStageScoringLabel } from "@/lib/scoring";
 import { fetchTournamentById, tournamentAdminPath } from "@/lib/tournaments";
-
-const EMPTY_FORM = {
-  bracketName: "",
-  groupId: "",
-  formatId: "",
-  bracketFormatId: "",
-  maxTeams: "16",
-  registrationFee: "",
-  minAge: "0",
-  maxAge: "0",
-  minRating: "0",
-  maxRating: "0",
-  startDate: "",
-  endDate: "",
-};
 
 function toDateInput(value) {
   if (!value) return "";
   const s = typeof value === "string" ? value : new Date(value).toISOString();
   return s.slice(0, 10);
+}
+
+function deriveIdsFromEventName(eventName, meta, fallbacks) {
+  if (!eventName || !meta?.groups?.length || !meta?.formats?.length) {
+    return fallbacks;
+  }
+  const normalized = eventName.trim().toLowerCase();
+  for (const g of meta.groups) {
+    for (const f of meta.formats) {
+      const combined = `${g.name} ${f.name}`.trim().toLowerCase();
+      if (combined === normalized) {
+        return { groupId: String(g.id), formatId: String(f.id) };
+      }
+    }
+  }
+  for (const g of meta.groups) {
+    const prefix = g.name.trim().toLowerCase();
+    if (normalized.startsWith(prefix)) {
+      const rest = eventName.trim().slice(g.name.length).trim().toLowerCase();
+      const f = meta.formats.find((x) => x.name.trim().toLowerCase() === rest);
+      if (f) return { groupId: String(g.id), formatId: String(f.id) };
+    }
+  }
+  return fallbacks;
+}
+
+function formatRating(value) {
+  if (value == null || value === "" || Number(value) === 0) return "0";
+  const n = Number(value);
+  return Number.isFinite(n) ? n.toFixed(2).replace(/\.?0+$/, "") : String(value);
 }
 
 function statusPillClass(status) {
@@ -61,8 +84,10 @@ export default function ManageDivisionsScreen() {
   const [openId, setOpenId] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState(DEFAULT_DIVISION_FORM);
   const [saving, setSaving] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     if (!tournamentId) return;
@@ -110,33 +135,52 @@ export default function ManageDivisionsScreen() {
 
   const openCreate = () => {
     setEditing(null);
+    const paletteColor =
+      DIVISION_COLORS[divisions.length % DIVISION_COLORS.length];
     setForm({
-      ...EMPTY_FORM,
+      ...DEFAULT_DIVISION_FORM,
       registrationFee: String(tournament?.entryFee ?? 0),
       startDate: toDateInput(tournament?.startDate),
       endDate: toDateInput(tournament?.endDate),
       groupId: defaultGroupId(),
       formatId: defaultFormatId(),
       bracketFormatId: defaultBracketFormatId(),
+      accentColor: paletteColor,
+      duprRecorded: Boolean(tournament?.duprRecorded ?? true),
+      duprEnforced: Boolean(tournament?.duprEnforced ?? false),
     });
     setModalOpen(true);
   };
 
   const openEdit = (div) => {
-    setEditing(div);
-    setForm({
-      bracketName: div.name || "",
+    const fallbacks = {
       groupId: defaultGroupId(),
       formatId: defaultFormatId(),
+    };
+    const derived = deriveIdsFromEventName(
+      div.Event?.eventName || div.formatLabel,
+      meta,
+      fallbacks
+    );
+    setEditing(div);
+    const idx = divisions.findIndex((d) => d.id === div.id);
+    setForm({
+      bracketName: div.name || "",
+      groupId: derived.groupId,
+      formatId: derived.formatId,
       bracketFormatId: String(div.bracketFormatId || defaultBracketFormatId()),
       maxTeams: String(div.maxTeams ?? 16),
       registrationFee: String(div.registrationFee ?? 0),
-      minAge: String(div.minAge ?? 0),
-      maxAge: String(div.maxAge ?? 0),
-      minRating: String(div.minRating ?? 0),
-      maxRating: String(div.maxRating ?? 0),
+      minAge: div.minAge ? String(div.minAge) : "",
+      maxAge: div.maxAge ? String(div.maxAge) : "",
+      minRating: div.minRating ? String(div.minRating) : "",
+      maxRating: div.maxRating ? String(div.maxRating) : "",
       startDate: toDateInput(div.startDate),
       endDate: toDateInput(div.endDate),
+      ...scoringConfigFromDivision(div, tournament),
+      accentColor:
+        div.scoringConfig?.accentColor ||
+        DIVISION_COLORS[(idx >= 0 ? idx : 0) % DIVISION_COLORS.length],
     });
     setModalOpen(true);
   };
@@ -146,21 +190,7 @@ export default function ManageDivisionsScreen() {
     setSaving(true);
     setError("");
     try {
-      const payload = {
-        bracketName: form.bracketName.trim(),
-        groupId: Number(form.groupId),
-        formatId: Number(form.formatId),
-        bracketFormatId: Number(form.bracketFormatId),
-        maxTeams: Number(form.maxTeams) || 16,
-        registrationFee: Number(form.registrationFee) || 0,
-        minAge: Number(form.minAge) || 0,
-        maxAge: Number(form.maxAge) || 0,
-        minRating: Number(form.minRating) || 0,
-        maxRating: Number(form.maxRating) || 0,
-        startDate: form.startDate,
-        endDate: form.endDate,
-        status: "draft",
-      };
+      const payload = buildDivisionSavePayload(form, { tournament });
 
       if (editing?.id) {
         await updateDivision(tournamentId, editing.id, payload);
@@ -176,13 +206,18 @@ export default function ManageDivisionsScreen() {
     }
   };
 
-  const handleDelete = async (div) => {
-    if (!window.confirm(`Delete division "${div.name}"?`)) return;
+  const handleConfirmDelete = async () => {
+    if (!tournamentId || !pendingDelete?.id) return;
+    setDeleting(true);
+    setError("");
     try {
-      await deleteDivision(tournamentId, div.id);
+      await deleteDivision(tournamentId, pendingDelete.id);
+      setPendingDelete(null);
       await load();
     } catch (err) {
       setError(err.message || "Failed to delete division");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -251,7 +286,7 @@ export default function ManageDivisionsScreen() {
               >
                 <div
                   className={styles.colorBar}
-                  style={{ background: DIVISION_COLORS[i % DIVISION_COLORS.length] }}
+                  style={{ background: divisionAccentColor(div, i) }}
                 />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div
@@ -262,10 +297,18 @@ export default function ManageDivisionsScreen() {
                     }}
                   >
                     {div.name}
+                    {div.scoringConfig?.useGlobalSettings === false ? (
+                      <span className="pill pill-amber" style={{ marginLeft: 8, fontSize: 10 }}>
+                        Override
+                      </span>
+                    ) : null}
                   </div>
                   <div style={{ fontSize: 12, color: "var(--text-sec)", marginTop: 2 }}>
                     {div.formatLabel || div.Event?.eventName} · $
                     {Number(div.registrationFee || 0)} /entry
+                    {div.scoringConfig?.useGlobalSettings === false
+                      ? " · custom settings"
+                      : ""}
                   </div>
                   <div
                     style={{
@@ -290,6 +333,12 @@ export default function ManageDivisionsScreen() {
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm"
+                  disabled={div.poolStarted}
+                  title={
+                    div.poolStarted
+                      ? "Cannot edit after pools have started"
+                      : "Edit division"
+                  }
                   onClick={(e) => {
                     e.stopPropagation();
                     openEdit(div);
@@ -300,9 +349,15 @@ export default function ManageDivisionsScreen() {
                 <button
                   type="button"
                   className="btn btn-danger btn-sm"
+                  disabled={div.poolStarted}
+                  title={
+                    div.poolStarted
+                      ? "Cannot delete after pools have started"
+                      : "Delete division"
+                  }
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDelete(div);
+                    setPendingDelete(div);
                   }}
                 >
                   ✕
@@ -310,11 +365,34 @@ export default function ManageDivisionsScreen() {
               </div>
               <div className={styles.expandBody}>
                 <div style={{ fontSize: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+                  {div.scoringConfig?.skillLevel ? (
+                    <div>
+                      <span style={{ color: "var(--text-sec)" }}>Skill: </span>
+                      <strong>{div.scoringConfig.skillLevel}</strong>
+                    </div>
+                  ) : null}
                   <div>
                     <span style={{ color: "var(--text-sec)" }}>DUPR range: </span>
                     <strong>
-                      {div.minRating}–{div.maxRating || "∞"}
+                      {formatRating(div.minRating)}–
+                      {div.maxRating ? formatRating(div.maxRating) : "∞"}
                     </strong>
+                    {div.scoringConfig?.duprCombinedMin != null ||
+                    div.scoringConfig?.duprCombinedMax != null ? (
+                      <span style={{ color: "var(--text-ter)", fontSize: 11 }}>
+                        {" "}
+                        (combined{" "}
+                        {div.scoringConfig.duprCombinedMin ?? "—"}–
+                        {div.scoringConfig.duprCombinedMax ?? "—"})
+                      </span>
+                    ) : null}
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--text-sec)" }}>Registration: </span>
+                    <strong>
+                      {div.scoringConfig?.registrationOn === false ? "Closed" : "Open"}
+                    </strong>
+                    {div.scoringConfig?.showPublic === false ? " · Hidden" : " · Public"}
                   </div>
                   <div>
                     <span style={{ color: "var(--text-sec)" }}>Dates: </span>
@@ -374,139 +452,39 @@ export default function ManageDivisionsScreen() {
         </div>
       </div>
 
-      {modalOpen ? (
-        <div className={styles.modalOverlay} onClick={() => setModalOpen(false)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalTitle}>
-              {editing ? "Edit Division" : "Add New Division"}
-            </div>
-            <div className={styles.formGrid}>
-              <div className={`form-group ${styles.formGridFull}`}>
-                <label className="form-label">Division name</label>
-                <input
-                  className="form-input"
-                  placeholder="e.g. MXD 16.0"
-                  value={form.bracketName}
-                  onChange={(e) => setForm((f) => ({ ...f, bracketName: e.target.value }))}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Group</label>
-                <select
-                  className="form-select"
-                  value={form.groupId}
-                  onChange={(e) => setForm((f) => ({ ...f, groupId: e.target.value }))}
-                >
-                  {(meta?.groups || []).map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Format</label>
-                <select
-                  className="form-select"
-                  value={form.formatId}
-                  onChange={(e) => setForm((f) => ({ ...f, formatId: e.target.value }))}
-                >
-                  {(meta?.formats || []).map((f) => (
-                    <option key={f.id} value={f.id}>
-                      {f.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Bracket format</label>
-                <select
-                  className="form-select"
-                  value={form.bracketFormatId}
-                  onChange={(e) => setForm((f) => ({ ...f, bracketFormatId: e.target.value }))}
-                >
-                  {(meta?.bracketFormats || []).map((bf) => (
-                    <option key={bf.id} value={bf.id}>
-                      {bf.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Max teams</label>
-                <input
-                  className="form-input"
-                  type="number"
-                  min={1}
-                  value={form.maxTeams}
-                  onChange={(e) => setForm((f) => ({ ...f, maxTeams: e.target.value }))}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Entry fee ($)</label>
-                <input
-                  className="form-input"
-                  type="number"
-                  min={0}
-                  value={form.registrationFee}
-                  onChange={(e) => setForm((f) => ({ ...f, registrationFee: e.target.value }))}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">DUPR min</label>
-                <input
-                  className="form-input"
-                  type="number"
-                  min={0}
-                  value={form.minRating}
-                  onChange={(e) => setForm((f) => ({ ...f, minRating: e.target.value }))}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">DUPR max</label>
-                <input
-                  className="form-input"
-                  type="number"
-                  min={0}
-                  value={form.maxRating}
-                  onChange={(e) => setForm((f) => ({ ...f, maxRating: e.target.value }))}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Start date</label>
-                <input
-                  className="form-input"
-                  type="date"
-                  value={form.startDate}
-                  onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">End date</label>
-                <input
-                  className="form-input"
-                  type="date"
-                  value={form.endDate}
-                  onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
-                />
-              </div>
-            </div>
-            <div className={styles.modalActions}>
-              <button type="button" className="btn btn-ghost btn-md" onClick={() => setModalOpen(false)}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary btn-md"
-                onClick={handleSave}
-                disabled={saving}
-              >
-                {saving ? "Saving…" : "Save Division"}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <DivisionFormModal
+        open={modalOpen}
+        editing={editing}
+        form={form}
+        setForm={setForm}
+        meta={meta}
+        tournament={tournament}
+        tournamentId={tournamentId}
+        saving={saving}
+        poolStarted={Boolean(editing?.poolStarted)}
+        divisionIndex={
+          editing
+            ? divisions.findIndex((d) => d.id === editing.id)
+            : divisions.length
+        }
+        onClose={() => setModalOpen(false)}
+        onSave={handleSave}
+      />
+
+      <DeleteDivisionConfirmModal
+        open={Boolean(pendingDelete)}
+        division={pendingDelete}
+        divisionIndex={
+          pendingDelete
+            ? divisions.findIndex((d) => d.id === pendingDelete.id)
+            : 0
+        }
+        deleting={deleting}
+        onCancel={() => {
+          if (!deleting) setPendingDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }
