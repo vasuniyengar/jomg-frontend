@@ -8,6 +8,7 @@ export const ROUTE_LABELS = {
   "/admin/reglist": "Players List",
   "/admin/communication": "Outreach",
   "/admin/draw": "Generate Draw",
+   "/admin/publishdraw": "Publish Draw",
   "/admin/schedule": "Schedule Builder",
   "/admin/control": "Control Center",
   "/admin/checkin": "Player Check-In",
