@@ -58,6 +58,8 @@ export const PHASES = [
     sub: "Before play begins",
     items: [
       { href: "/admin/draw", icon: "🎯", label: "Generate Draw" },
+       { href: "/admin/publishDraw", icon: "✅", label: "Publish Draw" },
+      
       { href: "/admin/schedule", icon: "📅", label: "Schedule Builder" },
     ],
   },
