@@ -96,6 +96,7 @@ export default function RegistrationsListScreen() {
   const [search, setSearch] = useState("");
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
+  const [uploadHadTeamNames, setUploadHadTeamNames] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [pendingUploadRows, setPendingUploadRows] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -283,6 +284,7 @@ export default function RegistrationsListScreen() {
     if (!file) return;
     setUploadError("");
     setUploadMessage("");
+    setUploadHadTeamNames(false);
     setPendingUploadRows([]);
     try {
       const buffer = await file.arrayBuffer();
@@ -310,6 +312,10 @@ export default function RegistrationsListScreen() {
       const skipped = result?.skipped?.length || 0;
       const errCount = result?.errors?.length || 0;
       const emailsQueued = result?.emailsQueued ?? 0;
+      const hadTeamNames = pendingUploadRows.some((r) =>
+        String(r.team_name || r.teamName || "").trim()
+      );
+      setUploadHadTeamNames(hadTeamNames && created > 0);
       setUploadMessage(
         `Registered ${created} player(s).${skipped ? ` ${skipped} skipped.` : ""}${emailsQueued ? ` Payment emails queued (${emailsQueued}).` : ""}${errCount ? ` ${errCount} issue(s) — see details below.` : ""}`
       );
@@ -353,6 +359,12 @@ export default function RegistrationsListScreen() {
           </div>
         </div>
         <div className="page-actions">
+          <Link
+            href={tournamentAdminPath("/admin/teams", tournamentId)}
+            className="btn btn-ghost btn-md"
+          >
+            Manage Teams →
+          </Link>
           <Link
             href={tournamentAdminPath("/admin/checkin", tournamentId)}
             className="btn btn-ghost btn-md"
@@ -468,7 +480,20 @@ export default function RegistrationsListScreen() {
               </button>
             </div>
             {uploadMessage ? (
-              <div className="bulk-upload-success">{uploadMessage}</div>
+              <div className="bulk-upload-success">
+                {uploadMessage}
+                {uploadHadTeamNames ? (
+                  <>
+                    {" "}
+                    <Link
+                      href={tournamentAdminPath("/admin/teams", tournamentId)}
+                      style={{ color: "var(--primary-text)", fontWeight: 600 }}
+                    >
+                      View teams in Manage Teams →
+                    </Link>
+                  </>
+                ) : null}
+              </div>
             ) : null}
             {uploadError ? (
               <div className="bulk-upload-error" style={{ whiteSpace: "pre-wrap" }}>

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import DrawPageClient from "./DrawPageClient";
+import TeamsPageClient from "./TeamsPageClient";
 
 function Fallback() {
   return (
@@ -11,10 +11,10 @@ function Fallback() {
   );
 }
 
-export default function DrawPage() {
+export default function TeamsPage() {
   return (
     <Suspense fallback={<Fallback />}>
-      <DrawPageClient />
+      <TeamsPageClient />
     </Suspense>
   );
 }

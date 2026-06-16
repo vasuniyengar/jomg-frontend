@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import DrawPageClient from "./DrawPageClient";
+import PublishedDetailPageClient from "./PublishedDetailPageClient";
 
 function Fallback() {
   return (
@@ -11,10 +11,10 @@ function Fallback() {
   );
 }
 
-export default function DrawPage() {
+export default function PublishedDetailPage() {
   return (
     <Suspense fallback={<Fallback />}>
-      <DrawPageClient />
+      <PublishedDetailPageClient />
     </Suspense>
   );
 }
