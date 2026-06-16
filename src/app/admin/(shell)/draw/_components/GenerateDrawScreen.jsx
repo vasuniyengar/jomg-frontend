@@ -613,18 +613,19 @@ export default function GenerateDrawScreen({ tournamentId }) {
     }
   };
  
-  const deleteRoundRobin = async () => {
-    try {
-      await apiRequest(
-        `/api/round-robin/${tournamentId}/brackets/${selectedBracketId}`,
-        { method: "DELETE" }
-      );
-      setPools([]);
-      setSuccess("Draw deleted.");
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+const deleteRoundRobin = async () => {
+  if (!window.confirm("Delete this draw? This cannot be undone.")) return; 
+  try {
+    await apiRequest(
+      `/api/round-robin/${tournamentId}/brackets/${selectedBracketId}`,
+      { method: "DELETE" }
+    );
+    setPools([]);
+    setSuccess("Draw deleted.");
+  } catch (err) {
+    setError(err.message);
+  }
+};
  
   return (
     <div className="page">

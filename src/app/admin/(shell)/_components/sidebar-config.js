@@ -59,6 +59,7 @@ export const PHASES = [
     items: [
       { href: "/admin/draw", icon: "🎯", label: "Generate Draw" },
        { href: "/admin/publishDraw", icon: "✅", label: "Publish Draw" },
+       { href: "/admin/PlayoffBracket", icon: "🏆", label: "Playoff Bracket" },
       
       { href: "/admin/schedule", icon: "📅", label: "Schedule Builder" },
     ],
