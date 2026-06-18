@@ -28,6 +28,7 @@ export default function GenerateDrawScreen({ tournamentId }) {
     publishDraw,
     unpublishDraw,
     regenerateBracket,
+    deleteBracket,
     generateAllReady,
     publishAllDrafts,
   } = useDrawState(tournamentId);
@@ -227,6 +228,7 @@ export default function GenerateDrawScreen({ tournamentId }) {
                       onPublish={(r) => setConfirm({ mode: "publish", row: r })}
                       onPreview={(r) => setExpandedId(r.id)}
                       onRegenerate={regenerateBracket}
+                      onDelete={deleteBracket}
                     />
                   </div>
                 );

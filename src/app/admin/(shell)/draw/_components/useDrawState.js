@@ -150,6 +150,32 @@ export function useDrawState(tournamentId) {
     [runGenerate]
   );
 
+  const deleteBracket = useCallback(
+    async (row) => {
+      if (!tournamentId || !row?.id) return;
+      const id = row.id;
+      setRowBusy(id, true);
+      setRowError(id, "");
+      setActionMessage("");
+      try {
+        await deleteRoundRobin(tournamentId, id);
+        // Clear the bracket locally rather than re-fetching — the pools
+        // endpoint may not 404 on an empty result, so we know the
+        // post-delete state directly from a successful delete call.
+        setPoolDataById((prev) => ({
+          ...prev,
+          [id]: { bracket: null, hasPools: false },
+        }));
+      } catch (err) {
+        setRowError(id, err.message || "Failed to delete draw");
+        throw err;
+      } finally {
+        setRowBusy(id, false);
+      }
+    },
+    [tournamentId, setRowBusy, setRowError]
+  );
+
   const publishDraw = useCallback(async () => {
     setActionMessage("Publish API coming soon — draw stays in draft until published.");
   }, []);
@@ -202,6 +228,7 @@ export function useDrawState(tournamentId) {
     publishDraw,
     unpublishDraw,
     regenerateBracket,
+    deleteBracket,
     generateAllReady,
     publishAllDrafts,
     getRowById,

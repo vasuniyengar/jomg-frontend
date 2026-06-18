@@ -4,7 +4,7 @@ import Link from "next/link";
 import styles from "../draw.module.css";
 import { drawFormatSummary, validateDivisionForDraw } from "@/lib/drawUi";
 import { tournamentAdminPath } from "@/lib/tournaments";
-import BracketPreview from "./BracketPreview";
+import BracketPreview from "../../draw/_components/BracketPreview";
 
 export default function DrawDivisionDetail({
   row,
@@ -12,6 +12,7 @@ export default function DrawDivisionDetail({
   locked = false,
   busy = false,
   onRegenerate,
+  onDelete,
   includeBracket = true,
   showEditLink = true,
 }) {
@@ -99,6 +100,7 @@ export default function DrawDivisionDetail({
           locked={locked}
           busy={busy}
           onRegenerate={onRegenerate}
+          onDelete={onDelete}
         />
       ) : null}
     </div>

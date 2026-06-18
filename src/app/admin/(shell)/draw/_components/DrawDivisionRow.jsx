@@ -22,6 +22,7 @@ export default function DrawDivisionRow({
   onView,
   onUnpublish,
   onRegenerate,
+  onDelete,
 }) {
   const v = validateDivisionForDraw(row);
   const pct = row.max ? Math.min(100, Math.round(((row.players || 0) / row.max) * 100)) : 0;
@@ -178,6 +179,7 @@ export default function DrawDivisionRow({
             tournamentId={tournamentId}
             busy={busy}
             onRegenerate={() => onRegenerate?.(row)}
+            onDelete={() => onDelete?.(row)}
           />
         </div>
       ) : null}

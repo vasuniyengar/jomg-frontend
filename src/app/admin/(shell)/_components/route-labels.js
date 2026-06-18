@@ -10,6 +10,7 @@ export const ROUTE_LABELS = {
   "/admin/communication": "Outreach",
   "/admin/draw": "Generate Draw",
   "/admin/published": "Published Draws",
+  "/admin/PlayoffBracket": "Playoff Bracket",
   "/admin/published/detail": "Published Draw Detail",
   "/admin/schedule": "Schedule Builder",
   "/admin/control": "Control Center",

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import styles from "../draw.module.css";
-import BracketPreview from "./BracketPreview";
+import BracketPreview from "../../draw/_components/BracketPreview";
 import DrawDivisionDetail from "./DrawDivisionDetail";
 import PublishDrawConfirmModal from "./PublishDrawConfirmModal";
 import { formatShortDate, formatTime12 } from "@/lib/drawUi";
