@@ -42,6 +42,7 @@ export const PHASES = [
         label: "Players List",
         badge: { text: "48", variant: "default" },
       },
+      { href: "/admin/teams", icon: "👥", label: "Manage Teams" },
       {
         comingSoon: true,
         icon: "⏳",
@@ -58,8 +59,8 @@ export const PHASES = [
     sub: "Before play begins",
     items: [
       { href: "/admin/draw", icon: "🎯", label: "Generate Draw" },
-       { href: "/admin/publishDraw", icon: "✅", label: "Publish Draw" },
-      
+      { href: "/admin/published", icon: "✅", label: "Published Draws" },
+      { href: "/admin/playoffBracket", icon: "🏆", label: "Playoff Bracket" },
       { href: "/admin/schedule", icon: "📅", label: "Schedule Builder" },
     ],
   },

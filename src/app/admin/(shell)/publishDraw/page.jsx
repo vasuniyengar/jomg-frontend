@@ -1,5 +1,7 @@
-import ComingSoon from "../_components/ComingSoon";
+import { redirect } from "next/navigation";
 
-export default function Page() {
-  return <ComingSoon name="Publish Draw" />;
+export default function PublishDrawRedirectPage({ searchParams }) {
+  const tournamentId = searchParams?.tournamentId;
+  const qs = tournamentId ? `?tournamentId=${tournamentId}` : "";
+  redirect(`/admin/published${qs}`);
 }
