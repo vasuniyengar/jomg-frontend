@@ -27,7 +27,7 @@ export default function VisibilityCard({
   const setPrivate = (checked) => {
     patch({
       privateOnly: checked,
-      publicTournamentPage: checked ? false : v.publicTournamentPage,
+      publicTournamentPage: checked ? false : true,
     });
   };
 

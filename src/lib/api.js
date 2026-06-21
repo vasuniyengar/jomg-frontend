@@ -51,17 +51,33 @@ apiClient.interceptors.response.use(
       !window.location.pathname.startsWith("/admin/login")
     ) {
       clearAuthSession();
-      window.location.replace("/admin/login");
+      setTimeout(() => {
+        window.location.replace("/admin/login");
+      }, 0);
     }
 
-    const apiMessage = error?.response?.data?.message;
+    const method = (error?.config?.method || "GET").toUpperCase();
+    const requestPath = error?.config?.url || requestUrl;
+    const responseData = error?.response?.data;
+    const apiMessage =
+      responseData && typeof responseData === "object"
+        ? responseData.message
+        : undefined;
+    const htmlNotFound =
+      typeof responseData === "string" &&
+      /<html/i.test(responseData) &&
+      (responseData.includes("Cannot POST") ||
+        responseData.includes("Cannot PATCH") ||
+        responseData.includes("Cannot GET"));
     const message = apiMessage
       ? apiMessage
-      : error.code === "ECONNABORTED"
-        ? "Request timed out. Please try again."
-        : error.code === "ERR_NETWORK"
-          ? "Cannot reach the API server. Check that the backend is running and NEXT_PUBLIC_API_BASE_URL is correct."
-          : error.message || "Something went wrong. Please try again.";
+      : htmlNotFound
+        ? `API route not found for ${method} ${requestPath}. Restart the backend server.`
+        : error.code === "ECONNABORTED"
+          ? "Request timed out. Please try again."
+          : error.code === "ERR_NETWORK"
+            ? `Network error calling ${method} ${API_BASE_URL}${requestPath}. Check that the backend is running at ${API_BASE_URL} and matches NEXT_PUBLIC_API_BASE_URL.`
+            : error.message || "Something went wrong. Please try again.";
     const normalizedError = new Error(message);
     normalizedError.status =
       error?.response?.status ??

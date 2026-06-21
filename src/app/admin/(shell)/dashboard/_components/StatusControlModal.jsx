@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  displayStatus,
-  tournamentAdminPath,
-} from "@/lib/tournaments";
+import { useEffect, useState } from "react";
+import { tournamentAdminPath } from "@/lib/tournaments";
 import Link from "next/link";
 
 const STEPS = ["draft", "active", "ongoing", "completed"];
@@ -25,6 +23,12 @@ export default function StatusControlModal({
   onStatusChange,
   updating,
 }) {
+  const [localError, setLocalError] = useState("");
+
+  useEffect(() => {
+    if (open) setLocalError("");
+  }, [open, status, settingsConfirmed]);
+
   if (!open) return null;
 
   const currentIdx = STEPS.indexOf(status);
@@ -32,13 +36,26 @@ export default function StatusControlModal({
     status === "active" || status === "ongoing" || status === "completed";
   const isLive = status === "ongoing";
   const isCompleted = status === "completed";
+  const publishBlocked = !isPublished && !settingsConfirmed;
 
   const handlePublishToggle = async (checked) => {
+    setLocalError("");
     if (checked) {
-      if (!settingsConfirmed) return;
-      await onStatusChange("active");
-    } else {
+      if (!settingsConfirmed) {
+        setLocalError("Confirm tournament settings before publishing.");
+        return;
+      }
+      try {
+        await onStatusChange("active");
+      } catch (err) {
+        setLocalError(err.message || "Failed to publish tournament");
+      }
+      return;
+    }
+    try {
       await onStatusChange("draft");
+    } catch (err) {
+      setLocalError(err.message || "Failed to unpublish tournament");
     }
   };
 
@@ -185,16 +202,32 @@ export default function StatusControlModal({
                   Make your tournament page live for player registration.
                 </div>
               </div>
-              <label className="mini-toggle">
+              <label
+                className="mini-toggle"
+                style={publishBlocked ? { opacity: 0.45, cursor: "not-allowed" } : undefined}
+                title={
+                  publishBlocked
+                    ? "Confirm tournament settings before publishing"
+                    : undefined
+                }
+              >
                 <input
                   type="checkbox"
                   checked={isPublished}
-                  disabled={isLive || isCompleted || updating}
+                  disabled={isLive || isCompleted || updating || publishBlocked}
                   onChange={(e) => handlePublishToggle(e.target.checked)}
                 />
                 <span className="mini-slider" />
               </label>
             </div>
+            {localError ? (
+              <div
+                className="alert alert-err"
+                style={{ marginTop: 10, fontSize: 12, padding: "8px 10px" }}
+              >
+                {localError}
+              </div>
+            ) : null}
             {!isPublished && !settingsConfirmed ? (
               <div
                 style={{
@@ -241,7 +274,14 @@ export default function StatusControlModal({
               type="button"
               className="btn btn-primary btn-md"
               disabled={!isPublished || isLive || isCompleted || updating}
-              onClick={() => onStatusChange("ongoing")}
+              onClick={async () => {
+                setLocalError("");
+                try {
+                  await onStatusChange("ongoing");
+                } catch (err) {
+                  setLocalError(err.message || "Failed to start tournament");
+                }
+              }}
             >
               {isLive ? "✓ Live" : "Start →"}
             </button>

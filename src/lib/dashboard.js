@@ -11,14 +11,25 @@ export async function fetchTournamentDashboard(tournamentId) {
 }
 
 export async function updateTournamentStatus(tournamentId, status) {
-  const response = await apiRequest(
-    `/api/tournaments/${tournamentId}/status`,
-    {
-      method: "PATCH",
-      body: { status },
+  const path = `/api/tournaments/${tournamentId}/status`;
+  const payload = { status };
+
+  try {
+    const response = await apiRequest(path, {
+      method: "POST",
+      body: payload,
+    });
+    return response?.data;
+  } catch (postError) {
+    if (postError.code === "ERR_NETWORK" || postError.status === 404) {
+      const response = await apiRequest(path, {
+        method: "PATCH",
+        body: payload,
+      });
+      return response?.data;
     }
-  );
-  return response?.data;
+    throw postError;
+  }
 }
 
 export async function pushTournamentSettings(tournamentId, payload) {

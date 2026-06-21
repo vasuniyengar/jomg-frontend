@@ -142,20 +142,50 @@ export default function DashboardPage() {
   );
 
   const handleStatusChange = async (nextStatus) => {
-    if (!tournamentId) return;
+    if (!tournamentId) {
+      throw new Error("No tournament selected");
+    }
     setStatusUpdating(true);
     setError("");
     try {
-      await updateTournamentStatus(tournamentId, nextStatus);
-      await load();
+      const result = await updateTournamentStatus(tournamentId, nextStatus);
+      setData((prev) => {
+        if (!prev?.tournament) return prev;
+        return {
+          ...prev,
+          tournament: {
+            ...prev.tournament,
+            status: result?.status ?? nextStatus,
+          },
+          checklist: {
+            ...prev.checklist,
+            isPublished:
+              nextStatus === "active" ||
+              nextStatus === "ongoing" ||
+              nextStatus === "completed",
+          },
+        };
+      });
+      load().catch(() => {});
       if (nextStatus === "ongoing") {
         setStatusModalOpen(false);
         router.push(paths.control);
       }
     } catch (err) {
-      setError(err.message || "Failed to update status");
+      const message = err.message || "Failed to update status";
+      setError(message);
+      throw err;
     } finally {
       setStatusUpdating(false);
+    }
+  };
+
+  const openStatusModal = () => {
+    setStatusModalOpen(true);
+    if (tournamentId) {
+      fetchTournamentDashboard(tournamentId)
+        .then(setData)
+        .catch(() => {});
     }
   };
 
@@ -189,7 +219,7 @@ export default function DashboardPage() {
             className="status-pill"
             data-status={t?.status || "draft"}
             title="Manage tournament status"
-            onClick={() => setStatusModalOpen(true)}
+            onClick={openStatusModal}
           >
             <span className="status-dot" />
             <span className="status-label">{displayLabel}</span>
@@ -259,7 +289,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   className="btn btn-primary btn-sm"
-                  onClick={() => setStatusModalOpen(true)}
+                  onClick={openStatusModal}
                 >
                   {heroActionLabel}
                 </button>

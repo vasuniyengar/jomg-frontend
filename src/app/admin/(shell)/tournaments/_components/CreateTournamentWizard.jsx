@@ -409,7 +409,7 @@ export default function CreateTournamentWizard({
             <div className="form-group">
               <label className="form-label">Tournament URL</label>
               <div className={styles.urlInputWrap}>
-                <span className={styles.urlPrefix}>drivepb.app/t/</span>
+                <span className={styles.urlPrefix}>drivepb.app/tournaments/</span>
                 <input
                   className="form-input"
                   value={form.slug}

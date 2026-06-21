@@ -46,7 +46,6 @@ export default function TournamentInfoScreen() {
   const [endDate, setEndDate] = useState("");
   const [registrationOpenDate, setRegistrationOpenDate] = useState("");
   const [registrationCloseDate, setRegistrationCloseDate] = useState("");
-  const [bannerUrl, setBannerUrl] = useState("");
   const [organizerOverride, setOrganizerOverride] = useState(false);
   const [organizerName, setOrganizerName] = useState("");
   const [organizerEmail, setOrganizerEmail] = useState("");
@@ -73,7 +72,6 @@ export default function TournamentInfoScreen() {
     setEndDate(toDateInput(data.endDate));
     setRegistrationOpenDate(toDateInput(data.registrationOpenDate));
     setRegistrationCloseDate(toDateInput(data.registrationCloseDate));
-    setBannerUrl(data.tournamentTumbnail || data.banner || "");
     setOrganizerOverride(info.organizerOverride);
     setOrganizerName(organizer.name);
     setOrganizerEmail(organizer.email);
@@ -170,7 +168,6 @@ export default function TournamentInfoScreen() {
           endDate,
           registrationOpenDate,
           registrationCloseDate,
-          tournamentTumbnail: bannerUrl || null,
         },
         {
           organizerInfo: buildOrganizerInfoPayload(
@@ -285,7 +282,7 @@ export default function TournamentInfoScreen() {
             <div className="form-group">
               <label className="form-label">Tournament URL</label>
               <div className={styles.urlWrap}>
-                <span className={styles.urlPrefix}>drivepb.app/t/</span>
+                <span className={styles.urlPrefix}>drivepb.app/tournaments/</span>
                 <input
                   className="form-input"
                   value={slug}
@@ -428,28 +425,6 @@ export default function TournamentInfoScreen() {
                     onChange={(e) => setSpectatorCapacity(e.target.value)}
                   />
                 </div>
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-header">
-                <span className="card-title">Tournament Banner</span>
-              </div>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Banner image URL</label>
-                <input
-                  className="form-input"
-                  type="url"
-                  value={bannerUrl}
-                  onChange={(e) => setBannerUrl(e.target.value)}
-                  placeholder="https://…"
-                />
-                {bannerUrl ? (
-                  <div
-                    className={styles.bannerPreview}
-                    style={{ backgroundImage: `url(${bannerUrl})` }}
-                  />
-                ) : null}
               </div>
             </div>
 

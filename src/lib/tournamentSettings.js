@@ -130,6 +130,72 @@ export function defaultMatchScoring() {
   };
 }
 
+export const SPONSOR_TIER_KEYS = [
+  "title",
+  "ball",
+  "championshipCourt",
+  "hydration",
+  "division",
+];
+
+export const SPONSOR_TIER_LABELS = {
+  title: "Title Sponsor",
+  ball: "Ball Sponsor",
+  championshipCourt: "Championship Court",
+  hydration: "Hydration Partner",
+  division: "Division Sponsors",
+};
+
+export function newSponsorItemId() {
+  tierIdCounter += 1;
+  return `spon-${Date.now()}-${tierIdCounter}`;
+}
+
+export function defaultSponsorTiers() {
+  return {
+    title: { items: [] },
+    ball: { items: [] },
+    championshipCourt: { items: [] },
+    hydration: { items: [] },
+    division: { items: [] },
+  };
+}
+
+export function defaultSponsorsConfig() {
+  return {
+    intro: "",
+    tiers: defaultSponsorTiers(),
+  };
+}
+
+export function mergeSponsorsConfig(raw) {
+  const defaults = defaultSponsorsConfig();
+  if (!raw) return defaults;
+  if (Array.isArray(raw)) {
+    return { ...defaults, tiers: { ...defaults.tiers } };
+  }
+  const tiers = defaultSponsorTiers();
+  for (const key of SPONSOR_TIER_KEYS) {
+    const tier = raw.tiers?.[key];
+    tiers[key] = {
+      items: Array.isArray(tier?.items)
+        ? tier.items.map((item) => ({
+            id: item.id || newSponsorItemId(),
+            name: String(item.name || "").trim(),
+            url: String(item.url || "#").trim() || "#",
+            logoKey: item.logoKey || item.logo || "",
+            logoUrl: item.logoUrl || "",
+            darkLogo: Boolean(item.darkLogo),
+          }))
+        : [],
+    };
+  }
+  return {
+    intro: String(raw.intro || defaults.intro),
+    tiers,
+  };
+}
+
 export function defaultTournamentInfo() {
   return {
     refundPolicy: {
@@ -141,7 +207,7 @@ export function defaultTournamentInfo() {
     spectators: { ticketFee: 0, maxCapacity: "" },
     duprRequirementsText: "",
     duprRequirementsManual: false,
-    sponsors: [],
+    sponsors: defaultSponsorsConfig(),
     organizerOverride: false,
   };
 }
@@ -339,9 +405,7 @@ export function mergeTournamentSettings(organizerInfo) {
         ...defaults.tournamentInfo.spectators,
         ...(parsed.tournamentInfo?.spectators || {}),
       },
-      sponsors: Array.isArray(parsed.tournamentInfo?.sponsors)
-        ? parsed.tournamentInfo.sponsors
-        : defaults.tournamentInfo.sponsors,
+      sponsors: mergeSponsorsConfig(parsed.tournamentInfo?.sponsors),
     },
   };
 

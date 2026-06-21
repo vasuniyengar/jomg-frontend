@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getStoredUser } from "@/lib/auth";
 import { mergeTournamentSettings } from "@/lib/tournamentSettings";
@@ -21,8 +21,11 @@ import PricingPrizesCard from "./sections/PricingPrizesCard";
 import PlayRulesCard from "./sections/PlayRulesCard";
 import DuprIntegrationCard from "./sections/DuprIntegrationCard";
 import NotificationsCard from "./sections/NotificationsCard";
+import SponsorsCard from "./sections/SponsorsCard";
+import BannerCard from "./sections/BannerCard";
 import VisibilityCard, { validateVisibilityPassword } from "./sections/VisibilityCard";
 import ConfirmSettingsCard from "./sections/ConfirmSettingsCard";
+import { publicTournamentPath } from "@/lib/publicTournamentPaths";
 
 export default function TournamentSettingsScreen() {
   const router = useRouter();
@@ -46,6 +49,8 @@ export default function TournamentSettingsScreen() {
   const [overrideSection, setOverrideSection] = useState(null);
   const [pendingSectionPatch, setPendingSectionPatch] = useState(null);
   const [pushing, setPushing] = useState(false);
+  const sponsorsRef = useRef(null);
+  const bannerRef = useRef(null);
 
   const patchSettings = useCallback((patch) => {
     setSettings((prev) => ({ ...prev, ...patch }));
@@ -119,7 +124,7 @@ export default function TournamentSettingsScreen() {
     return null;
   };
 
-  const persistSettings = async (nextSettings) => {
+  const persistSettings = async (nextSettings, { tournamentTumbnail } = {}) => {
     const validationError = validateBeforeSave(nextSettings);
     if (validationError) {
       setError(validationError);
@@ -132,10 +137,37 @@ export default function TournamentSettingsScreen() {
       duprEnforced,
       requireSkillRating,
       settings: nextSettings,
+      tournamentTumbnail:
+        tournamentTumbnail !== undefined
+          ? tournamentTumbnail
+          : tournament.tournamentTumbnail,
     });
     const updated = await updateTournament(tournament.id, payload);
     applyTournament(updated);
     return updated;
+  };
+
+  const prepareSettingsForSave = async () => {
+    let nextSettings = settings;
+    let tournamentTumbnail;
+
+    if (tournament && bannerRef.current?.hasPendingUpload()) {
+      tournamentTumbnail = await bannerRef.current.prepareForSave(tournament.id);
+    }
+
+    if (tournament && sponsorsRef.current?.hasPendingUploads()) {
+      const nextSponsors = await sponsorsRef.current.prepareForSave(tournament.id);
+      nextSettings = {
+        ...nextSettings,
+        tournamentInfo: {
+          ...nextSettings.tournamentInfo,
+          sponsors: nextSponsors,
+        },
+      };
+      setSettings(nextSettings);
+    }
+
+    return { nextSettings, tournamentTumbnail };
   };
 
   const handleSave = async () => {
@@ -144,7 +176,8 @@ export default function TournamentSettingsScreen() {
     setSaveMessage("");
     setError("");
     try {
-      const result = await persistSettings(settings);
+      const { nextSettings, tournamentTumbnail } = await prepareSettingsForSave();
+      const result = await persistSettings(nextSettings, { tournamentTumbnail });
       if (!result) return;
       setSaveMessage("Settings saved.");
       setTimeout(() => setSaveMessage(""), 3000);
@@ -158,16 +191,18 @@ export default function TournamentSettingsScreen() {
   const confirmSettings = async () => {
     if (!tournament) return;
     const prevSettings = settings;
-    const nextSettings = {
-      ...settings,
-      settingsConfirmed: true,
-      settingsConfirmedAt: new Date().toISOString(),
-    };
-    setSettings(nextSettings);
     setSaving(true);
     setError("");
     try {
-      const result = await persistSettings(nextSettings);
+      const { nextSettings: preparedSettings, tournamentTumbnail } =
+        await prepareSettingsForSave();
+      const nextSettings = {
+        ...preparedSettings,
+        settingsConfirmed: true,
+        settingsConfirmedAt: new Date().toISOString(),
+      };
+      setSettings(nextSettings);
+      const result = await persistSettings(nextSettings, { tournamentTumbnail });
       if (!result) {
         setSettings(prevSettings);
         return;
@@ -196,11 +231,15 @@ export default function TournamentSettingsScreen() {
     setPushing(true);
     setError("");
     try {
-      await persistSettings(
-        pendingSectionPatch
-          ? { ...settings, ...pendingSectionPatch }
-          : settings
-      );
+      const { nextSettings: preparedSettings, tournamentTumbnail } =
+        await prepareSettingsForSave();
+      const mergedSettings = pendingSectionPatch
+        ? { ...preparedSettings, ...pendingSectionPatch }
+        : preparedSettings;
+      if (mergedSettings !== preparedSettings) {
+        setSettings(mergedSettings);
+      }
+      await persistSettings(mergedSettings, { tournamentTumbnail });
       await pushTournamentSettings(tournament.id, { sections, bracketIds });
       setSaveMessage("Settings pushed to selected divisions.");
       setTimeout(() => setSaveMessage(""), 3000);
@@ -303,6 +342,33 @@ export default function TournamentSettingsScreen() {
       <div className={`content ${styles.content}`}>
         {error ? <div className={styles.errorBanner}>{error}</div> : null}
 
+        {tournament?.slug ? (
+          <div className={styles.playerUrlBanner}>
+            <span className={styles.playerUrlLabel}>Player website</span>
+            {settings.visibility?.publicTournamentPage &&
+            !settings.visibility?.privateOnly ? (
+              <a
+                href={publicTournamentPath(
+                  tournament.slug,
+                  { preview: tournament.status === "draft" }
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                /tournaments/{tournament.slug}
+                {tournament.status === "draft" ? " (draft preview)" : ""}
+              </a>
+            ) : (
+              <span style={{ fontSize: 13, color: "var(--text-sec)" }}>
+                Hidden — turn on{" "}
+                <strong style={{ color: "var(--text)" }}>Public Tournament Page</strong>{" "}
+                or turn off <strong style={{ color: "var(--text)" }}>Private Only</strong>, then
+                save.
+              </span>
+            )}
+          </div>
+        ) : null}
+
         <MasterPushBanner settings={settings} onChange={patchSettings} />
         <CourtsInfoCard settings={settings} onChange={patchSettings} />
         <PricingPrizesCard
@@ -329,6 +395,12 @@ export default function TournamentSettingsScreen() {
           onRequireSkillRating={setRequireSkillRating}
         />
         <NotificationsCard settings={settings} onSettingsChange={patchSettings} />
+        <BannerCard ref={bannerRef} bannerUrl={tournament?.tournamentTumbnail || ""} />
+        <SponsorsCard
+          ref={sponsorsRef}
+          settings={settings}
+          onSettingsChange={patchSettings}
+        />
         <VisibilityCard
           settings={settings}
           onSettingsChange={patchSettings}
