@@ -196,6 +196,49 @@ export function mergeSponsorsConfig(raw) {
   };
 }
 
+export const DEFAULT_PLAYER_INSTRUCTIONS = [
+  {
+    label: "Stay & Travel",
+    text: "Hampton Inn Austin (tournament rate code: APBO25).",
+  },
+  {
+    label: "On-Site Food",
+    text: "Food trucks on-site 8am–4pm. Water stations at every court.",
+  },
+  {
+    label: "Parking & Arrival",
+    text: "Free parking on-site. Shuttle available from Hampton Inn every 30 min.",
+  },
+  {
+    label: "What to Bring",
+    text: "Own paddle required. Tournament balls provided. Court-appropriate shoes mandatory.",
+  },
+  {
+    label: "Waiver / Liability",
+    text: "By registering, players agree to the Austin Pickleball Club liability waiver and release of claims.",
+  },
+];
+
+export const PLAYER_INSTRUCTION_LABELS = DEFAULT_PLAYER_INSTRUCTIONS.map(
+  (block) => block.label
+);
+
+function mergePlayerInstructions(saved) {
+  if (!Array.isArray(saved) || !saved.length) {
+    return DEFAULT_PLAYER_INSTRUCTIONS.map((block) => ({ ...block }));
+  }
+  return DEFAULT_PLAYER_INSTRUCTIONS.map((defaultBlock, index) => {
+    const savedBlock = saved[index];
+    if (savedBlock && typeof savedBlock === "object") {
+      return {
+        label: defaultBlock.label,
+        text: String(savedBlock.text ?? defaultBlock.text),
+      };
+    }
+    return { ...defaultBlock };
+  });
+}
+
 export function defaultTournamentInfo() {
   return {
     refundPolicy: {
@@ -207,6 +250,7 @@ export function defaultTournamentInfo() {
     spectators: { ticketFee: 0, maxCapacity: "" },
     duprRequirementsText: "",
     duprRequirementsManual: false,
+    playerInstructions: DEFAULT_PLAYER_INSTRUCTIONS.map((block) => ({ ...block })),
     sponsors: defaultSponsorsConfig(),
     organizerOverride: false,
   };
@@ -239,6 +283,7 @@ export function defaultTournamentSettings() {
     numCourts: 8,
     playEnv: "Outdoor Open",
     netSetup: "Permanent",
+    courtDescription: "",
     officialBall: "",
     officialBallUrl: "",
     paymentPhone: "",
@@ -333,6 +378,7 @@ export function mergeTournamentSettings(organizerInfo) {
     numCourts: parsed.numCourts ?? defaults.numCourts,
     playEnv: parsed.playEnv ?? defaults.playEnv,
     netSetup: parsed.netSetup ?? defaults.netSetup,
+    courtDescription: parsed.courtDescription ?? defaults.courtDescription,
     officialBall: parsed.officialBall ?? defaults.officialBall,
     officialBallUrl: parsed.officialBallUrl ?? defaults.officialBallUrl,
     paymentPhone: parsed.paymentPhone ?? defaults.paymentPhone,
@@ -405,6 +451,9 @@ export function mergeTournamentSettings(organizerInfo) {
         ...defaults.tournamentInfo.spectators,
         ...(parsed.tournamentInfo?.spectators || {}),
       },
+      playerInstructions: mergePlayerInstructions(
+        parsed.tournamentInfo?.playerInstructions
+      ),
       sponsors: mergeSponsorsConfig(parsed.tournamentInfo?.sponsors),
     },
   };
