@@ -19,9 +19,9 @@ export const mockTournamentPageData = {
       "value": "Sat, Sep 19"
     },
     {
-      "icon": "divisions",
-      "label": "Divisions",
-      "value": "9"
+      "icon": "format",
+      "label": "Format",
+      "value": "MLP Style"
     },
     {
       "icon": "clubs",
@@ -72,31 +72,10 @@ export const mockTournamentPageData = {
           "text": "By registering, players agree to the Austin Pickleball Club liability waiver and release of claims."
         }
       ],
-      "duprPolicy": [
-        {
-          "label": "50+ Masters",
-          "text": "DUPR is enforced but not recorded \u2014 results do not count toward official ratings."
-        },
-        {
-          "label": "18+ Open",
-          "text": "DUPR is enforced and recorded \u2014 match results are submitted to DUPR and count toward official ratings."
-        },
-        {
-          "label": "Profile Requirements",
-          "text": "A DUPR profile is mandatory. Duplicate profiles are not allowed, and sandbagging will not be tolerated."
-        },
-        {
-          "label": "Players Without a Rating",
-          "text": "Players without a DUPR rating are not allowed in 18+. We request the club's coach to rate such players."
-        },
-        {
-          "label": "Rating Basis",
-          "text": "A player's DUPR overall rating is taken into consideration \u2014 not age- or gender-based ratings."
-        }
-      ]
+      "duprPolicyText": "DUPR is enforced and recorded for 18+ Open divisions — match results are submitted to DUPR. For 50+ Masters, DUPR is enforced but not recorded. A DUPR profile is mandatory; duplicate profiles are not allowed. Players without a DUPR rating are not allowed in 18+. A player's DUPR overall rating is taken into consideration — not age- or gender-based ratings."
     },
     "format": {
-      "tag": "MLP \u00b7 Team Play",
+      "tag": "MLP Style",
       "intro": "Major League Pickleball format \u2014 team play with men's doubles, women's doubles, and mixed doubles segments plus a Dream Breaker tiebreaker.",
       "mlpScoring": [
         {

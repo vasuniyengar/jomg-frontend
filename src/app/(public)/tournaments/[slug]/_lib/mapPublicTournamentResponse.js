@@ -1,12 +1,15 @@
 import {
   PUBLIC_BRAND,
-  STATIC_DETAILS,
+  STATIC_FORMAT,
   STATIC_POINTS_ADVANCE,
+  applyStaticInfoBarLabels,
   staticSponsorsIntro,
 } from "../_content/staticPageCopy";
 
 export function mapPublicTournamentResponse(apiData) {
   if (!apiData) return null;
+
+  const apiDetails = apiData.tabs?.details || {};
 
   return {
     slug: apiData.slug,
@@ -16,21 +19,19 @@ export function mapPublicTournamentResponse(apiData) {
     badge: apiData.badge,
     bannerUrl: apiData.bannerUrl || "",
     volairLogoUrl: PUBLIC_BRAND.volairLogoUrl,
-    infoBar: apiData.infoBar || [],
+    infoBar: applyStaticInfoBarLabels(apiData.infoBar),
     venue: apiData.venue,
-    organizer: {
-      ...apiData.organizer,
-      email: apiData.organizer?.email || "",
-    },
+    organizer: apiData.organizer || {},
     tabs: {
       details: {
         about: [],
-        courts: STATIC_DETAILS.courts,
-        officialBall: STATIC_DETAILS.officialBall,
-        instructions: STATIC_DETAILS.instructions,
-        duprPolicy: STATIC_DETAILS.duprPolicy,
+        courts: apiDetails.courtDescription || "",
+        officialBall: apiDetails.officialBall || "",
+        officialBallUrl: apiDetails.officialBallUrl || "",
+        instructions: apiDetails.instructions || [],
+        duprPolicyText: apiDetails.duprPolicyText || "",
       },
-      format: apiData.tabs?.format || {},
+      format: STATIC_FORMAT,
       pointsAdvance: STATIC_POINTS_ADVANCE,
       divisions: apiData.tabs?.divisions || { note: "", days: [] },
       sponsors: {

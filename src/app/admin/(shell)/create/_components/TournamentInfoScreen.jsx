@@ -7,6 +7,7 @@ import DescriptionRteEditor from "../../_components/DescriptionRteEditor";
 import TournamentPicker from "../../_components/TournamentPicker";
 import styles from "../tournamentInfo.module.css";
 import {
+  DEFAULT_PLAYER_INSTRUCTIONS,
   generateDuprRequirementsText,
   mergeTournamentSettings,
   stripHtmlForValidation,
@@ -57,11 +58,15 @@ export default function TournamentInfoScreen() {
   const [spectatorCapacity, setSpectatorCapacity] = useState("");
   const [duprRequirementsText, setDuprRequirementsText] = useState("");
   const [duprManual, setDuprManual] = useState(false);
+  const [playerInstructions, setPlayerInstructions] = useState(() =>
+    DEFAULT_PLAYER_INSTRUCTIONS.map((block) => ({ ...block }))
+  );
 
   const applyTournament = useCallback((data) => {
     setTournament(data);
     const { organizer, settings } = mergeTournamentSettings(data.organizerInfo);
     const info = settings.tournamentInfo;
+    const host = data.User || data.user || null;
 
     setName(data.name || "");
     setSlug(data.slug || "");
@@ -73,9 +78,9 @@ export default function TournamentInfoScreen() {
     setRegistrationOpenDate(toDateInput(data.registrationOpenDate));
     setRegistrationCloseDate(toDateInput(data.registrationCloseDate));
     setOrganizerOverride(info.organizerOverride);
-    setOrganizerName(organizer.name);
-    setOrganizerEmail(organizer.email);
-    setOrganizerPhone(organizer.phone);
+    setOrganizerName(organizer.name || `${host?.firstname || ""} ${host?.lastname || ""}`.trim());
+    setOrganizerEmail(organizer.email || host?.email || "");
+    setOrganizerPhone(organizer.phone || host?.phoneNumber || "");
     setRefundFull(info.refundPolicy.fullWindow);
     setRefundReplacement(info.refundPolicy.replacement);
     setRefundQuestions(info.refundPolicy.questions);
@@ -89,6 +94,15 @@ export default function TournamentInfoScreen() {
           data.duprEnforced,
           data.requireSkillRating
         )
+    );
+    setPlayerInstructions(
+      info.playerInstructions?.length
+        ? info.playerInstructions.map((block, index) => ({
+            label:
+              DEFAULT_PLAYER_INSTRUCTIONS[index]?.label || block.label || "",
+            text: block.text ?? "",
+          }))
+        : DEFAULT_PLAYER_INSTRUCTIONS.map((block) => ({ ...block }))
     );
   }, []);
 
@@ -153,7 +167,22 @@ export default function TournamentInfoScreen() {
           },
           duprRequirementsText,
           duprRequirementsManual: duprManual,
+          playerInstructions,
         },
+      };
+
+      const host = tournament.User || tournament.user || null;
+      const resolvedOrganizer = {
+        name: organizerOverride
+          ? organizerName.trim()
+          : organizerName.trim() ||
+            `${host?.firstname || ""} ${host?.lastname || ""}`.trim(),
+        email: organizerOverride
+          ? organizerEmail.trim()
+          : organizerEmail.trim() || host?.email || "",
+        phone: organizerOverride
+          ? organizerPhone.trim()
+          : organizerPhone.trim() || host?.phoneNumber || "",
       };
 
       const payload = buildTournamentUpdatePayload(
@@ -170,14 +199,7 @@ export default function TournamentInfoScreen() {
           registrationCloseDate,
         },
         {
-          organizerInfo: buildOrganizerInfoPayload(
-            {
-              name: organizerName.trim(),
-              email: organizerEmail.trim(),
-              phone: organizerPhone.trim(),
-            },
-            nextSettings
-          ),
+          organizerInfo: buildOrganizerInfoPayload(resolvedOrganizer, nextSettings),
         }
       );
 
@@ -399,6 +421,27 @@ export default function TournamentInfoScreen() {
                   onChange={(e) => setRefundQuestions(e.target.value)}
                 />
               </div>
+            </div>
+
+            <div className="card">
+              <div className="card-header">
+                <span className="card-title">Player Instructions</span>
+              </div>
+              {playerInstructions.map((block, index) => (
+                <div className="form-group" key={block.label}>
+                  <label className="form-label">{block.label}</label>
+                  <textarea
+                    className="form-textarea"
+                    rows={2}
+                    value={block.text}
+                    onChange={(e) => {
+                      const next = [...playerInstructions];
+                      next[index] = { ...block, text: e.target.value };
+                      setPlayerInstructions(next);
+                    }}
+                  />
+                </div>
+              ))}
             </div>
 
             <div className="card">

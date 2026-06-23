@@ -2,6 +2,10 @@ import Avatar from "../shared/Avatar";
 
 export default function DetailsTab({ data, venue, organizer }) {
   const { details } = data;
+  const hasCourts = Boolean(details.courts?.trim());
+  const hasOfficialBall = Boolean(details.officialBall?.trim());
+  const hasInstructions = details.instructions?.some((block) => block.text?.trim());
+  const hasDuprPolicy = Boolean(details.duprPolicyText?.trim());
 
   return (
     <div className="o3-pane active">
@@ -63,65 +67,76 @@ export default function DetailsTab({ data, venue, organizer }) {
         </div>
       </div>
 
-      <div className="about">
+      {hasCourts || hasOfficialBall ? (
+        <div className="about">
+          {hasCourts ? (
+            <div className="vcard dsec">
+              <div className="sh">
+                <div className="sh-title" style={{ fontSize: 26 }}>
+                  COURTS
+                </div>
+              </div>
+              <div className="info-block">
+                <div className="info-k">Courts</div>
+                <div className="info-v">{details.courts}</div>
+              </div>
+            </div>
+          ) : null}
+          {hasOfficialBall ? (
+            <div className="vcard dsec">
+              <div className="sh">
+                <div className="sh-title" style={{ fontSize: 26 }}>
+                  OFFICIAL BALL
+                </div>
+              </div>
+              <div className="info-block">
+                <div className="info-k">Official Ball</div>
+                <div className="info-v">
+                  {details.officialBallUrl ? (
+                    <a
+                      href={details.officialBallUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "var(--accent-deep)", fontWeight: 600 }}
+                    >
+                      {details.officialBall}
+                    </a>
+                  ) : (
+                    details.officialBall
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {hasInstructions ? (
         <div className="vcard dsec">
           <div className="sh">
-            <div className="sh-title" style={{ fontSize: 26 }}>
-              COURTS
-            </div>
+            <div className="sh-title">PLAYER INSTRUCTIONS</div>
           </div>
-          <div className="info-block">
-            <div className="info-k">Courts</div>
-            <div className="info-v">{details.courts}</div>
-          </div>
+          {details.instructions
+            .filter((block) => block.text?.trim())
+            .map((block) => (
+              <div className="info-block" key={block.label}>
+                <div className="info-k">{block.label}</div>
+                <div className="info-v">{block.text}</div>
+              </div>
+            ))}
         </div>
+      ) : null}
+
+      {hasDuprPolicy ? (
         <div className="vcard dsec">
           <div className="sh">
-            <div className="sh-title" style={{ fontSize: 26 }}>
-              OFFICIAL BALL
-            </div>
+            <div className="sh-title">DUPR POLICY</div>
           </div>
           <div className="info-block">
-            <div className="info-k">Official Ball</div>
-            <div className="info-v">
-              <b>Sriya Designs</b>{" "}
-              {details.officialBall.replace(/^Sriya Designs\s*/, "")}
-            </div>
+            <div className="info-v">{details.duprPolicyText}</div>
           </div>
         </div>
-      </div>
-
-      <div className="vcard dsec">
-        <div className="sh">
-          <div className="sh-title">PLAYER INSTRUCTIONS</div>
-        </div>
-        {details.instructions.map((block) => (
-          <div className="info-block" key={block.label}>
-            <div className="info-k">{block.label}</div>
-            <div className="info-v">
-              {block.label === "Stay & Travel" ? (
-                <>
-                  Hampton Inn Austin (tournament rate code: <b>APBO25</b>).
-                </>
-              ) : (
-                block.text
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="vcard dsec">
-        <div className="sh">
-          <div className="sh-title">DUPR POLICY</div>
-        </div>
-        {details.duprPolicy.map((block) => (
-          <div className="info-block" key={block.label}>
-            <div className="info-k">{block.label}</div>
-            <div className="info-v">{block.text}</div>
-          </div>
-        ))}
-      </div>
+      ) : null}
     </div>
   );
 }

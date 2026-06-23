@@ -79,6 +79,16 @@ export default function CourtsInfoCard({ settings, onChange }) {
           />
         </div>
       </div>
+      <div className="form-group" style={{ marginBottom: 0 }}>
+        <label className="form-label">Court Description</label>
+        <textarea
+          className="form-textarea"
+          rows={3}
+          placeholder="Describe the courts shown on the player website (surface, indoor/outdoor details, etc.)"
+          value={settings.courtDescription}
+          onChange={(e) => onChange({ courtDescription: e.target.value })}
+        />
+      </div>
     </div>
   );
 }

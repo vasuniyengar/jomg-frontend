@@ -4,10 +4,97 @@ export const PUBLIC_BRAND = {
   volairLogoUrl: "/tournaments/volair-logo.png",
 };
 
+export const STATIC_FIRST_EVENT_DAY_LABEL = "Masters 50+";
+export const STATIC_CLUBS_COUNT = "16";
+export const STATIC_INFO_BAR_FORMAT = {
+  icon: "format",
+  label: "Format",
+  value: "MLP Style",
+};
+
 export function staticSponsorsIntro(tournamentTitle) {
   const name = tournamentTitle?.trim() || "This tournament";
   return `${name} is made possible by the partners below.`;
 }
+
+export function applyStaticInfoBarLabels(items) {
+  let firstCalendarSeen = false;
+  const processed = [];
+
+  for (const item of items || []) {
+    if (item.icon === "divisions") continue;
+
+    if (item.icon === "clubs") {
+      processed.push(STATIC_INFO_BAR_FORMAT);
+      processed.push({ ...item, value: STATIC_CLUBS_COUNT });
+      continue;
+    }
+
+    if (item.icon === "calendar") {
+      processed.push(
+        !firstCalendarSeen
+          ? { ...item, label: STATIC_FIRST_EVENT_DAY_LABEL }
+          : item
+      );
+      firstCalendarSeen = true;
+      continue;
+    }
+
+    processed.push(item);
+  }
+
+  if (!processed.some((item) => item.icon === "format")) {
+    const clubsIndex = processed.findIndex((item) => item.icon === "clubs");
+    if (clubsIndex >= 0) {
+      processed.splice(clubsIndex, 0, STATIC_INFO_BAR_FORMAT);
+    } else {
+      processed.push(STATIC_INFO_BAR_FORMAT);
+      processed.push({
+        icon: "clubs",
+        label: "Clubs",
+        value: STATIC_CLUBS_COUNT,
+      });
+    }
+  }
+
+  return processed;
+}
+
+export const STATIC_FORMAT = {
+  tag: "MLP Style",
+  intro:
+    "Major League Pickleball format — team play with men's doubles, women's doubles, and mixed doubles segments plus a Dream Breaker tiebreaker.",
+  mlpScoring: [
+    { label: "Men's Doubles", value: "1 game to 11, win by 2" },
+    { label: "Women's Doubles", value: "1 game to 11, win by 2" },
+    { label: "Mixed Doubles 1", value: "1 game to 11, win by 2" },
+    { label: "Mixed Doubles 2", value: "1 game to 11, win by 2" },
+  ],
+  dreamBreaker: [
+    { label: "Scoring", value: "1 game to 21, win by 1" },
+    { label: "Rotation", value: "Singles rally — 1 server switches" },
+    { label: "Trigger", value: "Only when games tied 2–2" },
+  ],
+  teamSetup: [
+    { label: "Starters", value: "2F + 2M" },
+    { label: "Substitutes (Optional)", value: "1F & 1M" },
+    { label: "Game Order", value: "Women's D → Men's D → Mixed" },
+  ],
+  scoringTiming: [
+    { label: "Scoring Type", value: "Traditional (side-out)" },
+    { label: "Warm-up Time", value: "3 min" },
+  ],
+  notes: [
+    {
+      label: "Substitutions",
+      text: "Allowed for injury or before the next match (not between games).",
+    },
+    {
+      label: "Coach on Court",
+      text: "Off — no non-playing coach during timeouts.",
+    },
+  ],
+};
 
 export const STATIC_DETAILS = {
   courts:

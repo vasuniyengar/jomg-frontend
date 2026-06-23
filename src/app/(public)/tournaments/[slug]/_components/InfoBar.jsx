@@ -1,4 +1,4 @@
-function DivisionsIcon() {
+function FormatIcon() {
   return (
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
       <circle cx="12" cy="12" r="9.5" fill="var(--accent)" />
@@ -6,10 +6,10 @@ function DivisionsIcon() {
         <circle cx="12" cy="6.5" r="1.3" />
         <circle cx="8.2" cy="9" r="1.3" />
         <circle cx="15.8" cy="9" r="1.3" />
-        <circle cx="6.5" cy="13.5" r="1.3" />
-        <circle cx="17.5" cy="13.5" r="1.3" />
-        <circle cx="9" cy="17" r="1.3" />
-        <circle cx="15" cy="17" r="1.3" />
+        <circle cx="12" cy="11.5" r="1.3" />
+        <circle cx="8.2" cy="14" r="1.3" />
+        <circle cx="15.8" cy="14" r="1.3" />
+        <circle cx="12" cy="16.5" r="1.3" />
       </g>
     </svg>
   );
@@ -17,8 +17,8 @@ function DivisionsIcon() {
 
 function InfoBarIcon({ icon }) {
   if (icon === "calendar") return "🗓";
+  if (icon === "format") return <FormatIcon />;
   if (icon === "clubs") return "🏟";
-  if (icon === "divisions") return <DivisionsIcon />;
   return "•";
 }
 
@@ -27,7 +27,7 @@ export default function InfoBar({ items }) {
     <div className="o3-ibar-wrap">
       <div className="ibar">
         {items.map((item) => (
-          <div className="ib" key={`${item.label}-${item.value}`}>
+          <div className="ib" key={`${item.icon}-${item.label}-${item.value}`}>
             <span className="ib-ic">
               <InfoBarIcon icon={item.icon} />
             </span>
