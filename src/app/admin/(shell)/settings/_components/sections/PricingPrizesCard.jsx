@@ -32,6 +32,30 @@ function PayForRow({ title, description, option, onChange }) {
   );
 }
 
+function PrizeInput({ label, placeholder, field, pricing, patchPricing }) {
+  return (
+    <div className="form-group">
+      <label className="form-label">{label}</label>
+      <input
+        className="form-input"
+        type="number"
+        min={0}
+        placeholder={placeholder}
+        value={pricing.prizes[field]}
+        onChange={(e) => {
+          const raw = e.target.value;
+          patchPricing({
+            prizes: {
+              ...pricing.prizes,
+              [field]: raw === "" ? "" : Math.max(0, Number(raw) || 0),
+            },
+          });
+        }}
+      />
+    </div>
+  );
+}
+
 export default function PricingPrizesCard({
   settings,
   entryFee,
@@ -250,48 +274,27 @@ export default function PricingPrizesCard({
 
       <SectionEyebrow>Prize Money (per division)</SectionEyebrow>
       <div className={styles.grid3}>
-        <div className="form-group">
-          <label className="form-label">1st Prize ($)</label>
-          <input
-            className="form-input"
-            type="number"
-            min={0}
-            value={pricing.prizes.first}
-            onChange={(e) =>
-              patchPricing({
-                prizes: { ...pricing.prizes, first: Number(e.target.value) || 0 },
-              })
-            }
-          />
-        </div>
-        <div className="form-group">
-          <label className="form-label">2nd Prize ($)</label>
-          <input
-            className="form-input"
-            type="number"
-            min={0}
-            value={pricing.prizes.second}
-            onChange={(e) =>
-              patchPricing({
-                prizes: { ...pricing.prizes, second: Number(e.target.value) || 0 },
-              })
-            }
-          />
-        </div>
-        <div className="form-group">
-          <label className="form-label">3rd Prize ($)</label>
-          <input
-            className="form-input"
-            type="number"
-            min={0}
-            value={pricing.prizes.third}
-            onChange={(e) =>
-              patchPricing({
-                prizes: { ...pricing.prizes, third: Number(e.target.value) || 0 },
-              })
-            }
-          />
-        </div>
+        <PrizeInput
+          label="1st Prize ($)"
+          placeholder="e.g. 500"
+          field="first"
+          pricing={pricing}
+          patchPricing={patchPricing}
+        />
+        <PrizeInput
+          label="2nd Prize ($)"
+          placeholder="e.g. 250"
+          field="second"
+          pricing={pricing}
+          patchPricing={patchPricing}
+        />
+        <PrizeInput
+          label="3rd Prize ($)"
+          placeholder="e.g. 100"
+          field="third"
+          pricing={pricing}
+          patchPricing={patchPricing}
+        />
       </div>
       <ToggleRow
         title="Medals & Trophy Awards"

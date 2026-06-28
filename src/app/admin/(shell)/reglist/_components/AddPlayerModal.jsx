@@ -14,10 +14,19 @@ const EMPTY = {
   gender: "male",
   partner: "",
   duprRating: "",
+  duprId: "",
   paymentStatus: "unpaid",
   sendPaymentEmail: true,
   bracketId: "",
 };
+
+function RequiredStar() {
+  return (
+    <span style={{ color: "#ef4444", marginLeft: 4 }} aria-hidden="true">
+      *
+    </span>
+  );
+}
 
 export default function AddPlayerModal({
   open,
@@ -77,6 +86,7 @@ export default function AddPlayerModal({
         age: Number(form.age) || 30,
         gender: form.gender,
         partner: form.partner.trim() || undefined,
+        duprId: form.duprId.trim(),
         paymentStatus: form.paymentStatus,
         sendPaymentEmail:
           form.paymentStatus === "unpaid" ? form.sendPaymentEmail : false,
@@ -124,7 +134,10 @@ export default function AddPlayerModal({
               </div>
             ) : null}
             <div className="form-group">
-              <label className="form-label">Division</label>
+              <label className="form-label">
+                Division
+                <RequiredStar />
+              </label>
               <select
                 className="form-select"
                 required
@@ -146,7 +159,10 @@ export default function AddPlayerModal({
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div className="form-group">
-                <label className="form-label">First name</label>
+                <label className="form-label">
+                  First name
+                  <RequiredStar />
+                </label>
                 <input
                   className="form-input"
                   required
@@ -156,7 +172,10 @@ export default function AddPlayerModal({
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Last name</label>
+                <label className="form-label">
+                  Last name
+                  <RequiredStar />
+                </label>
                 <input
                   className="form-input"
                   required
@@ -167,7 +186,10 @@ export default function AddPlayerModal({
               </div>
             </div>
             <div className="form-group">
-              <label className="form-label">Email</label>
+              <label className="form-label">
+                Email
+                <RequiredStar />
+              </label>
               <input
                 className="form-input"
                 type="email"
@@ -176,18 +198,20 @@ export default function AddPlayerModal({
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
               />
             </div>
-            <div className="form-group">
-              <label className="form-label">Phone</label>
-              <input
-                className="form-input"
-                required
-                value={form.phoneNumber}
-                onChange={(e) => setForm((f) => ({ ...f, phoneNumber: e.target.value }))}
-              />
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+         <div className="form-group">
+          <label className="form-label">Phone</label>
+          <input
+            className="form-input"
+            value={form.phoneNumber}
+            onChange={(e) => setForm((f) => ({ ...f, phoneNumber: e.target.value }))}
+          />
+</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
               <div className="form-group">
-                <label className="form-label">Age</label>
+                <label className="form-label">
+                  Age
+                  <RequiredStar />
+                </label>
                 <input
                   className="form-input"
                   type="number"
@@ -220,6 +244,15 @@ export default function AddPlayerModal({
                   placeholder="Optional"
                   value={form.duprRating}
                   onChange={(e) => setForm((f) => ({ ...f, duprRating: e.target.value }))}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">DUPR ID</label>
+                <input
+                  className="form-input"
+                  placeholder="Optional"
+                  value={form.duprId}
+                  onChange={(e) => setForm((f) => ({ ...f, duprId: e.target.value }))}
                 />
               </div>
             </div>

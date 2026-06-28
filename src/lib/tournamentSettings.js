@@ -115,7 +115,7 @@ export function defaultMlpSettings() {
     scoringType: "Traditional (side-out)",
     warmUpMinutes: 3,
     substitutions: true,
-    coachOnCourt: false,
+    coachOnCourt: true,
     teamTimeouts: true,
   };
 }
@@ -199,23 +199,23 @@ export function mergeSponsorsConfig(raw) {
 export const DEFAULT_PLAYER_INSTRUCTIONS = [
   {
     label: "Stay & Travel",
-    text: "Hampton Inn Austin (tournament rate code: APBO25).",
+    text: "",
   },
   {
     label: "On-Site Food",
-    text: "Food trucks on-site 8am–4pm. Water stations at every court.",
+    text: "",
   },
   {
     label: "Parking & Arrival",
-    text: "Free parking on-site. Shuttle available from Hampton Inn every 30 min.",
+    text: "",
   },
   {
     label: "What to Bring",
-    text: "Own paddle required. Tournament balls provided. Court-appropriate shoes mandatory.",
+    text: "",
   },
   {
     label: "Waiver / Liability",
-    text: "By registering, players agree to the Austin Pickleball Club liability waiver and release of claims.",
+    text: "",
   },
 ];
 
@@ -281,7 +281,7 @@ export function defaultTournamentSettings() {
   return {
     masterPush: false,
     numCourts: 8,
-    playEnv: "Outdoor Open",
+    playEnv: "",
     netSetup: "Permanent",
     courtDescription: "",
     officialBall: "",
@@ -300,14 +300,14 @@ export function defaultTournamentSettings() {
       advanceTiers: defaultAdvanceTiers(),
       bundles: defaultBundles(),
       prizes: {
-        first: 500,
-        second: 250,
-        third: 100,
+        first: "",
+        second: "",
+        third: "",
         medalsAwards: true,
       },
     },
     playRules: {
-      mlpFormat: false,
+      mlpFormat: true,
       mlp: defaultMlpSettings(),
       matchScoring: defaultMatchScoring(),
       scoringType: "Traditional (side-out)",
@@ -317,11 +317,11 @@ export function defaultTournamentSettings() {
       seedingMethod: SEEDING_METHOD_OPTIONS[0],
       autoGeneratePools: true,
       tiebreakerTo5: false,
-      switchSidesAtHalf: true,
-      top1SeedBye: true,
+      switchSidesAtHalf: false,
+      top1SeedBye: false,
       top12AdvanceToSemis: false,
-      allowRefereeRequests: true,
-      bronzeMatch: true,
+      allowRefereeRequests: false,
+      bronzeMatch: false,
     },
     notifications: {
       matchNotifications: true,
@@ -350,7 +350,7 @@ function mergePayFor(src, defaults) {
 }
 
 function mergeAdvanceTiers(src, defaults) {
-  const list = Array.isArray(src) && src.length ? src : defaults;
+  const list = Array.isArray(src) ? src : defaults;
   return list.map((t, i) => ({
     id: t.id || newTierId(),
     label: t.label ?? defaults[i]?.label ?? `Tier ${i + 1}`,
@@ -360,13 +360,20 @@ function mergeAdvanceTiers(src, defaults) {
 }
 
 function mergeBundles(src, defaults) {
-  const list = Array.isArray(src) && src.length ? src : defaults;
+  const list = Array.isArray(src) ? src : defaults;
   return list.map((b, i) => ({
     id: b.id || newTierId(),
     divisionCount: Number(b.divisionCount ?? b.count ?? defaults[i]?.divisionCount ?? 2),
     mode: b.mode === "flat" ? "flat" : "pct",
     value: Number(b.value ?? defaults[i]?.value ?? 0),
   }));
+}
+
+
+function mergePrizeValue(value) {
+  if (value === "" || value === null || value === undefined) return "";
+  const n = Number(value);
+  return Number.isFinite(n) ? n : "";
 }
 
 export function mergeTournamentSettings(organizerInfo) {
@@ -398,9 +405,9 @@ export function mergeTournamentSettings(organizerInfo) {
       ),
       bundles: mergeBundles(parsed.pricing?.bundles, defaults.pricing.bundles),
       prizes: {
-        first: Number(parsed.pricing?.prizes?.first ?? defaults.pricing.prizes.first),
-        second: Number(parsed.pricing?.prizes?.second ?? defaults.pricing.prizes.second),
-        third: Number(parsed.pricing?.prizes?.third ?? defaults.pricing.prizes.third),
+        first: mergePrizeValue(parsed.pricing?.prizes?.first),
+        second: mergePrizeValue(parsed.pricing?.prizes?.second),
+        third: mergePrizeValue(parsed.pricing?.prizes?.third),
         medalsAwards:
           parsed.pricing?.prizes?.medalsAwards ?? defaults.pricing.prizes.medalsAwards,
       },
