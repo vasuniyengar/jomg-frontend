@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { tournamentAdminPath } from "@/lib/tournaments";
+import { useEffect, useMemo, useState } from "react";
+import { tournamentAdminPath, canStartTournamentLive } from "@/lib/tournaments";
 import Link from "next/link";
 
 const STEPS = ["draft", "active", "ongoing", "completed"];
@@ -20,6 +20,8 @@ export default function StatusControlModal({
   status,
   settingsConfirmed,
   slug,
+  startDate,
+  timezone,
   onStatusChange,
   updating,
 }) {
@@ -29,6 +31,11 @@ export default function StatusControlModal({
     if (open) setLocalError("");
   }, [open, status, settingsConfirmed]);
 
+  const liveGate = useMemo(
+    () => canStartTournamentLive(startDate, timezone),
+    [startDate, timezone]
+  );
+
   if (!open) return null;
 
   const currentIdx = STEPS.indexOf(status);
@@ -37,6 +44,7 @@ export default function StatusControlModal({
   const isLive = status === "ongoing";
   const isCompleted = status === "completed";
   const publishBlocked = !isPublished && !settingsConfirmed;
+  const canStartLive = isPublished && !isLive && !isCompleted && liveGate.allowed;
 
   const handlePublishToggle = async (checked) => {
     setLocalError("");
@@ -199,7 +207,7 @@ export default function StatusControlModal({
               <div>
                 <div style={{ fontWeight: 700 }}>Publish Tournament</div>
                 <div style={{ fontSize: 12, color: "var(--text-sec)", marginTop: 4 }}>
-                  Make your tournament page live for player registration.
+                  Players cannot browse or self-register until the tournament is published.
                 </div>
               </div>
               <label
@@ -268,12 +276,28 @@ export default function StatusControlModal({
           >
             <div style={{ fontWeight: 700, marginBottom: 8 }}>Start Tournament (Go Live)</div>
             <div style={{ fontSize: 12, color: "var(--text-sec)", marginBottom: 12 }}>
-              Mark as live on event day when brackets are ready. Enables live operations.
+              Mark as live on event day when brackets are ready. Available from the calendar
+              day before the start date through the event.
             </div>
+            {!liveGate.allowed && isPublished && !isLive && !isCompleted ? (
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "var(--text-sec)",
+                  marginBottom: 10,
+                  padding: "8px 10px",
+                  background: "var(--badge-bg)",
+                  borderRadius: "var(--radius-sm)",
+                }}
+              >
+                {liveGate.reason}
+              </div>
+            ) : null}
             <button
               type="button"
               className="btn btn-primary btn-md"
-              disabled={!isPublished || isLive || isCompleted || updating}
+              disabled={!canStartLive || updating}
+              title={!liveGate.allowed ? liveGate.reason : undefined}
               onClick={async () => {
                 setLocalError("");
                 try {

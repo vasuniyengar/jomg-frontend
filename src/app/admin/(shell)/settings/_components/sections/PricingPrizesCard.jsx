@@ -303,19 +303,40 @@ export default function PricingPrizesCard({
       />
 
       <SectionEyebrow>Payment Instructions</SectionEyebrow>
-      <div className="form-group" style={{ maxWidth: 420 }}>
-        <label className="form-label">Payment mobile number</label>
-        <input
-          className="form-input"
-          type="tel"
-          placeholder="e.g. (512) 555-0100"
-          value={settings.paymentPhone || ""}
-          onChange={(e) => onSettingsChange({ paymentPhone: e.target.value })}
-        />
-        <p className="form-hint">
-          Shown in bulk registration emails for manual payment. Stored in plain text for Phase 1.
-        </p>
+      <div className={styles.grid2} style={{ maxWidth: 640 }}>
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label className="form-label">Payment mobile number</label>
+          <input
+            className="form-input"
+            type="tel"
+            placeholder="e.g. (512) 555-0100"
+            value={settings.paymentPhone || ""}
+            onChange={(e) => onSettingsChange({ paymentPhone: e.target.value })}
+          />
+        </div>
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label className="form-label">Zelle username</label>
+          <input
+            className="form-input"
+            placeholder="e.g. organizer@email.com or phone"
+            value={settings.zelleUsername || ""}
+            onChange={(e) => onSettingsChange({ zelleUsername: e.target.value })}
+          />
+        </div>
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label className="form-label">Venmo username</label>
+          <input
+            className="form-input"
+            placeholder="e.g. @JOMG-Pickleball"
+            value={settings.venmoUsername || ""}
+            onChange={(e) => onSettingsChange({ venmoUsername: e.target.value })}
+          />
+        </div>
       </div>
+      <p className="form-hint" style={{ marginTop: 8 }}>
+        Shown in bulk registration payment emails. At least one payment method is required before
+        sending payment reminders.
+      </p>
     </div>
   );
 }

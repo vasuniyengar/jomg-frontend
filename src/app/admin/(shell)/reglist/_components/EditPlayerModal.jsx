@@ -2,33 +2,34 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { addPlayerByHost } from "@/lib/divisions";
+import { updateRegistration } from "@/lib/divisions";
 import styles from "../reglist.module.css";
 
-const EMPTY = {
-  firstname: "",
-  lastname: "",
-  email: "",
-  phoneNumber: "",
-  age: "30",
-  gender: "male",
-  partner: "",
-  duprRating: "",
-  clubName: "",
-  paymentStatus: "unpaid",
-  sendPaymentEmail: true,
-  bracketId: "",
-};
+const STATUS_OPTIONS = [
+  { value: "registered", label: "Registered" },
+  { value: "completed", label: "Completed" },
+  { value: "withdraw", label: "Withdrawn" },
+  { value: "not_registered", label: "Not registered" },
+];
 
-export default function AddPlayerModal({
+function splitName(fullName) {
+  const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return { firstname: "", lastname: "" };
+  return {
+    firstname: parts[0],
+    lastname: parts.slice(1).join(" "),
+  };
+}
+
+export default function EditPlayerModal({
   open,
   onClose,
   tournamentId,
+  player,
   divisions = [],
-  tournamentClubName = "",
-  onAdded,
+  onSaved,
 }) {
-  const [form, setForm] = useState(EMPTY);
+  const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
@@ -38,14 +39,26 @@ export default function AddPlayerModal({
   }, []);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !player) return;
+    const { firstname, lastname } = splitName(player.name);
     setForm({
-      ...EMPTY,
-      clubName: tournamentClubName || "",
-      bracketId: "",
+      firstname: player.firstname || firstname,
+      lastname: player.lastname || lastname,
+      email: player.email || "",
+      phoneNumber: player.phone === "—" ? "" : player.phone || "",
+      age: player.age === "—" ? "30" : String(player.age || "30"),
+      gender: player.gender === "F" ? "female" : "male",
+      bracketId: player.bracketId ? String(player.bracketId) : "",
+      clubName: player.clubName || "",
+      partner: player.partner === "—" ? "" : player.partner || "",
+      duprRating: player.duprRaw ?? "",
+      duprId: player.duprId || "",
+      rosterNumber: player.rosterNumber || "",
+      playerRole: player.playerRole || "starter",
+      status: player.registrationStatus || "registered",
     });
     setError("");
-  }, [open, tournamentClubName]);
+  }, [open, player]);
 
   useEffect(() => {
     if (!open) return;
@@ -61,7 +74,7 @@ export default function AddPlayerModal({
     };
   }, [open, onClose]);
 
-  if (!open || !mounted) return null;
+  if (!open || !mounted || !form || !player?.registrationId) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,20 +92,22 @@ export default function AddPlayerModal({
         phoneNumber: form.phoneNumber.trim(),
         age: Number(form.age) || 30,
         gender: form.gender,
+        bracketId: Number(form.bracketId),
+        clubName: form.clubName.trim(),
         partner: form.partner.trim() || undefined,
-        clubName: form.clubName.trim() || tournamentClubName || undefined,
-        paymentStatus: form.paymentStatus,
-        sendPaymentEmail:
-          form.paymentStatus === "unpaid" ? form.sendPaymentEmail : false,
+        rosterNumber: form.rosterNumber.trim() || undefined,
+        playerRole: form.playerRole || undefined,
+        status: form.status,
+        duprId: form.duprId.trim() || undefined,
       };
       if (form.duprRating !== "") {
         payload.duprRating = Number(form.duprRating);
       }
-      await addPlayerByHost(tournamentId, Number(form.bracketId), payload);
-      await onAdded?.();
+      await updateRegistration(tournamentId, player.registrationId, payload);
+      await onSaved?.();
       onClose();
     } catch (err) {
-      setError(err.message || "Failed to add player");
+      setError(err.message || "Failed to update player");
     } finally {
       setSaving(false);
     }
@@ -103,13 +118,13 @@ export default function AddPlayerModal({
       className={styles.modalOverlay}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="add-player-title"
+      aria-labelledby="edit-player-title"
       onClick={onClose}
     >
       <div className={styles.modalPanel} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2 id="add-player-title" className={styles.modalTitle}>
-            Add Player
+          <h2 id="edit-player-title" className={styles.modalTitle}>
+            Edit Player
           </h2>
           <button
             type="button"
@@ -142,11 +157,6 @@ export default function AddPlayerModal({
                   </option>
                 ))}
               </select>
-              {!divisions.length ? (
-                <p className="form-hint" style={{ marginTop: 6 }}>
-                  Create divisions first under Manage Divisions.
-                </p>
-              ) : null}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div className="form-group">
@@ -228,10 +238,18 @@ export default function AddPlayerModal({
               </div>
             </div>
             <div className="form-group">
+              <label className="form-label">DUPR ID</label>
+              <input
+                className="form-input"
+                placeholder="Optional account ID"
+                value={form.duprId}
+                onChange={(e) => setForm((f) => ({ ...f, duprId: e.target.value }))}
+              />
+            </div>
+            <div className="form-group">
               <label className="form-label">Club</label>
               <input
                 className="form-input"
-                placeholder={tournamentClubName || "Club name"}
                 value={form.clubName}
                 onChange={(e) => setForm((f) => ({ ...f, clubName: e.target.value }))}
               />
@@ -245,38 +263,49 @@ export default function AddPlayerModal({
                 onChange={(e) => setForm((f) => ({ ...f, partner: e.target.value }))}
               />
             </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div className="form-group">
+                <label className="form-label">Roster #</label>
+                <input
+                  className="form-input"
+                  value={form.rosterNumber}
+                  onChange={(e) => setForm((f) => ({ ...f, rosterNumber: e.target.value }))}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Role</label>
+                <select
+                  className="form-select"
+                  value={form.playerRole}
+                  onChange={(e) => setForm((f) => ({ ...f, playerRole: e.target.value }))}
+                >
+                  <option value="starter">Starter</option>
+                  <option value="bench">Bench</option>
+                  <option value="captain">Captain</option>
+                </select>
+              </div>
+            </div>
             <div className="form-group">
-              <label className="form-label">Payment status</label>
+              <label className="form-label">Registration status</label>
               <select
                 className="form-select"
-                value={form.paymentStatus}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, paymentStatus: e.target.value }))
-                }
+                value={form.status}
+                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
               >
-                <option value="unpaid">Unpaid</option>
-                <option value="paid">Paid</option>
+                {STATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
             </div>
-            {form.paymentStatus === "unpaid" ? (
-              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-                <input
-                  type="checkbox"
-                  checked={form.sendPaymentEmail}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, sendPaymentEmail: e.target.checked }))
-                  }
-                />
-                Send payment email after adding
-              </label>
-            ) : null}
           </div>
           <div className={styles.modalFooter}>
             <button type="button" className="btn btn-ghost btn-md" onClick={onClose}>
               Cancel
             </button>
             <button type="submit" className="btn btn-primary btn-md" disabled={saving}>
-              {saving ? "Adding…" : "Add Player"}
+              {saving ? "Saving…" : "Save Changes"}
             </button>
           </div>
         </form>

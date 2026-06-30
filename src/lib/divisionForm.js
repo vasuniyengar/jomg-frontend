@@ -24,6 +24,10 @@ export const DEFAULT_DIVISION_FORM = {
   duprCombinedMin: "",
   duprCombinedMax: "",
   skillLevel: "",
+  teamsPerPool: "4",
+  seedingMethod: "",
+  poolScoring: "",
+  playoffScoring: "",
 };
 
 export function scoringConfigFromDivision(div, tournament) {
@@ -50,6 +54,13 @@ export function scoringConfigFromDivision(div, tournament) {
         ? String(cfg.duprCombinedMax)
         : "",
     skillLevel: cfg.skillLevel || "",
+    teamsPerPool:
+      cfg.teamsPerPool != null && cfg.teamsPerPool !== ""
+        ? String(cfg.teamsPerPool)
+        : "4",
+    seedingMethod: cfg.seedingMethod || "",
+    poolScoring: cfg.matchScoring?.pool || "",
+    playoffScoring: cfg.matchScoring?.playoff || "",
   };
 }
 
@@ -71,7 +82,18 @@ export function buildDivisionSavePayload(form, { tournament } = {}) {
         ? Number(form.duprCombinedMax)
         : null,
     skillLevel: (form.skillLevel || "").trim(),
+    teamsPerPool: Number(form.teamsPerPool) || 4,
   };
+
+  if (form.seedingMethod) {
+    scoringConfig.seedingMethod = form.seedingMethod;
+  }
+  if (form.poolScoring || form.playoffScoring) {
+    scoringConfig.matchScoring = {
+      pool: form.poolScoring || undefined,
+      playoff: form.playoffScoring || undefined,
+    };
+  }
 
   if (!useGlobal) {
     scoringConfig.pricingTiers = [

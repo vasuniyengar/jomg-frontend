@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import * as XLSX from "xlsx";
 import TournamentPicker from "../../_components/TournamentPicker";
 import AddPlayerModal from "./AddPlayerModal";
+import EditPlayerModal from "./EditPlayerModal";
 import {
   MAX_PAYMENT_EMAILS,
   bulkUpdateRegistrationPayments,
@@ -19,7 +20,7 @@ import {
   buildBulkUploadTemplateAoA,
   normalizeBulkUploadRow,
 } from "@/lib/bulkUpload";
-import { fetchHostTournaments, tournamentAdminPath } from "@/lib/tournaments";
+import { fetchHostTournaments, fetchTournamentById, tournamentAdminPath } from "@/lib/tournaments";
 
 function formatDupr(value) {
   if (value == null || value === "") return "—";
@@ -33,56 +34,80 @@ function paymentMeta(paymentStatus) {
   return { label: "⏱ Unpaid", cls: "pill-live" };
 }
 
-function mapApiPlayersToRows(apiList) {
+function registrationStatusMeta(status) {
+  switch (status) {
+    case "registered":
+      return { label: "Registered", cls: "pill-approved" };
+    case "completed":
+      return { label: "Completed", cls: "pill-approved" };
+    case "withdraw":
+      return { label: "Withdrawn", cls: "pill-wait" };
+    case "not_registered":
+      return { label: "Not registered", cls: "pill-live" };
+    default:
+      return { label: status || "—", cls: "pill-wait" };
+  }
+}
+
+function mapApiPlayersToRows(apiList, tournamentClubName = "") {
   const rows = [];
   for (const p of apiList || []) {
-    const event = p.events?.[0];
-    const paid = paymentMeta(event?.paymentStatus);
-    const paymentEmailSentCount = event?.paymentEmailSentCount ?? 0;
-    const paymentStatus = event?.paymentStatus || "unpaid";
-    const canResendEmail =
-      paymentStatus === "unpaid" && paymentEmailSentCount < MAX_PAYMENT_EMAILS;
-    const initials = String(p.name || "")
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((x) => x[0])
-      .join("")
-      .toUpperCase();
-    rows.push({
-      id: `p-${p.playerId}-${event?.bracketId || 0}`,
-      registrationId: event?.registrationId,
-      playerId: p.playerId,
-      bracketId: event?.bracketId,
-      paymentStatus,
-      paymentEmailSentCount,
-      canResendEmail,
-      resendDisabledReason:
-        paymentStatus !== "unpaid"
-          ? "Paid players cannot receive payment reminder emails"
-          : paymentEmailSentCount >= MAX_PAYMENT_EMAILS
-            ? `Payment email limit reached (${MAX_PAYMENT_EMAILS} max)`
-            : "",
-      initials: initials || "??",
-      avatar: "linear-gradient(135deg,#64748b 0%,#334155 100%)",
-      name: p.name,
-      email: p.email,
-      gender: p.gender?.[0]?.toUpperCase() || "M",
-      age: p.age || "—",
-      date: new Date().toLocaleDateString("en-US"),
-      phone: p.phoneNumber || "—",
-      partner: event?.partnerName || "—",
-      division: event?.bracketName || "—",
-      dupr: formatDupr(p.duprRating),
-      duprId: p.duprId || event?.duprId || "",
-      clubName: event?.clubName || "",
-      rosterNumber: event?.rosterNumber || "",
-      playerRole: event?.playerRole || "",
-      paid: paid.label,
-      paidClass: paid.cls,
-      status: "✓ Confirmed",
-      statusClass: "pill-approved",
-    });
+    const events = p.events?.length ? p.events : [];
+    if (!events.length) continue;
+
+    for (const event of events) {
+      const paid = paymentMeta(event?.paymentStatus);
+      const paymentEmailSentCount = event?.paymentEmailSentCount ?? 0;
+      const paymentStatus = event?.paymentStatus || "unpaid";
+      const canResendEmail =
+        paymentStatus === "unpaid" && paymentEmailSentCount < MAX_PAYMENT_EMAILS;
+      const regStatus = registrationStatusMeta(event?.status);
+      const initials = String(p.name || "")
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((x) => x[0])
+        .join("")
+        .toUpperCase();
+      const clubDisplay =
+        event?.clubName?.trim() || tournamentClubName?.trim() || "";
+      rows.push({
+        id: `reg-${event?.registrationId || `${p.playerId}-${event?.bracketId}`}`,
+        registrationId: event?.registrationId,
+        playerId: p.playerId,
+        bracketId: event?.bracketId,
+        paymentStatus,
+        paymentEmailSentCount,
+        canResendEmail,
+        resendDisabledReason:
+          paymentStatus !== "unpaid"
+            ? "Paid players cannot receive payment reminder emails"
+            : paymentEmailSentCount >= MAX_PAYMENT_EMAILS
+              ? `Payment email limit reached (${MAX_PAYMENT_EMAILS} max)`
+              : "",
+        initials: initials || "??",
+        avatar: "linear-gradient(135deg,#64748b 0%,#334155 100%)",
+        name: p.name,
+        email: p.email,
+        gender: p.gender?.[0]?.toUpperCase() || "M",
+        age: p.age || "—",
+        date: new Date().toLocaleDateString("en-US"),
+        phone: p.phoneNumber || "—",
+        partner: event?.partnerName || "—",
+        division: event?.bracketName || "—",
+        dupr: formatDupr(p.duprRating),
+        duprRaw: p.duprRating,
+        duprId: p.duprId || event?.duprId || "",
+        clubName: clubDisplay,
+        rosterNumber: event?.rosterNumber || "",
+        playerRole: event?.playerRole || "",
+        registrationStatus: event?.status || "registered",
+        paid: paid.label,
+        paidClass: paid.cls,
+        status: regStatus.label,
+        statusClass: regStatus.cls,
+      });
+    }
   }
   return rows;
 }
@@ -110,7 +135,9 @@ export default function RegistrationsListScreen() {
   const [paymentMessage, setPaymentMessage] = useState("");
   const [paymentError, setPaymentError] = useState("");
   const [addPlayerOpen, setAddPlayerOpen] = useState(false);
+  const [editPlayer, setEditPlayer] = useState(null);
   const [divisions, setDivisions] = useState([]);
+  const [tournamentClubName, setTournamentClubName] = useState("");
 
   const loadPlayers = useCallback(async () => {
     if (!tournamentId) return;
@@ -119,14 +146,14 @@ export default function RegistrationsListScreen() {
       const statusArg =
         paymentFilter === "all" ? undefined : { paymentStatus: paymentFilter };
       const data = await fetchRegisteredPlayers(tournamentId, statusArg);
-      setPlayers(mapApiPlayersToRows(data));
+      setPlayers(mapApiPlayersToRows(data, tournamentClubName));
       setSelectedIds(new Set());
     } catch {
       setPlayers([]);
     } finally {
       setLoading(false);
     }
-  }, [tournamentId, paymentFilter]);
+  }, [tournamentId, paymentFilter, tournamentClubName]);
 
   useEffect(() => {
     fetchHostTournaments().then(setTournaments).catch(() => setTournaments([]));
@@ -139,11 +166,17 @@ export default function RegistrationsListScreen() {
   useEffect(() => {
     if (!tournamentId) {
       setDivisions([]);
+      setTournamentClubName("");
       return;
     }
     fetchDivisions(tournamentId)
       .then(setDivisions)
       .catch(() => setDivisions([]));
+    fetchTournamentById(tournamentId)
+      .then((t) => {
+        setTournamentClubName(t?.clubName || t?.Club?.name || "");
+      })
+      .catch(() => setTournamentClubName(""));
   }, [tournamentId]);
 
   const filteredPlayers = useMemo(() => {
@@ -504,7 +537,7 @@ export default function RegistrationsListScreen() {
               Required: name, email, division (match Manage Divisions exactly). MLP: team_name,
               role (starter/bench), rosterNumber. Doubles: partner, pay_for_partner (yes/no).
               DUPR rating in dupr or numeric DuprID; account ID in DuprID when not numeric.
-              paymentStatus: paid/unpaid/refunded. Set payment mobile in Tournament Settings
+              paymentStatus: paid/unpaid/refunded. Set payment phone, Zelle, or Venmo in Tournament Settings
               before sending payment emails.
             </p>
           </div>
@@ -606,6 +639,7 @@ export default function RegistrationsListScreen() {
                   <th>Paid</th>
                   <th>Payment email</th>
                   <th>Status</th>
+                  <th style={{ width: 72 }} />
                 </tr>
               </thead>
               <tbody>
@@ -692,11 +726,21 @@ export default function RegistrationsListScreen() {
                     <td>
                       <span className={`pill ${p.statusClass}`}>{p.status}</span>
                     </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        disabled={!p.registrationId}
+                        onClick={() => setEditPlayer(p)}
+                      >
+                        Edit
+                      </button>
+                    </td>
                   </tr>
                 ))}
                 {!loading && !filteredPlayers.length ? (
                   <tr>
-                    <td colSpan={14} style={{ padding: 24, color: "var(--text-sec)" }}>
+                    <td colSpan={15} style={{ padding: 24, color: "var(--text-sec)" }}>
                       No players yet. Add divisions, then add or bulk upload players.
                     </td>
                   </tr>
@@ -712,7 +756,16 @@ export default function RegistrationsListScreen() {
         onClose={() => setAddPlayerOpen(false)}
         tournamentId={tournamentId}
         divisions={divisions}
+        tournamentClubName={tournamentClubName}
         onAdded={loadPlayers}
+      />
+      <EditPlayerModal
+        open={Boolean(editPlayer)}
+        onClose={() => setEditPlayer(null)}
+        tournamentId={tournamentId}
+        player={editPlayer}
+        divisions={divisions}
+        onSaved={loadPlayers}
       />
     </div>
   );

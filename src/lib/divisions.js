@@ -100,6 +100,18 @@ export async function bulkUpdateRegistrationPayments(
   return response?.data;
 }
 
+export async function updateRegistration(tournamentId, registrationId, payload) {
+  const regId = Number(registrationId);
+  const response = await apiRequest(
+    `/api/tournaments/${tournamentId}/registrations/${regId}`,
+    {
+      method: "PATCH",
+      body: payload,
+    }
+  );
+  return response?.data;
+}
+
 export async function addPlayerByHost(tournamentId, bracketId, data) {
   const response = await apiRequest(
     `/api/host/tournaments/${tournamentId}/brackets/${bracketId}/add-player`,
