@@ -19,8 +19,16 @@ import { CardBadge } from "../SettingsUi";
 
 function resolveLogoPreview(item, pendingPreviews) {
   if (pendingPreviews[item.id]) return pendingPreviews[item.id];
-  if (item.logoUrl) return item.logoUrl;
+  if (item.logoUrl) return resolveAdminMediaUrl(item.logoUrl);
   return resolveAdminMediaUrl(item.logoKey);
+}
+
+function normalizeSponsorUrl(raw) {
+  const trimmed = (raw || "").trim();
+  if (!trimmed) return "#";
+  // Already has a scheme (http:, https:, mailto:, etc.) — leave it alone.
+  if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
 }
 
 const SponsorsCard = forwardRef(function SponsorsCard(
@@ -186,12 +194,19 @@ const SponsorsCard = forwardRef(function SponsorsCard(
                     <input
                       className="form-input"
                       type="url"
+                      autoComplete="off"
                       value={item.url === "#" ? "" : item.url}
                       onChange={(e) =>
                         updateSponsorRow(tierKey, item.id, {
                           url: e.target.value || "#",
                         })
                       }
+                      onBlur={(e) => {
+                        const normalized = normalizeSponsorUrl(e.target.value);
+                        if (normalized !== item.url) {
+                          updateSponsorRow(tierKey, item.id, { url: normalized });
+                        }
+                      }}
                       placeholder="https://…"
                     />
                   </div>

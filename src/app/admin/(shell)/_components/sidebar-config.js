@@ -1,35 +1,39 @@
 /** Sidebar phases + nav — mirrors 04-dashboard-page-4.html */
 export const PHASES = [
-  {
-    id: "phase-1",
-    num: 1,
-    label: "Setup",
-    sub: "Pre-tournament",
-    items: [
-      {
-        href: "/admin/dashboard",
-        icon: "🏠",
-        label: "Dashboard",
-        badge: { text: "3", variant: "red" },
-      },
-      { href: "/admin/settings", icon: "⚙️", label: "Tournament Settings" },
-      { href: "/admin/divisions", icon: "🗂", label: "Manage Divisions" },
-      { href: "/admin/courtsetup", icon: "🏟️", label: "Court Setup" },
-      {
-        comingSoon: true,
-        icon: "📋",
-        label: "Event Planner",
-        version: "v1.01",
-      },
-      { href: "/admin/coupons", icon: "🏷️", label: "Discounts" },
-      {
-        comingSoon: true,
-        icon: "👕",
-        label: "Shop",
-        version: "v1.01",
-      },
-    ],
-  },
+    {
+  id: "phase-1",
+  num: 1,
+  label: "Setup",
+  sub: "Pre-tournament",
+  items: [
+    {
+      href: "/admin/dashboard",
+      icon: "🏠",
+      label: "Dashboard",
+      badge: { text: "3", variant: "red" },
+    },
+    { href: "/admin/settings", icon: "⚙️", label: "Tournament Settings" },
+    { href: "/admin/divisions", icon: "🗂", label: "Manage Divisions" },
+    { href: "/admin/courtsetup", icon: "🏟️", label: "Court Setup" },
+    {
+      comingSoon: true,
+      icon: "📋",
+      label: "Event Planner",
+      version: "v1.01",
+    },
+    {
+      comingSoon: true,
+      icon: "🏷️",
+      label: "Discounts",
+    },
+    {
+      comingSoon: true,
+      icon: "👕",
+      label: "Shop",
+      version: "v1.01",
+    },
+  ],
+},
   {
     id: "phase-2",
     num: 2,
@@ -40,7 +44,7 @@ export const PHASES = [
         href: "/admin/reglist",
         icon: "👥",
         label: "Players List",
-        badge: { text: "48", variant: "default" },
+        
       },
       { href: "/admin/teams", icon: "👥", label: "Manage Teams" },
       {

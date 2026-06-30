@@ -14,6 +14,7 @@ export default function DuprIntegrationCard({
   onRequireSkillRating,
   onEnableSectionPush,
   clubDuprId = "CLB-08821",
+  onClubDuprIdChange,
 }) {
   return (
     <div className="card">
@@ -30,12 +31,19 @@ export default function DuprIntegrationCard({
         />
       </div>
       <div className="form-group" style={{ maxWidth: 420, marginTop: 16 }}>
-        <label className="form-label">Club DUPR ID</label>
-        <div className={styles.readOnlyField}>
-          <span style={{ fontFamily: "monospace", fontWeight: 600 }}>{clubDuprId}</span>
-          <span className={styles.readOnlyBadge}>Read-only</span>
-        </div>
-        <p className="form-hint">Managed in club profile (Phase 2).</p>
+        <label className="form-label" htmlFor="club-dupr-id">
+          Club DUPR ID
+        </label>
+        <input
+          id="club-dupr-id"
+          type="text"
+          className="form-input"
+          style={{ fontFamily: "monospace", fontWeight: 600 }}
+          value={clubDuprId}
+          onChange={(e) => onClubDuprIdChange?.(e.target.value)}
+          placeholder="CLB-00000"
+        />
+        <p className="form-hint">Managed in club profile.</p>
       </div>
       <div className={styles.toggleGrid}>
         <ToggleRow
