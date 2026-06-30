@@ -12,6 +12,91 @@ export function slugifyTournamentName(name) {
     .replace(/^-|-$/g, "");
 }
 
+export const TOURNAMENT_TIMEZONE_OPTIONS = [
+  { value: "", label: "Auto-detect (browser)" },
+  { value: "America/New_York", label: "Eastern Time — America/New_York" },
+  { value: "America/Chicago", label: "Central Time — America/Chicago" },
+  { value: "America/Denver", label: "Mountain Time — America/Denver" },
+  { value: "America/Phoenix", label: "Arizona Time — America/Phoenix" },
+  { value: "America/Los_Angeles", label: "Pacific Time — America/Los_Angeles" },
+  { value: "America/Anchorage", label: "Alaska Time — America/Anchorage" },
+  { value: "Pacific/Honolulu", label: "Hawaii Time — Pacific/Honolulu" },
+];
+
+export function getBrowserTimezone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  } catch {
+    return "";
+  }
+}
+
+export function resolveTournamentTimezone(value) {
+  if (value) return value;
+  return getBrowserTimezone();
+}
+
+/** @returns {string|null} error message or null if valid */
+export function validateTournamentDates({
+  startDate,
+  endDate,
+  registrationOpenDate,
+  registrationCloseDate,
+  refundDeadline,
+}) {
+  if (!startDate || !endDate || !registrationOpenDate || !registrationCloseDate) {
+    return null;
+  }
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const regOpen = new Date(registrationOpenDate);
+  const regClose = new Date(registrationCloseDate);
+
+  if (end < start) return "Event end must be on or after event start.";
+  if (regOpen >= start) return "Registration open must be before event start.";
+  if (regClose < regOpen) return "Registration close must be on or after registration open.";
+  if (regClose > end) return "Registration close must be on or before event end.";
+  if (refundDeadline) {
+    const refund = new Date(refundDeadline);
+    if (refund >= start) return "Refund deadline must be before event start.";
+  }
+  return null;
+}
+
+export function calendarDateString(date, timeZone) {
+  const d = date instanceof Date ? date : new Date(date);
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: timeZone || undefined,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}
+
+export function canStartTournamentLive(startDate, timeZone) {
+  if (!startDate) {
+    return {
+      allowed: false,
+      reason: "Set a tournament start date before going live.",
+    };
+  }
+  const startDay = calendarDateString(startDate, timeZone);
+  const [sy, sm, sd] = startDay.split("-").map(Number);
+  const startUtc = Date.UTC(sy, sm - 1, sd);
+  const earliestUtc = startUtc - 24 * 60 * 60 * 1000;
+  const today = calendarDateString(new Date(), timeZone);
+  const [ty, tm, td] = today.split("-").map(Number);
+  const todayUtc = Date.UTC(ty, tm - 1, td);
+  if (todayUtc < earliestUtc) {
+    return {
+      allowed: false,
+      reason:
+        "Go Live is available starting the calendar day before the tournament start date.",
+    };
+  }
+  return { allowed: true, reason: null };
+}
+
 export async function fetchHostTournaments({ status, search } = {}) {
   const params = new URLSearchParams();
   if (status && status !== "all") params.set("status", status);

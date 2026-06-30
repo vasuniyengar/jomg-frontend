@@ -142,9 +142,9 @@ export default function ManageDivisionsScreen() {
       registrationFee: String(tournament?.entryFee ?? 0),
       startDate: toDateInput(tournament?.startDate),
       endDate: toDateInput(tournament?.endDate),
-      groupId: defaultGroupId(),
-      formatId: defaultFormatId(),
-      bracketFormatId: defaultBracketFormatId(),
+      groupId: "",
+      formatId: "",
+      bracketFormatId: "",
       accentColor: paletteColor,
       duprRecorded: Boolean(tournament?.duprRecorded ?? true),
       duprEnforced: Boolean(tournament?.duprEnforced ?? false),
@@ -187,6 +187,10 @@ export default function ManageDivisionsScreen() {
 
   const handleSave = async () => {
     if (!tournamentId || !form.bracketName.trim()) return;
+    if (!form.groupId || !form.formatId || !form.bracketFormatId) {
+      setError("Please select group, format, and bracket format.");
+      return;
+    }
     setSaving(true);
     setError("");
     try {

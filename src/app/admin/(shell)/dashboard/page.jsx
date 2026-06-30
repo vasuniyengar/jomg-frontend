@@ -625,6 +625,8 @@ export default function DashboardPage() {
         status={t?.status || "draft"}
         settingsConfirmed={data?.settingsConfirmed}
         slug={t?.slug}
+        startDate={t?.startDate}
+        timezone={t?.timezone}
         onStatusChange={handleStatusChange}
         updating={statusUpdating}
       />

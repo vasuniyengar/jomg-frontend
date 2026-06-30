@@ -23,7 +23,7 @@ import {
 } from "@/lib/tournaments";
 
 const TIMEZONES = [
-  { value: "", label: "Auto-detect from address" },
+  { value: "", label: "Auto-detect (browser)" },
   { value: "America/New_York", label: "Eastern Time — America/New_York" },
   { value: "America/Chicago", label: "Central Time — America/Chicago" },
   { value: "America/Denver", label: "Mountain Time — America/Denver" },
@@ -73,6 +73,19 @@ function buildWizardOrganizerExtras(form, existingOrganizerInfo) {
   };
 }
 
+function getBrowserTimezone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  } catch {
+    return "";
+  }
+}
+
+function resolveWizardTimezone(value) {
+  if (value) return value;
+  return getBrowserTimezone();
+}
+
 function toIsoDate(value) {
   if (!value) return undefined;
   return value;
@@ -100,7 +113,10 @@ export default function CreateTournamentWizard({
   useEffect(() => {
     if (!open) return;
     if (!isEdit) {
-      setForm(INITIAL_FORM);
+      setForm({
+        ...INITIAL_FORM,
+        timezone: getBrowserTimezone(),
+      });
       setStep(1);
       setEditStatus("draft");
     }
@@ -108,7 +124,22 @@ export default function CreateTournamentWizard({
     setClubsLoadError("");
     fetchClubs()
       .then((data) => {
-        if (mounted) setClubs(data);
+        if (!mounted) return;
+        setClubs(data);
+        if (data?.length) {
+          const club = data[0];
+          setForm((prev) => {
+            if (prev.clubId) return prev;
+            return {
+              ...prev,
+              clubId: String(club.id),
+              venue: club.name || prev.venue,
+              location: club.location || prev.location,
+              organizerName: club.name || prev.organizerName,
+              organizerPhone: club.phoneNumber || prev.organizerPhone,
+            };
+          });
+        }
       })
       .catch((err) => {
         if (mounted) {
@@ -204,8 +235,8 @@ export default function CreateTournamentWizard({
       setDateError("Registration close must be on or after registration open.");
       return false;
     }
-    if (regClose >= start) {
-      setDateError("Registration close must be before event start.");
+    if (regClose > end) {
+      setDateError("Registration close must be on or before event end.");
       return false;
     }
     if (refundDeadline) {
@@ -263,9 +294,12 @@ export default function CreateTournamentWizard({
     setSubmitting(true);
     setSubmitError("");
     try {
-      const payload = buildWizardApiPayload(form, {
+      const payload = buildWizardApiPayload(
+        { ...form, timezone: resolveWizardTimezone(form.timezone) },
+        {
         status: isEdit ? editStatus : "draft",
-      });
+      }
+      );
 
       if (isEdit) {
         const existing = await fetchTournamentById(editTournamentId);
@@ -378,34 +412,21 @@ export default function CreateTournamentWizard({
                 placeholder="e.g. Austin Pickleball Open 2025"
               />
             </div>
-            <div className="form-group">
-              <label className="form-label">
-                Select Your Club <span style={{ color: "#ff5555" }}>*</span>
-              </label>
-              <select
-                className="form-select"
-                value={form.clubId}
-                onChange={(e) => onClubChange(e.target.value)}
-              >
-                <option value="">— Select a club —</option>
-                {clubs.map((club) => (
-                  <option key={club.id} value={club.id}>
-                    {club.name}
-                  </option>
-                ))}
-              </select>
-              {clubsLoadError && (
+            {clubsLoadError && (
+              <div className="form-group">
                 <p className="form-hint" style={{ color: "#ff5555" }}>
                   {clubsLoadError}
                 </p>
-              )}
-              {!clubs.length && !clubsLoadError && (
+              </div>
+            )}
+            {!clubs.length && !clubsLoadError && (
+              <div className="form-group">
                 <p className="form-hint">
                   No clubs found. Run <code>npm run prisma:seed</code> in the backend, then sign in as{" "}
                   <strong>organizer@jomg.com</strong>.
                 </p>
-              )}
-            </div>
+              </div>
+            )}
             <div className="form-group">
               <label className="form-label">Tournament URL</label>
               <div className={styles.urlInputWrap}>
@@ -432,7 +453,7 @@ export default function CreateTournamentWizard({
               <div className={styles.orgCardTitle}>Organizer Details</div>
               <p className={styles.orgCardHint}>
                 {selectedClub
-                  ? `Pre-filled from ${selectedClub.name}.`
+                  ? `Organizer details from ${selectedClub.name} (tournament host club).`
                   : "Enter organizer contact for this tournament."}
               </p>
               <div className="form-row">

@@ -287,6 +287,8 @@ export function defaultTournamentSettings() {
     officialBall: "",
     officialBallUrl: "",
     paymentPhone: "",
+    zelleUsername: "",
+    venmoUsername: "",
     settingsConfirmed: false,
     settingsConfirmedAt: null,
     sectionPush: {
@@ -382,6 +384,8 @@ export function mergeTournamentSettings(organizerInfo) {
     officialBall: parsed.officialBall ?? defaults.officialBall,
     officialBallUrl: parsed.officialBallUrl ?? defaults.officialBallUrl,
     paymentPhone: parsed.paymentPhone ?? defaults.paymentPhone,
+    zelleUsername: parsed.zelleUsername ?? defaults.zelleUsername,
+    venmoUsername: parsed.venmoUsername ?? defaults.venmoUsername,
     settingsConfirmed: parsed.settingsConfirmed ?? defaults.settingsConfirmed,
     settingsConfirmedAt: parsed.settingsConfirmedAt ?? defaults.settingsConfirmedAt,
     sectionPush: {
