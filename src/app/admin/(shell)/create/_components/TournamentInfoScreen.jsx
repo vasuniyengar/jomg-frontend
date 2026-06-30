@@ -17,8 +17,10 @@ import {
   buildTournamentUpdatePayload,
   fetchTournamentById,
   slugifyTournamentName,
+  TOURNAMENT_TIMEZONE_OPTIONS,
   tournamentAdminPath,
   updateTournament,
+  validateTournamentDates,
 } from "@/lib/tournaments";
 
 function toDateInput(value) {
@@ -43,6 +45,7 @@ export default function TournamentInfoScreen() {
   const [description, setDescription] = useState("");
   const [venue, setVenue] = useState("");
   const [location, setLocation] = useState("");
+  const [timezone, setTimezone] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [registrationOpenDate, setRegistrationOpenDate] = useState("");
@@ -73,6 +76,7 @@ export default function TournamentInfoScreen() {
     setDescription(data.description || "");
     setVenue(data.venue || "");
     setLocation(data.location || "");
+    setTimezone(data.timezone || "");
     setStartDate(toDateInput(data.startDate));
     setEndDate(toDateInput(data.endDate));
     setRegistrationOpenDate(toDateInput(data.registrationOpenDate));
@@ -146,6 +150,19 @@ export default function TournamentInfoScreen() {
       setError("Tournament name and description are required.");
       return;
     }
+    const dateError = validateTournamentDates({
+      startDate,
+      endDate,
+      registrationOpenDate,
+      registrationCloseDate,
+      refundDeadline: tournament.refundDeadline
+        ? toDateInput(tournament.refundDeadline)
+        : "",
+    });
+    if (dateError) {
+      setError(dateError);
+      return;
+    }
     setSaving(true);
     setError("");
     setMessage("");
@@ -193,6 +210,7 @@ export default function TournamentInfoScreen() {
           description,
           venue,
           location,
+          timezone: timezone || null,
           startDate,
           endDate,
           registrationOpenDate,
@@ -300,6 +318,20 @@ export default function TournamentInfoScreen() {
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Street, City, State ZIP"
               />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Timezone</label>
+              <select
+                className="form-select"
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
+              >
+                {TOURNAMENT_TIMEZONE_OPTIONS.map((tz) => (
+                  <option key={tz.value || "auto"} value={tz.value}>
+                    {tz.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="form-group">
               <label className="form-label">Tournament URL</label>

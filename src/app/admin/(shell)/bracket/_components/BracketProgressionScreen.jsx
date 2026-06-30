@@ -106,7 +106,10 @@ export default function BracketProgressionScreen() {
     setError("");
     setMessage("");
     try {
-      await createRoundRobin(tournamentId, bracketId, { teamsPerPool: 6, force: false });
+      await createRoundRobin(tournamentId, bracketId, {
+        teamsPerPool: Number(selectedDivision?.scoringConfig?.teamsPerPool) || 4,
+        force: false,
+      });
       setMessage("Pool schedule generated.");
       await loadPools();
       setTab("pools");

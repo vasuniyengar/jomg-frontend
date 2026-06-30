@@ -3,6 +3,7 @@
 import Link from "next/link";
 import styles from "../divisions.module.css";
 import { DIVISION_COLORS } from "@/lib/divisions";
+import { SCORING_OPTIONS, SEEDING_METHOD_OPTIONS } from "@/lib/tournamentSettings";
 import { tournamentAdminPath } from "@/lib/tournaments";
 
 const DEFAULT_ACCENT = "#AAFF00";
@@ -134,6 +135,7 @@ export default function DivisionFormModal({
                 disabled={poolStarted}
                 onChange={(e) => setForm((f) => ({ ...f, groupId: e.target.value }))}
               >
+                <option value="">Select group…</option>
                 {(meta?.groups || []).map((g) => (
                   <option key={g.id} value={g.id}>
                     {g.name}
@@ -149,6 +151,7 @@ export default function DivisionFormModal({
                 disabled={poolStarted}
                 onChange={(e) => setForm((f) => ({ ...f, formatId: e.target.value }))}
               >
+                <option value="">Select format…</option>
                 {(meta?.formats || []).map((f) => (
                   <option key={f.id} value={f.id}>
                     {f.name}
@@ -166,6 +169,7 @@ export default function DivisionFormModal({
               disabled={poolStarted}
               onChange={(e) => setForm((f) => ({ ...f, bracketFormatId: e.target.value }))}
             >
+              <option value="">Select bracket format…</option>
               {(meta?.bracketFormats || []).map((bf) => (
                 <option key={bf.id} value={bf.id}>
                   {bf.name}
@@ -238,7 +242,7 @@ export default function DivisionFormModal({
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Max Players / Teams</label>
+              <label className="form-label">Max Teams</label>
               <input
                 className="form-input"
                 type="number"
@@ -355,7 +359,7 @@ export default function DivisionFormModal({
                 min={0}
                 max={20}
                 step="0.01"
-                placeholder="Doubles only"
+                placeholder="e.g. 8.0"
                 value={form.duprCombinedMin}
                 disabled={poolStarted}
                 onChange={(e) =>
@@ -371,7 +375,7 @@ export default function DivisionFormModal({
                 min={0}
                 max={20}
                 step="0.01"
-                placeholder="Doubles only"
+                placeholder="e.g. 16.0"
                 value={form.duprCombinedMax}
                 disabled={poolStarted}
                 onChange={(e) =>
@@ -415,60 +419,93 @@ export default function DivisionFormModal({
             </label>
           </div>
 
-          <PlaceholderSection title="Division Play Rules">
-            <p style={{ fontSize: 11, color: "var(--text-sec)", marginBottom: 10 }}>
-              Pre-filled from <strong style={{ color: "var(--text)" }}>Tournament Play Rules</strong>.
-              Configure in Tournament Settings.
-            </p>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Division Format</label>
-                <select className="form-select" defaultValue="pool" disabled>
-                  <option>Pool Play → Single Elimination</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Seeding Method</label>
-                <select className="form-select" defaultValue="dupr" disabled>
-                  <option>DUPR Rating</option>
-                </select>
-              </div>
+          <div className={styles.sectionLabel} style={{ marginTop: 16 }}>
+            Division Play Rules
+          </div>
+          <p style={{ fontSize: 11, color: "var(--text-sec)", marginBottom: 10 }}>
+            {form.useGlobalSettings
+              ? "Inherits tournament play rules unless overridden below."
+              : "Custom play rules for this division."}
+          </p>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Seeding Method</label>
+              <select
+                className="form-select"
+                value={form.seedingMethod || ""}
+                disabled={poolStarted}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, seedingMethod: e.target.value }))
+                }
+              >
+                <option value="">Inherit from tournament</option>
+                {SEEDING_METHOD_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
             </div>
-            <div className={styles.subsectionLabel}>Match Scoring by Stage</div>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Pool Play Scoring</label>
-                <select className="form-select" disabled>
-                  <option>1 game to 15, win by 2</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Playoff Scoring</label>
-                <select className="form-select" disabled>
-                  <option>1 game to 15, win by 2</option>
-                </select>
-              </div>
+          </div>
+          <div className={styles.subsectionLabel}>Match Scoring by Stage</div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Pool Play Scoring</label>
+              <select
+                className="form-select"
+                value={form.poolScoring || ""}
+                disabled={poolStarted}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, poolScoring: e.target.value }))
+                }
+              >
+                <option value="">Inherit from tournament</option>
+                {SCORING_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
             </div>
-          </PlaceholderSection>
+            <div className="form-group">
+              <label className="form-label">Playoff Scoring</label>
+              <select
+                className="form-select"
+                value={form.playoffScoring || ""}
+                disabled={poolStarted}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, playoffScoring: e.target.value }))
+                }
+              >
+                <option value="">Inherit from tournament</option>
+                {SCORING_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-          <PlaceholderSection title="Pool Play &amp; Advancement">
-            <div className={styles.poolAutoHint}>
-              <span>✨</span>
-              <span>Auto-calculated from max players. Set in Tournament Settings.</span>
+          <div className={styles.sectionLabel} style={{ marginTop: 16 }}>
+            Pool Play &amp; Advancement
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Teams per Pool</label>
+              <input
+                className="form-input"
+                type="number"
+                min={2}
+                max={16}
+                value={form.teamsPerPool}
+                disabled={poolStarted}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, teamsPerPool: e.target.value }))
+                }
+              />
             </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Teams per Pool</label>
-                <input className="form-input" defaultValue="4" disabled />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Teams Advancing to Playoffs</label>
-                <select className="form-select" disabled>
-                  <option>Top Two per pool</option>
-                </select>
-              </div>
-            </div>
-          </PlaceholderSection>
+          </div>
 
           <div className={styles.fieldDisabled} aria-hidden="true">
             <div className={styles.sectionLabel}>MLP / Dream Breaker</div>
