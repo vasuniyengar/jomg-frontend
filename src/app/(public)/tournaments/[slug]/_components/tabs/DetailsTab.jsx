@@ -135,7 +135,7 @@ export default function DetailsTab({ data, venue, organizer }) {
             <div className="sh-title">DUPR POLICY</div>
           </div>
           <div className="info-block">
-            <div className="info-v">{details.duprPolicyText}</div>
+            <div className="info-v">{details.duprPolicyText} </div>
           </div>
         </div>
       ) : null}

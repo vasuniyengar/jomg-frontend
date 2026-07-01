@@ -106,27 +106,27 @@ export const STATIC_DETAILS = {
   officialBall:
     "Sriya Designs match ball — the official tournament ball used for every match. Tournament balls provided on court.",
   instructions: [
-    {
-      label: "Stay & Travel",
-      text: "Hampton Inn Austin (tournament rate code: APBO25).",
-    },
-    {
-      label: "On-Site Food",
-      text: "Food trucks on-site 8am–4pm. Water stations at every court.",
-    },
-    {
-      label: "Parking & Arrival",
-      text: "Free parking on-site. Shuttle available from Hampton Inn every 30 min.",
-    },
-    {
-      label: "What to Bring",
-      text: "Own paddle required. Tournament balls provided. Court-appropriate shoes mandatory.",
-    },
-    {
-      label: "Waiver / Liability",
-      text: "By registering, players agree to the Austin Pickleball Club liability waiver and release of claims.",
-    },
-  ],
+  {
+    label: "Stay & Travel",
+    text: "",
+  },
+  {
+    label: "On-Site Food",
+    text: "",
+  },
+  {
+    label: "Parking & Arrival",
+    text: "",
+  },
+  {
+    label: "What to Bring",
+    text: "",
+  },
+  {
+    label: "Waiver / Liability",
+    text: "",
+  },
+],
   duprPolicy: [
     {
       label: "50+ Masters",
