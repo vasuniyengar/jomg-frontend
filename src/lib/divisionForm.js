@@ -15,6 +15,7 @@ export const DEFAULT_DIVISION_FORM = {
   maxRating: "",
   startDate: "",
   endDate: "",
+  startTime: "",
   useGlobalSettings: true,
   accentColor: "#AAFF00",
   registrationOn: true,
@@ -119,6 +120,7 @@ export function buildDivisionSavePayload(form, { tournament } = {}) {
     maxRating: Number(form.maxRating) || 0,
     startDate: form.startDate,
     endDate: form.endDate,
+    startTime: form.startTime || null,
     status: "draft",
     scoringConfig,
   };

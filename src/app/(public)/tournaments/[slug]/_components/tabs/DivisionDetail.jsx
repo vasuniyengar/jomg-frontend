@@ -149,38 +149,40 @@ export default function DivisionDetail({ detail, onBack }) {
           {filteredPools.map((pool) => (
             <div className="pool-card" key={pool.id} data-pool={pool.id}>
               <div className="pool-name">{pool.name}</div>
-              <table className="stand-tbl">
-                <thead>
-                  <tr>
-                    <th>Team</th>
-                    <th>W</th>
-                    <th>L</th>
-                    <th>Games</th>
-                    <th>Pts</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pool.rows.map((row) => (
-                    <tr className={row.advance ? "adv" : ""} key={row.team}>
-                      <td>
-                        <div className="stand-team">
-                          <span className="stand-seed">{row.seed}</span>
-                          <Avatar
-                            initials={row.initials}
-                            size={24}
-                            seed={row.advance}
-                          />
-                          {row.team}
-                        </div>
-                      </td>
-                      <td>{row.w}</td>
-                      <td>{row.l}</td>
-                      <td>{row.games}</td>
-                      <td>{row.pts}</td>
+              <div className="tbl-scroll">
+                <table className="stand-tbl">
+                  <thead>
+                    <tr>
+                      <th>Team</th>
+                      <th>W</th>
+                      <th>L</th>
+                      <th>Games</th>
+                      <th>Pts</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {pool.rows.map((row) => (
+                      <tr className={row.advance ? "adv" : ""} key={row.team}>
+                        <td>
+                          <div className="stand-team">
+                            <span className="stand-seed">{row.seed}</span>
+                            <Avatar
+                              initials={row.initials}
+                              size={24}
+                              seed={row.advance}
+                            />
+                            {row.team}
+                          </div>
+                        </td>
+                        <td>{row.w}</td>
+                        <td>{row.l}</td>
+                        <td>{row.games}</td>
+                        <td>{row.pts}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ))}
           <div className="dv-empty" style={{ fontSize: 12 }}>

@@ -10,20 +10,25 @@ const TABS = [
 
 export default function TabNav({ activeTab, onTabChange, livePlayEnabled }) {
   return (
-    <div className="o3-tabs">
-      {TABS.map((tab) => {
-        if (tab.hiddenUnlessEnabled && !livePlayEnabled) return null;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            className={`o3-tab${activeTab === tab.id ? " active" : ""}`}
-            onClick={() => onTabChange(tab.id)}
-          >
-            {tab.label}
-          </button>
-        );
-      })}
+    <div className="o3-tabs-wrap">
+      <div className="o3-tabs" role="tablist" aria-label="Tournament sections">
+        {TABS.map((tab) => {
+          if (tab.hiddenUnlessEnabled && !livePlayEnabled) return null;
+          const selected = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              className={`o3-tab${selected ? " active" : ""}`}
+              onClick={() => onTabChange(tab.id)}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

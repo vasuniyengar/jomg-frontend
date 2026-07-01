@@ -4,6 +4,10 @@ export const PUBLIC_BRAND = {
   volairLogoUrl: "/tournaments/volair-logo.png",
 };
 
+/** Static banner copy — not derived from tournament API */
+export const STATIC_BANNER_BADGE = "CLUB VS CLUB";
+export const STATIC_BANNER_TITLE = "Central Texas Championship";
+
 export const STATIC_FIRST_EVENT_DAY_LABEL = "Masters 50+";
 export const STATIC_CLUBS_COUNT = "16";
 export const STATIC_INFO_BAR_FORMAT = {

@@ -190,6 +190,16 @@ export default function DivisionFormModal({
               />
             </div>
             <div className="form-group">
+              <label className="form-label">Start Time</label>
+              <input
+                className="form-input"
+                type="time"
+                value={form.startTime}
+                disabled={poolStarted}
+                onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
+              />
+            </div>
+            <div className="form-group">
               <label className="form-label">Division Ends</label>
               <input
                 className="form-input"

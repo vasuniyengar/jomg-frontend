@@ -1,5 +1,7 @@
 import {
   PUBLIC_BRAND,
+  STATIC_BANNER_BADGE,
+  STATIC_BANNER_TITLE,
   STATIC_FORMAT,
   STATIC_POINTS_ADVANCE,
   applyStaticInfoBarLabels,
@@ -15,8 +17,8 @@ export function mapPublicTournamentResponse(apiData) {
     slug: apiData.slug,
     brandTitle: PUBLIC_BRAND.brandTitle,
     brandSubtitle: PUBLIC_BRAND.brandSubtitle,
-    title: apiData.title,
-    badge: apiData.badge,
+    title: STATIC_BANNER_TITLE,
+    badge: STATIC_BANNER_BADGE,
     bannerUrl: apiData.bannerUrl || "",
     volairLogoUrl: PUBLIC_BRAND.volairLogoUrl,
     infoBar: applyStaticInfoBarLabels(apiData.infoBar),

@@ -12,22 +12,24 @@ export default function DetailsTab({ data, venue, organizer }) {
       <div style={{ marginBottom: 18 }}>
         <div className="venue">
           <div className="vcard">
-            <div className="vleft-head">
-              <div>
-                <div className="vname">{venue.name}</div>
-                <a
-                  className="vmaps"
-                  href={venue.mapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  📍 {venue.address}{" "}
-                  <span className="vmaps-go">View on Google Maps ↗</span>
-                </a>
-              </div>
+            <div className="sh venue-sh">
+              <div className="sh-title">VENUE</div>
             </div>
+            <div className="venue-detail-name">{venue.name}</div>
+            <a
+              className="vmaps"
+              href={venue.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              📍 {venue.address}{" "}
+              <span className="vmaps-go">View on Google Maps ↗</span>
+            </a>
           </div>
           <div className="vcard">
+            <div className="sh venue-sh">
+              <div className="sh-title">ORGANIZER</div>
+            </div>
             <div className="vorg">
               <Avatar initials={organizer.initials} size={40} seed />
               <div>

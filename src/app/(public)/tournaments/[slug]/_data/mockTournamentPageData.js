@@ -4,7 +4,7 @@ export const mockTournamentPageData = {
   "brandTitle": "JOMG PCC",
   "brandSubtitle": "Pickleball Club Championship",
   "title": "Central Texas Championship",
-  "badge": "CLUB PLAYERS ONLY",
+  "badge": "CLUB VS CLUB",
   "bannerUrl": "/tournaments/central-texas-championship-banner.jpg",
   "volairLogoUrl": "/tournaments/volair-logo.png",
   "infoBar": [

@@ -12,7 +12,7 @@ export default function TournamentBanner({ badge, title, bannerUrl, volairLogoUr
           </div>
           <div className="cbnr-title">{title}</div>
           <div className="vol-under">
-            POWERED BY{" "}
+            <span>POWERED BY</span>
             <img className="vol-logo" src={volairLogoUrl} alt="Volair" />
           </div>
         </div>

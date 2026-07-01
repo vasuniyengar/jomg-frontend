@@ -177,6 +177,7 @@ export default function ManageDivisionsScreen() {
       maxRating: div.maxRating ? String(div.maxRating) : "",
       startDate: toDateInput(div.startDate),
       endDate: toDateInput(div.endDate),
+      startTime: div.startTime ? String(div.startTime).slice(0, 5) : "",
       ...scoringConfigFromDivision(div, tournament),
       accentColor:
         div.scoringConfig?.accentColor ||
