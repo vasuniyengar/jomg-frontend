@@ -3,8 +3,8 @@ import {
   STATIC_BANNER_BADGE,
   STATIC_BANNER_TITLE,
   STATIC_FORMAT,
+  STATIC_INFO_BAR,
   STATIC_POINTS_ADVANCE,
-  applyStaticInfoBarLabels,
   staticSponsorsIntro,
 } from "../_content/staticPageCopy";
 
@@ -21,7 +21,7 @@ export function mapPublicTournamentResponse(apiData) {
     badge: STATIC_BANNER_BADGE,
     bannerUrl: apiData.bannerUrl || "",
     volairLogoUrl: PUBLIC_BRAND.volairLogoUrl,
-    infoBar: applyStaticInfoBarLabels(apiData.infoBar),
+    infoBar: STATIC_INFO_BAR,
     venue: apiData.venue,
     organizer: apiData.organizer || {},
     tabs: {
@@ -31,6 +31,7 @@ export function mapPublicTournamentResponse(apiData) {
         officialBall: apiDetails.officialBall || "",
         officialBallUrl: apiDetails.officialBallUrl || "",
         instructions: apiDetails.instructions || [],
+        paddlePolicyText: apiDetails.paddlePolicyText || "",
         duprPolicyText: apiDetails.duprPolicyText || "",
       },
       format: STATIC_FORMAT,

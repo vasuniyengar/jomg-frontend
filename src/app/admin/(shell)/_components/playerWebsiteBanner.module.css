@@ -1,0 +1,46 @@
+.banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--primary-border);
+  background: var(--primary-dim);
+  font-size: 13px;
+}
+
+.label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.banner a {
+  color: var(--primary-text);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.hiddenNote {
+  font-size: 13px;
+  color: var(--text-sec);
+}
+
+.hiddenNote strong {
+  color: var(--text);
+}
+
+.settingsLink {
+  color: var(--primary-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.settingsLink:hover {
+  text-decoration: underline;
+}
+
+.privateNote {
+  font-size: 12px;
+  color: var(--text-sec);
+}

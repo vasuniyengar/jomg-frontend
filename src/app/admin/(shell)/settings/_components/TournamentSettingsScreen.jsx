@@ -25,7 +25,7 @@ import SponsorsCard from "./sections/SponsorsCard";
 import BannerCard from "./sections/BannerCard";
 import VisibilityCard, { validateVisibilityPassword } from "./sections/VisibilityCard";
 import ConfirmSettingsCard from "./sections/ConfirmSettingsCard";
-import { publicTournamentPath } from "@/lib/publicTournamentPaths";
+import PlayerWebsiteBanner from "../../_components/PlayerWebsiteBanner";
 
 export default function TournamentSettingsScreen() {
   const router = useRouter();
@@ -343,30 +343,11 @@ export default function TournamentSettingsScreen() {
         {error ? <div className={styles.errorBanner}>{error}</div> : null}
 
         {tournament?.slug ? (
-          <div className={styles.playerUrlBanner}>
-            <span className={styles.playerUrlLabel}>Player website</span>
-            {settings.visibility?.publicTournamentPage &&
-            !settings.visibility?.privateOnly ? (
-              <a
-                href={publicTournamentPath(
-                  tournament.slug,
-                  { preview: tournament.status === "draft" }
-                )}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                /tournaments/{tournament.slug}
-                {tournament.status === "draft" ? " (draft preview)" : ""}
-              </a>
-            ) : (
-              <span style={{ fontSize: 13, color: "var(--text-sec)" }}>
-                Hidden — turn on{" "}
-                <strong style={{ color: "var(--text)" }}>Public Tournament Page</strong>{" "}
-                or turn off <strong style={{ color: "var(--text)" }}>Private Only</strong>, then
-                save.
-              </span>
-            )}
-          </div>
+          <PlayerWebsiteBanner
+            slug={tournament.slug}
+            status={tournament.status}
+            visibility={settings.visibility}
+          />
         ) : null}
 
         <MasterPushBanner settings={settings} onChange={patchSettings} />

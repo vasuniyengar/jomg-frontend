@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TopChrome from "./TopChrome";
 import TournamentBanner from "./TournamentBanner";
 import InfoBar from "./InfoBar";
@@ -13,9 +13,25 @@ import SponsorsTab from "./tabs/SponsorsTab";
 import RefundTab from "./tabs/RefundTab";
 import LivePlayTab from "./tabs/LivePlayTab";
 
+const DESKTOP_ONLY_TABS = new Set(["sponsors", "refund"]);
+const MOBILE_QUERY = "(max-width: 760px)";
+
 export default function TournamentPage({ data, slug, preview = false }) {
   const [activeTab, setActiveTab] = useState("details");
   const livePlayEnabled = data.tabs.livePlay.enabled;
+
+  useEffect(() => {
+    const media = window.matchMedia(MOBILE_QUERY);
+    const syncTabForViewport = () => {
+      if (media.matches && DESKTOP_ONLY_TABS.has(activeTab)) {
+        setActiveTab("details");
+      }
+    };
+
+    syncTabForViewport();
+    media.addEventListener("change", syncTabForViewport);
+    return () => media.removeEventListener("change", syncTabForViewport);
+  }, [activeTab]);
 
   return (
     <>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TournamentPicker from "../_components/TournamentPicker";
+import PlayerWebsiteBanner from "../_components/PlayerWebsiteBanner";
 import StatusControlModal from "./_components/StatusControlModal";
 import styles from "./dashboard.module.css";
 import {
@@ -19,6 +20,7 @@ import {
   statusBadgeClass,
   tournamentAdminPath,
 } from "@/lib/tournaments";
+import { defaultTournamentSettings } from "@/lib/tournamentSettings";
 
 function useCountdown(targetDate) {
   const [parts, setParts] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
@@ -124,6 +126,13 @@ export default function DashboardPage() {
 
   const t = data?.tournament;
   const metrics = data?.metrics;
+  const visibility = useMemo(
+    () => ({
+      ...defaultTournamentSettings().visibility,
+      ...data?.visibility,
+    }),
+    [data?.visibility]
+  );
   const brackets = data?.brackets || [];
   const checklist = data?.checklist || {};
   const isLive = t?.status === "ongoing";
@@ -274,6 +283,16 @@ export default function DashboardPage() {
                     </strong>
                   </div>
                 </div>
+                {t.slug ? (
+                  <PlayerWebsiteBanner
+                    slug={t.slug}
+                    status={t.status}
+                    visibility={visibility}
+                    settingsHref={paths.settings}
+                    alwaysShowLink
+                    className={styles.playerUrlBanner}
+                  />
+                ) : null}
               </div>
               <div
                 style={{

@@ -6,3 +6,8 @@
 .pageRoot {
   min-height: 0;
 }
+
+.playerUrlBanner {
+  margin-top: 12px;
+  width: 100%;
+}

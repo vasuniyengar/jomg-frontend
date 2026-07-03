@@ -8,6 +8,14 @@ export const PUBLIC_BRAND = {
 export const STATIC_BANNER_BADGE = "CLUB VS CLUB";
 export const STATIC_BANNER_TITLE = "Central Texas Championship";
 
+/** Info bar below banner — static copy from PHASE 1 reference HTML */
+export const STATIC_INFO_BAR = [
+  { icon: "calendar", label: "Masters 50+", value: "Sat, Aug 8" },
+  { icon: "calendar", label: "Open 18+", value: "Sat, Sep 19" },
+  { icon: "format", label: "Format", value: "MLP Style" },
+  { icon: "clubs", label: "Clubs", value: "16" },
+];
+
 export const STATIC_FIRST_EVENT_DAY_LABEL = "Masters 50+";
 export const STATIC_CLUBS_COUNT = "16";
 export const STATIC_INFO_BAR_FORMAT = {

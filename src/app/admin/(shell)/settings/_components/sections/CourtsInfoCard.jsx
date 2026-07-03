@@ -1,5 +1,6 @@
 "use client";
 
+import DescriptionRteEditor from "../../../_components/DescriptionRteEditor";
 import { NET_SETUP_OPTIONS, PLAY_ENV_OPTIONS } from "@/lib/tournamentSettings";
 import styles from "../../settings.module.css";
 import { CardBadge } from "../SettingsUi";
@@ -81,12 +82,22 @@ export default function CourtsInfoCard({ settings, onChange }) {
       </div>
       <div className="form-group" style={{ marginBottom: 0 }}>
         <label className="form-label">Court Description</label>
-        <textarea
-          className="form-textarea"
-          rows={3}
-          placeholder="Describe the courts shown on the player website (surface, indoor/outdoor details, etc.)"
+        <DescriptionRteEditor
           value={settings.courtDescription}
-          onChange={(e) => onChange({ courtDescription: e.target.value })}
+          onChange={(html) => onChange({ courtDescription: html })}
+          placeholder="Describe the courts shown on the player website (surface, indoor/outdoor details, etc.)"
+          minHeight={100}
+          showExpand={false}
+        />
+      </div>
+      <div className="form-group" style={{ marginBottom: 0 }}>
+        <label className="form-label">Paddle Policy</label>
+        <DescriptionRteEditor
+          value={settings.paddlePolicyText}
+          onChange={(html) => onChange({ paddlePolicyText: html })}
+          placeholder="Paddle rules shown on the player website Details tab"
+          minHeight={160}
+          showExpand
         />
       </div>
     </div>

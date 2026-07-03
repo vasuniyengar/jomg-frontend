@@ -219,6 +219,14 @@ export const DEFAULT_PLAYER_INSTRUCTIONS = [
   },
 ];
 
+export const DEFAULT_PADDLE_POLICY_TEXT = `Only USAPA & UPA-A approved paddles are allowed
+
+USA Pickleball "delisted" the following paddles; Joola: Preseus 14mm Mod TA-15, Preseus 16mm Mod TA-15, Gearbox: Pro Power Elongated, Pro Kennex: Black Ace Ovation, Black Ace Pro, and Black Ace XF which players WILL NOT be allowed to use during medal matches. Selkirk Boomstick Elongated is allowed.
+
+Since this is an amateur-only event, we will give players the opportunity to switch paddles (or choose to forfeit) rather than default to a forfeited game as stated in the USAPA rules, especially in light of paddles with an approved stamp that are no longer on the approved list.
+
+Our event will follow USAPA rules (see: https://usapickleball.org/what-is-pickleball/official-rules/). Players may ask any questions they have or report any violations at the tournament desk. The tournament director may use their discretion in interpreting or modifying the USAPA rules to suit the specific scenario and ensure fun/competitive play.`;
+
 export const PLAYER_INSTRUCTION_LABELS = DEFAULT_PLAYER_INSTRUCTIONS.map(
   (block) => block.label
 );
@@ -284,6 +292,7 @@ export function defaultTournamentSettings() {
     playEnv: "",
     netSetup: "Permanent",
     courtDescription: "",
+    paddlePolicyText: DEFAULT_PADDLE_POLICY_TEXT,
     officialBall: "",
     officialBallUrl: "",
     paymentPhone: "",
@@ -388,6 +397,10 @@ export function mergeTournamentSettings(organizerInfo) {
     playEnv: parsed.playEnv ?? defaults.playEnv,
     netSetup: parsed.netSetup ?? defaults.netSetup,
     courtDescription: parsed.courtDescription ?? defaults.courtDescription,
+    paddlePolicyText: (() => {
+      const raw = String(parsed.paddlePolicyText ?? "");
+      return raw.trim() ? raw : defaults.paddlePolicyText;
+    })(),
     officialBall: parsed.officialBall ?? defaults.officialBall,
     officialBallUrl: parsed.officialBallUrl ?? defaults.officialBallUrl,
     paymentPhone: parsed.paymentPhone ?? defaults.paymentPhone,

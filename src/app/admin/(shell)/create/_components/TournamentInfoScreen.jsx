@@ -507,14 +507,15 @@ export default function TournamentInfoScreen() {
               <div className="card-header">
                 <span className="card-title">DUPR Level Requirements</span>
               </div>
-              <textarea
-                className="form-textarea"
-                rows={4}
+              <DescriptionRteEditor
                 value={duprRequirementsText}
-                onChange={(e) => {
+                onChange={(html) => {
                   setDuprManual(true);
-                  setDuprRequirementsText(e.target.value);
+                  setDuprRequirementsText(html);
                 }}
+                placeholder="DUPR policy shown on the player website Details tab"
+                minHeight={120}
+                showExpand
               />
               <button
                 type="button"
