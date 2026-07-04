@@ -75,23 +75,24 @@ export const mockTournamentPageData = {
       "duprPolicyText": "DUPR is enforced and recorded for 18+ Open divisions — match results are submitted to DUPR. For 50+ Masters, DUPR is enforced but not recorded. A DUPR profile is mandatory; duplicate profiles are not allowed. Players without a DUPR rating are not allowed in 18+. A player's DUPR overall rating is taken into consideration — not age- or gender-based ratings."
     },
     "format": {
-      "tag": "MLP Style",
-      "intro": "Major League Pickleball format \u2014 team play with men's doubles, women's doubles, and mixed doubles segments plus a Dream Breaker tiebreaker.",
+      "tag": "MLP style",
+      "intro": "Major League Pickleball format \u2014 team play across four doubles games (men's doubles, women's doubles, and two mixed doubles), plus a Dream Breaker tiebreaker if the games finish tied 2\u20132.",
+      "mlpNote": "All four games are played in every round-robin match \u2014 even if a team clinches 3\u20130 after three games. Because match points are awarded by total game wins, teams must complete all four games.",
       "mlpScoring": [
         {
-          "label": "Men's Doubles",
+          "label": "Men's doubles",
           "value": "1 game to 11, win by 2"
         },
         {
-          "label": "Women's Doubles",
+          "label": "Women's doubles",
           "value": "1 game to 11, win by 2"
         },
         {
-          "label": "Mixed Doubles 1",
+          "label": "Mixed doubles 1",
           "value": "1 game to 11, win by 2"
         },
         {
-          "label": "Mixed Doubles 2",
+          "label": "Mixed doubles 2",
           "value": "1 game to 11, win by 2"
         }
       ],
@@ -105,8 +106,8 @@ export const mockTournamentPageData = {
           "value": "Singles rally \u2014 1 server switches"
         },
         {
-          "label": "Trigger",
-          "value": "Only when games tied 2\u20132"
+          "label": "Win on serve",
+          "value": "Team must serve to win the game"
         }
       ],
       "teamSetup": [
@@ -115,22 +116,38 @@ export const mockTournamentPageData = {
           "value": "2F + 2M"
         },
         {
-          "label": "Substitutes (Optional)",
+          "label": "Substitutes (optional)",
           "value": "1F & 1M"
         },
         {
-          "label": "Game Order",
+          "label": "Game order",
           "value": "Women's D \u2192 Men's D \u2192 Mixed"
         }
       ],
       "scoringTiming": [
         {
-          "label": "Scoring Type",
+          "label": "Scoring type",
           "value": "Traditional (side-out)"
         },
         {
-          "label": "Warm-up Time",
+          "label": "Warm-up time",
           "value": "3 min"
+        }
+      ],
+      "switchSides": [
+        {
+          "label": "Game to 11",
+          "value": "Switch at 6, one minute timeout at switch or rotation"
+        },
+        {
+          "label": "Game to 21",
+          "value": "Switch at 11, one minute timeout at switch or rotation"
+        }
+      ],
+      "timeouts": [
+        {
+          "label": "Timeouts",
+          "value": "1 timeout per game per team"
         }
       ],
       "notes": [
@@ -139,7 +156,7 @@ export const mockTournamentPageData = {
           "text": "Allowed for injury or before the next match (not between games)."
         },
         {
-          "label": "Coach on Court",
+          "label": "Coach on court",
           "text": "Off \u2014 no non-playing coach during timeouts."
         }
       ]

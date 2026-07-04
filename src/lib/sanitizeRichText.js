@@ -22,7 +22,23 @@ function escapeHtml(text) {
 }
 
 function looksLikeHtml(value) {
-  return /<[a-z][\s\S]*>/i.test(value);
+  const raw = String(value);
+  if (/<[a-z][\s\S]*>/i.test(raw)) return true;
+  if (/&(?:nbsp|#\d+|#x[\da-f]+|[a-z]{2,10});/i.test(raw)) return true;
+  return false;
+}
+
+function normalizeNbsp(value) {
+  return String(value).replace(/&amp;nbsp;/gi, " ").replace(/&nbsp;/gi, " ");
+}
+
+/** Normalize contenteditable output (nbsp, div blocks) for storage and display. */
+export function normalizeRichTextForStorage(value) {
+  let html = normalizeNbsp(value);
+  html = html.replace(/<div>/gi, "<p>").replace(/<\/div>/gi, "</p>");
+  html = html.replace(/<p>\s*<\/p>/gi, "");
+  html = html.replace(/<p>\s*(<br\s*\/?>)\s*<\/p>/gi, "$1");
+  return html;
 }
 
 function sanitizeAllowlistedHtml(html) {
@@ -66,8 +82,9 @@ export function richTextIsEmpty(value) {
 export function richTextToDisplayHtml(value) {
   const raw = String(value ?? "");
   if (richTextIsEmpty(raw)) return "";
-  if (!looksLikeHtml(raw)) {
-    return escapeHtml(raw).replace(/\n/g, "<br>");
+  const normalized = normalizeRichTextForStorage(raw);
+  if (!looksLikeHtml(normalized)) {
+    return escapeHtml(normalized).replace(/\n/g, "<br>");
   }
-  return sanitizeAllowlistedHtml(raw);
+  return sanitizeAllowlistedHtml(normalized);
 }

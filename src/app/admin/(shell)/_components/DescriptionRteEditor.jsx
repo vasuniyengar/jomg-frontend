@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { normalizeRichTextForStorage } from "@/lib/sanitizeRichText";
 
 function execOn(el, cmd, value = null) {
   if (!el) return;
@@ -39,7 +40,7 @@ export default function DescriptionRteEditor({
   }, [syncFromValue]);
 
   const emitChange = () => {
-    const html = editorRef.current?.innerHTML || "";
+    const html = normalizeRichTextForStorage(editorRef.current?.innerHTML || "");
     onChange(html);
   };
 
@@ -54,7 +55,9 @@ export default function DescriptionRteEditor({
   };
 
   const saveModal = () => {
-    const html = modalEditorRef.current?.innerHTML || modalHtml;
+    const html = normalizeRichTextForStorage(
+      modalEditorRef.current?.innerHTML || modalHtml
+    );
     onChange(html);
     if (editorRef.current) editorRef.current.innerHTML = html;
     setModalOpen(false);

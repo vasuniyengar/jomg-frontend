@@ -1,3 +1,5 @@
+const FOUNDING_STAR_SRC = "/tournaments/founding-star.png";
+
 function FormatIcon() {
   return (
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -15,10 +17,22 @@ function FormatIcon() {
   );
 }
 
+function FoundingClubsIcon() {
+  return (
+    <img
+      className="ib-ic-star"
+      src={FOUNDING_STAR_SRC}
+      alt=""
+      width={18}
+      height={18}
+    />
+  );
+}
+
 function InfoBarIcon({ icon }) {
   if (icon === "calendar") return "🗓";
   if (icon === "format") return <FormatIcon />;
-  if (icon === "clubs") return "🏟";
+  if (icon === "clubs") return <FoundingClubsIcon />;
   return "•";
 }
 

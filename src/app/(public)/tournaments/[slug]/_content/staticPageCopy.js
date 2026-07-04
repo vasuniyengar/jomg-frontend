@@ -73,36 +73,49 @@ export function applyStaticInfoBarLabels(items) {
 }
 
 export const STATIC_FORMAT = {
-  tag: "MLP Style",
+  tag: "MLP style",
   intro:
-    "Major League Pickleball format — team play with men's doubles, women's doubles, and mixed doubles segments plus a Dream Breaker tiebreaker.",
+    "Major League Pickleball format — team play across four doubles games (men's doubles, women's doubles, and two mixed doubles), plus a Dream Breaker tiebreaker if the games finish tied 2–2.",
+  mlpNote:
+    "All four games are played in every round-robin match — even if a team clinches 3–0 after three games. Because match points are awarded by total game wins, teams must complete all four games.",
   mlpScoring: [
-    { label: "Men's Doubles", value: "1 game to 11, win by 2" },
-    { label: "Women's Doubles", value: "1 game to 11, win by 2" },
-    { label: "Mixed Doubles 1", value: "1 game to 11, win by 2" },
-    { label: "Mixed Doubles 2", value: "1 game to 11, win by 2" },
+    { label: "Men's doubles", value: "1 game to 11, win by 2" },
+    { label: "Women's doubles", value: "1 game to 11, win by 2" },
+    { label: "Mixed doubles 1", value: "1 game to 11, win by 2" },
+    { label: "Mixed doubles 2", value: "1 game to 11, win by 2" },
   ],
   dreamBreaker: [
     { label: "Scoring", value: "1 game to 21, win by 1" },
     { label: "Rotation", value: "Singles rally — 1 server switches" },
-    { label: "Trigger", value: "Only when games tied 2–2" },
+    { label: "Win on serve", value: "Team must serve to win the game" },
   ],
   teamSetup: [
     { label: "Starters", value: "2F + 2M" },
-    { label: "Substitutes (Optional)", value: "1F & 1M" },
-    { label: "Game Order", value: "Women's D → Men's D → Mixed" },
+    { label: "Substitutes (optional)", value: "1F & 1M" },
+    { label: "Game order", value: "Women's D → Men's D → Mixed" },
   ],
   scoringTiming: [
-    { label: "Scoring Type", value: "Traditional (side-out)" },
-    { label: "Warm-up Time", value: "3 min" },
+    { label: "Scoring type", value: "Traditional (side-out)" },
+    { label: "Warm-up time", value: "3 min" },
   ],
+  switchSides: [
+    {
+      label: "Game to 11",
+      value: "Switch at 6, one minute timeout at switch or rotation",
+    },
+    {
+      label: "Game to 21",
+      value: "Switch at 11, one minute timeout at switch or rotation",
+    },
+  ],
+  timeouts: [{ label: "Timeouts", value: "1 timeout per game per team" }],
   notes: [
     {
       label: "Substitutions",
       text: "Allowed for injury or before the next match (not between games).",
     },
     {
-      label: "Coach on Court",
+      label: "Coach on court",
       text: "Off — no non-playing coach during timeouts.",
     },
   ],
