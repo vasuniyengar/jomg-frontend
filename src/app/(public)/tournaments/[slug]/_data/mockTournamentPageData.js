@@ -19,14 +19,14 @@ export const mockTournamentPageData = {
       "value": "Sat, Sep 19"
     },
     {
+      "icon": "clubs",
+      "label": "Founding Clubs",
+      "value": "14"
+    },
+    {
       "icon": "format",
       "label": "Format",
       "value": "MLP Style"
-    },
-    {
-      "icon": "clubs",
-      "label": "Club",
-      "value": "14"
     }
   ],
   "venue": {

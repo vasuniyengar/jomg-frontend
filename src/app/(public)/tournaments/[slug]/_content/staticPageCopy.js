@@ -12,8 +12,8 @@ export const STATIC_BANNER_TITLE = "Central Texas Championship";
 export const STATIC_INFO_BAR = [
   { icon: "calendar", label: "Masters 50+", value: "Sat, Aug 8" },
   { icon: "calendar", label: "Open 18+", value: "Sat, Sep 19" },
+  { icon: "clubs", label: "Founding Clubs", value: "14" },
   { icon: "format", label: "Format", value: "MLP Style" },
-  { icon: "clubs", label: "Club", value: "14" },
 ];
 
 export const STATIC_FIRST_EVENT_DAY_LABEL = "Masters 50+";
@@ -37,8 +37,8 @@ export function applyStaticInfoBarLabels(items) {
     if (item.icon === "divisions") continue;
 
     if (item.icon === "clubs") {
-      processed.push(STATIC_INFO_BAR_FORMAT);
       processed.push({ ...item, value: STATIC_CLUBS_COUNT });
+      processed.push(STATIC_INFO_BAR_FORMAT);
       continue;
     }
 
@@ -58,14 +58,14 @@ export function applyStaticInfoBarLabels(items) {
   if (!processed.some((item) => item.icon === "format")) {
     const clubsIndex = processed.findIndex((item) => item.icon === "clubs");
     if (clubsIndex >= 0) {
-      processed.splice(clubsIndex, 0, STATIC_INFO_BAR_FORMAT);
+      processed.splice(clubsIndex + 1, 0, STATIC_INFO_BAR_FORMAT);
     } else {
-      processed.push(STATIC_INFO_BAR_FORMAT);
       processed.push({
         icon: "clubs",
-        label: "Club",
+        label: "Founding Clubs",
         value: STATIC_CLUBS_COUNT,
       });
+      processed.push(STATIC_INFO_BAR_FORMAT);
     }
   }
 

@@ -90,7 +90,6 @@ export default function DetailsTab({ data, venue, organizer }) {
             </div>
           </div>
           <div className="info-block">
-            <div className="info-k">Courts</div>
             <RichTextContent html={details.courts} />
           </div>
         </div>
@@ -103,7 +102,6 @@ export default function DetailsTab({ data, venue, organizer }) {
             </div>
           </div>
           <div className="info-block">
-            <div className="info-k">Official Ball</div>
             <div className="info-v">
               {details.officialBallUrl ? (
                 <a
@@ -173,7 +171,7 @@ export default function DetailsTab({ data, venue, organizer }) {
       </DetailsCollapsibleSection>
 
       {hasAbout ? (
-        <DetailsCollapsibleSection id="details-about" title="ABOUT" defaultOpen>
+        <DetailsCollapsibleSection id="details-about" title="TOURNAMENT INFO" defaultOpen>
           <div className="about-body">
             {!richTextIsEmpty(details.description) ? (
               <RichTextContent html={details.description} />
@@ -196,22 +194,6 @@ export default function DetailsTab({ data, venue, organizer }) {
         </DetailsCollapsibleSection>
       ) : null}
 
-      {hasInstructions ? (
-        <DetailsCollapsibleSection
-          id="details-instructions"
-          title="PLAYER ESSENTIALS"
-        >
-          {details.instructions
-            .filter((block) => block.text?.trim())
-            .map((block) => (
-              <div className="info-block" key={block.label}>
-                <div className="info-k">{block.label}</div>
-                <div className="info-v">{block.text}</div>
-              </div>
-            ))}
-        </DetailsCollapsibleSection>
-      ) : null}
-
       {hasPaddlePolicy ? (
         <DetailsCollapsibleSection id="details-paddle" title="PADDLE POLICY">
           <div className="info-block">
@@ -229,6 +211,22 @@ export default function DetailsTab({ data, venue, organizer }) {
           <div className="info-block">
             <RichTextContent html={details.duprPolicyText} />
           </div>
+        </DetailsCollapsibleSection>
+      ) : null}
+
+      {hasInstructions ? (
+        <DetailsCollapsibleSection
+          id="details-instructions"
+          title="PLAYER ESSENTIALS"
+        >
+          {details.instructions
+            .filter((block) => block.text?.trim())
+            .map((block) => (
+              <div className="info-block" key={block.label}>
+                <div className="info-k">{block.label}</div>
+                <div className="info-v">{block.text}</div>
+              </div>
+            ))}
         </DetailsCollapsibleSection>
       ) : null}
 

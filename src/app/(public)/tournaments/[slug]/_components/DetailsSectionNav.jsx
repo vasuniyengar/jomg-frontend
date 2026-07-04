@@ -14,13 +14,10 @@ export function buildDetailsSections({
 }) {
   const sections = [{ id: "details-venue", label: "Venue" }];
   if (hasAbout) {
-    sections.push({ id: "details-about", label: "About" });
+    sections.push({ id: "details-about", label: "Tournament Info" });
   }
   if (hasCourts || hasOfficialBall) {
     sections.push({ id: "details-courts", label: "Courts" });
-  }
-  if (hasInstructions) {
-    sections.push({ id: "details-instructions", label: "Essentials" });
   }
   if (hasPaddlePolicy) {
     sections.push({ id: "details-paddle", label: "Paddle" });
@@ -30,6 +27,9 @@ export function buildDetailsSections({
   }
   if (hasDuprPolicy) {
     sections.push({ id: "details-dupr", label: "DUPR" });
+  }
+  if (hasInstructions) {
+    sections.push({ id: "details-instructions", label: "Essentials" });
   }
   if (hasRefund) {
     sections.push({ id: "details-refund", label: "Refund" });
