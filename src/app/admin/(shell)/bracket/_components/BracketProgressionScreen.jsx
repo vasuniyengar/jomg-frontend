@@ -154,7 +154,7 @@ export default function BracketProgressionScreen() {
     <div className={`screen active ${styles.page}`}>
       <div className="page-header">
         <div className="page-title-group">
-          <div className="page-eyebrow">Phase 4 · Live Play</div>
+          <div className="page-eyebrow">Phase 4 · Control Hub</div>
           <div className="page-title">Bracket Progression</div>
           <div className="page-sub">Live bracket updates as matches complete</div>
         </div>

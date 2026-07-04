@@ -252,7 +252,7 @@ export function buildTournamentUpdatePayload(tournament, overrides = {}) {
 
   return {
     name: tournament.name,
-    description: tournament.description,
+    description: overrides.description ?? tournament.description,
     entryFee: Number(overrides.entryFee ?? tournament.entryFee ?? 0),
     clubId: tournament.clubId,
     discount: tournament.discount ?? 0,

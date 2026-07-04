@@ -25,8 +25,8 @@ export const mockTournamentPageData = {
     },
     {
       "icon": "clubs",
-      "label": "Clubs",
-      "value": "16"
+      "label": "Club",
+      "value": "14"
     }
   ],
   "venue": {

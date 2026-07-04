@@ -94,7 +94,10 @@ export default function DivisionsTab({ data, slug, preview = false }) {
           {(selectedDay?.divisions || []).map((division) => (
             <details className="tl-stop" key={division.id} open>
               <summary className="tl-head">
-                <div className="tl-time">{division.time}</div>
+                <div className="tl-timeCol">
+                  <div className="tl-sl">Start Time</div>
+                  <div className="tl-time">{division.time}</div>
+                </div>
                 <div className="tl-main">
                   <div className="tl-name">{division.name}</div>
                   <div className="tl-sub">{division.sub}</div>

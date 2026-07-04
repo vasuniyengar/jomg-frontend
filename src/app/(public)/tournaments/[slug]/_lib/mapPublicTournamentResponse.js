@@ -17,7 +17,7 @@ export function mapPublicTournamentResponse(apiData) {
     slug: apiData.slug,
     brandTitle: PUBLIC_BRAND.brandTitle,
     brandSubtitle: PUBLIC_BRAND.brandSubtitle,
-    title: STATIC_BANNER_TITLE,
+    title: apiData.title || STATIC_BANNER_TITLE,
     badge: STATIC_BANNER_BADGE,
     bannerUrl: apiData.bannerUrl || "",
     volairLogoUrl: PUBLIC_BRAND.volairLogoUrl,
@@ -26,7 +26,8 @@ export function mapPublicTournamentResponse(apiData) {
     organizer: apiData.organizer || {},
     tabs: {
       details: {
-        about: [],
+        description: apiData.description || "",
+        about: apiDetails.about || [],
         courts: apiDetails.courtDescription || "",
         officialBall: apiDetails.officialBall || "",
         officialBallUrl: apiDetails.officialBallUrl || "",

@@ -190,7 +190,7 @@ export default function CheckInScreen() {
     <div className="screen active">
       <div className="page-header">
         <div className="page-title-group">
-          <div className="page-eyebrow">Phase 4 · Live Play</div>
+          <div className="page-eyebrow">Phase 4 · Control Hub</div>
           <div className="page-title">Arrival Center</div>
           <div className="page-sub">
             Team check-in ·{" "}

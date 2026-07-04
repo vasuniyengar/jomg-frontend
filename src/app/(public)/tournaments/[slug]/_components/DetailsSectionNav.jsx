@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 export function buildDetailsSections({
+  hasAbout,
   hasCourts,
   hasOfficialBall,
   hasInstructions,
@@ -12,11 +13,14 @@ export function buildDetailsSections({
   hasRefund,
 }) {
   const sections = [{ id: "details-venue", label: "Venue" }];
+  if (hasAbout) {
+    sections.push({ id: "details-about", label: "About" });
+  }
   if (hasCourts || hasOfficialBall) {
     sections.push({ id: "details-courts", label: "Courts" });
   }
   if (hasInstructions) {
-    sections.push({ id: "details-instructions", label: "Instructions" });
+    sections.push({ id: "details-instructions", label: "Essentials" });
   }
   if (hasPaddlePolicy) {
     sections.push({ id: "details-paddle", label: "Paddle" });

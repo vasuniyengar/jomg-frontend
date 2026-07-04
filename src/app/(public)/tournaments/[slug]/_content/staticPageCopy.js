@@ -13,11 +13,11 @@ export const STATIC_INFO_BAR = [
   { icon: "calendar", label: "Masters 50+", value: "Sat, Aug 8" },
   { icon: "calendar", label: "Open 18+", value: "Sat, Sep 19" },
   { icon: "format", label: "Format", value: "MLP Style" },
-  { icon: "clubs", label: "Clubs", value: "16" },
+  { icon: "clubs", label: "Club", value: "14" },
 ];
 
 export const STATIC_FIRST_EVENT_DAY_LABEL = "Masters 50+";
-export const STATIC_CLUBS_COUNT = "16";
+export const STATIC_CLUBS_COUNT = "14";
 export const STATIC_INFO_BAR_FORMAT = {
   icon: "format",
   label: "Format",
@@ -63,7 +63,7 @@ export function applyStaticInfoBarLabels(items) {
       processed.push(STATIC_INFO_BAR_FORMAT);
       processed.push({
         icon: "clubs",
-        label: "Clubs",
+        label: "Club",
         value: STATIC_CLUBS_COUNT,
       });
     }

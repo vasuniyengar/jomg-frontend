@@ -8,6 +8,8 @@ import { richTextIsEmpty } from "@/lib/sanitizeRichText";
 
 export default function DetailsTab({ data, venue, organizer }) {
   const { details, sponsors, refund } = data;
+  const hasAbout =
+    !richTextIsEmpty(details.description) || (details.about?.length ?? 0) > 0;
   const hasCourts = !richTextIsEmpty(details.courts);
   const hasOfficialBall = Boolean(details.officialBall?.trim());
   const hasInstructions = details.instructions?.some((block) => block.text?.trim());
@@ -24,6 +26,7 @@ export default function DetailsTab({ data, venue, organizer }) {
         : "OFFICIAL BALL";
 
   const sectionNavItems = buildDetailsSections({
+    hasAbout,
     hasCourts,
     hasOfficialBall,
     hasInstructions,
@@ -55,23 +58,23 @@ export default function DetailsTab({ data, venue, organizer }) {
           <div className="sh venue-sh">
             <div className="sh-title">ORGANIZER</div>
           </div>
-          <div className="vorg">
+          <div className="vorg vorgWithContacts">
             <Avatar initials={organizer.initials} size={40} seed />
-            <div>
+            <div className="vorgBody">
               <div className="vorg-name">{organizer.name}</div>
               <div className="vorg-role">{organizer.role}</div>
+              {organizer.email ? (
+                <a className="vcontact" href={`mailto:${organizer.email}`}>
+                  ✉️ {organizer.email}
+                </a>
+              ) : null}
+              {organizer.phone ? (
+                <a className="vcontact" href={organizer.phoneHref}>
+                  📞 {organizer.phone}
+                </a>
+              ) : null}
             </div>
           </div>
-          {organizer.email ? (
-            <a className="vcontact" href={`mailto:${organizer.email}`}>
-              ✉️ {organizer.email}
-            </a>
-          ) : null}
-          {organizer.phone ? (
-            <a className="vcontact" href={organizer.phoneHref}>
-              📞 {organizer.phone}
-            </a>
-          ) : null}
         </div>
       </div>
     </div>
@@ -169,20 +172,17 @@ export default function DetailsTab({ data, venue, organizer }) {
         {venueContent}
       </DetailsCollapsibleSection>
 
-      <DetailsCollapsibleSection id="details-about" title="ABOUT" defaultOpen>
-        <div className="about-body">
-          <p>
-            The <b>Central Texas Championship</b> is an invite-only club-vs-club
-            battle on the JOMG PCC circuit — the strongest teams in the region
-            across nine skill divisions.
-          </p>
-          <p>
-            This is <b>MLP team play</b>: every team fields its starters
-            contesting men&apos;s doubles, women&apos;s doubles, two mixed games,
-            and a Dream Breaker when tied 2–2.
-          </p>
-        </div>
-      </DetailsCollapsibleSection>
+      {hasAbout ? (
+        <DetailsCollapsibleSection id="details-about" title="ABOUT" defaultOpen>
+          <div className="about-body">
+            {!richTextIsEmpty(details.description) ? (
+              <RichTextContent html={details.description} />
+            ) : (
+              details.about.map((paragraph) => <p key={paragraph}>{paragraph}</p>)
+            )}
+          </div>
+        </DetailsCollapsibleSection>
+      ) : null}
 
       {hasCourts || hasOfficialBall ? (
         <DetailsCollapsibleSection
@@ -199,7 +199,7 @@ export default function DetailsTab({ data, venue, organizer }) {
       {hasInstructions ? (
         <DetailsCollapsibleSection
           id="details-instructions"
-          title="PLAYER INSTRUCTIONS"
+          title="PLAYER ESSENTIALS"
         >
           {details.instructions
             .filter((block) => block.text?.trim())

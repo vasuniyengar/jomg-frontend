@@ -47,12 +47,7 @@ export default function TournamentPage({ data, slug, preview = false }) {
             </span>
           </div>
         ) : null}
-        <TournamentBanner
-          badge={data.badge}
-          title={data.title}
-          bannerUrl={data.bannerUrl}
-          volairLogoUrl={data.volairLogoUrl}
-        />
+        <TournamentBanner badge={data.badge} bannerUrl={data.bannerUrl} />
         <InfoBar items={data.infoBar} />
 
         <section className="sec" style={{ paddingTop: 20 }}>

@@ -71,27 +71,32 @@ export const PHASES = [
   {
     id: "phase-4",
     num: 4,
-    label: "Live Play",
+    label: "Control Hub",
     sub: "Day-of operations",
     items: [
       {
-        href: "/admin/control",
-        icon: "🎮",
-        label: "Control Center",
-        liveDot: true,
-      },
-      {
         href: "/admin/checkin",
         icon: "✅",
-        label: "Player Check-In",
+        label: "Check-In",
         badge: {
           text: "94%",
           variant: "green",
           style: { background: "rgba(0,200,80,0.15)", color: "#00b84a" },
         },
       },
+      {
+        href: "/admin/control",
+        icon: "🎮",
+        label: "Live Play",
+        liveDot: true,
+      },
       { href: "/admin/courts", icon: "🏟", label: "Court Center" },
-      { href: "/admin/autopilot", icon: "🛫", label: "Auto-Pilot" },
+      {
+        comingSoon: true,
+        icon: "🛫",
+        label: "Auto-Pilot",
+        version: "Soon",
+      },
       { href: "/admin/scoreentry", icon: "📋", label: "Score Entry" },
       { href: "/admin/bracket", icon: "📊", label: "Bracket Progression" },
     ],
