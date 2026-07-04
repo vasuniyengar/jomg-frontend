@@ -62,14 +62,40 @@ a{color:inherit;text-decoration:none;} button{font-family:inherit;cursor:pointer
 .av-seed{background:var(--seed-bg);color:var(--seed-fg);}
 
 /* ── CONTAINED BANNER (shared, rounded card inside margins) ── */
-.cbnr{position:relative;border-radius:20px;overflow:hidden;margin:20px 0;min-height:280px;display:flex;align-items:center;background:#222;box-shadow:var(--shadow);}
-.cbnr-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.cbnr{
+  position:relative;
+  width:100%;
+  aspect-ratio:1132 / 280;
+  border-radius:20px;
+  overflow:hidden;
+  margin:20px 0;
+  background:#222;
+  box-shadow:var(--shadow);
+}
+.cbnr-img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  max-width:none;
+  object-fit:cover;
+  object-position:center;
+}
+.cbnr-empty{background:linear-gradient(135deg,var(--surface2),var(--border2));}
 .cbnr-grad{position:absolute;inset:0;background:var(--bnr-overlay);}
 .cbnr-in{position:relative;display:flex;align-items:center;gap:22px;padding:36px 40px;width:100%;}
 .cbnr-eyebrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;font-weight:600;letter-spacing:.5px;color:rgba(255,255,255,.8);margin-bottom:14px;}
 .cbnr-badge{background:var(--accent);color:var(--accent-fg);padding:5px 13px;border-radius:999px;font-weight:700;letter-spacing:.4px;font-size:12px;}
 .cbnr-title{font-family:var(--display);font-size:74px;line-height:.9;letter-spacing:.5px;color:#fff;text-shadow:0 2px 18px rgba(0,0,0,.45);}
-@media(max-width:760px){.cbnr{min-height:240px;}.cbnr-in{flex-direction:column;align-items:flex-start;gap:14px;padding:24px;}.cbnr-title{font-size:46px;}}
+@media(max-width:760px){
+  .cbnr{
+    margin:14px -14px;
+    width:calc(100% + 28px);
+    border-radius:0;
+  }
+  .cbnr-in{flex-direction:column;align-items:flex-start;gap:14px;padding:24px;}
+  .cbnr-title{font-size:46px;}
+}
 
 /* ── Volair placement variants (toggle via html[data-vol]) ── */
 
@@ -587,7 +613,7 @@ a{color:inherit;text-decoration:none;} button{font-family:inherit;cursor:pointer
   .cs-brand{font-size:17px;gap:7px;}
   .cs-brand .dot{width:20px;height:20px;font-size:10px;}
   .cs-theme{padding:7px 11px;}
-  .cbnr{margin:14px 0;min-height:200px;border-radius:16px;}
+  .cbnr{margin:12px -14px;width:calc(100% + 28px);}
   .cbnr-title{font-size:38px;line-height:.95;}
   .vol-under{
     font-size:15px;
