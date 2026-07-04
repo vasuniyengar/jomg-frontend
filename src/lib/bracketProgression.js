@@ -63,30 +63,83 @@ export async function updateMatchScore(bracketId, matchId, { scoreTeam1, scoreTe
   return response;
 }
 
-/** Flatten pool + playoff matches for score-entry picker. */
-export async function listMatchesForBracket(tournamentId, bracketId) {
-  const pools = await fetchPools(tournamentId, bracketId);
-  const poolMatches = [];
+function mapPoolMatch(m, pool, round, bracketId) {
+  return {
+    matchId: m.id,
+    bracketId: Number(bracketId),
+    poolId: pool.id,
+    poolName: pool.poolName || pool.name,
+    roundNumber: round.roundNumber,
+    roundType: "pool",
+    status: m.status || "pending",
+    scoreTeam1: Number(m.scoreTeam1) || 0,
+    scoreTeam2: Number(m.scoreTeam2) || 0,
+    winnerTeamId: m.winnerTeamId || null,
+    team1Id: m.team1?.id || m.Team1?.id || null,
+    team2Id: m.team2?.id || m.Team2?.id || null,
+    team1Name: formatTeamName(m.team1 || m.Team1),
+    team2Name: formatTeamName(m.team2 || m.Team2),
+    team1Seed: m.team1?.seed || m.Team1?.seed || null,
+    team2Seed: m.team2?.seed || m.Team2?.seed || null,
+  };
+}
 
-  for (const pool of pools) {
+function mapPlayoffMatch(m, round, bracketId) {
+  const matchId = m.matchId || m.id;
+  if (!matchId) return null;
+  const team1 = m.Team1 || m.team1;
+  const team2 = m.Team2 || m.team2;
+  const hasScores =
+    m.scoreTeam1 != null ||
+    m.scoreTeam2 != null ||
+    m.winnerTeamId != null;
+  const status =
+    m.status ||
+    (m.winnerTeamId
+      ? "completed"
+      : hasScores && (Number(m.scoreTeam1) || Number(m.scoreTeam2))
+        ? "ongoing"
+        : "pending");
+  return {
+    matchId,
+    bracketId: Number(bracketId),
+    poolId: null,
+    poolName: null,
+    roundNumber: round.roundNumber,
+    roundType: round.type || "playoff",
+    status,
+    scoreTeam1: Number(m.scoreTeam1) || 0,
+    scoreTeam2: Number(m.scoreTeam2) || 0,
+    winnerTeamId: m.winnerTeamId || null,
+    team1Id: team1?.id || team1?.team1Id || null,
+    team2Id: team2?.id || team2?.team2Id || null,
+    team1Name: team1?.teamName || formatTeamName(team1) || "TBD",
+    team2Name: team2?.teamName || formatTeamName(team2) || "TBD",
+    team1Seed: team1?.seed || null,
+    team2Seed: team2?.seed || null,
+  };
+}
+
+/** Full pool details + playoffs for Score Entry (v60-style pool grid). */
+export async function loadScoreEntryBracket(tournamentId, bracketId) {
+  const poolsMeta = await fetchPools(tournamentId, bracketId);
+  const pools = [];
+
+  for (const pool of poolsMeta) {
     const detail = await fetchPoolDetails(tournamentId, bracketId, pool.id);
+    const matches = [];
     for (const round of detail?.rounds || []) {
       for (const m of round.matches || []) {
-        poolMatches.push({
-          matchId: m.id,
-          bracketId: Number(bracketId),
-          poolId: pool.id,
-          poolName: detail.poolName,
-          roundNumber: round.roundNumber,
-          roundType: "pool",
-          status: m.status,
-          scoreTeam1: m.scoreTeam1,
-          scoreTeam2: m.scoreTeam2,
-          team1Name: formatTeamName(m.team1),
-          team2Name: formatTeamName(m.team2),
-        });
+        matches.push(mapPoolMatch(m, detail || pool, round, bracketId));
       }
     }
+    pools.push({
+      id: detail?.id || pool.id,
+      poolName: detail?.poolName || pool.poolName || pool.name || `Pool ${pool.id}`,
+      scoring: detail?.scoring || "",
+      teams: detail?.teams || [],
+      matches,
+    });
   }
 
   let playoffRounds = [];
@@ -99,23 +152,32 @@ export async function listMatchesForBracket(tournamentId, bracketId) {
   const playoffMatches = [];
   for (const round of playoffRounds || []) {
     for (const m of round.matches || []) {
-      if (!m.matchId && !m.Team1) continue;
-      playoffMatches.push({
-        matchId: m.matchId,
-        bracketId: Number(bracketId),
-        poolId: null,
-        roundNumber: round.roundNumber,
-        roundType: round.type,
-        status: m.status || "pending",
-        scoreTeam1: m.scoreTeam1,
-        scoreTeam2: m.scoreTeam2,
-        team1Name: m.Team1?.teamName || teamLabel(m.Team1),
-        team2Name: m.Team2?.teamName || teamLabel(m.Team2) || "TBD",
-      });
+      const mapped = mapPlayoffMatch(m, round, bracketId);
+      if (mapped) playoffMatches.push(mapped);
     }
   }
 
-  return { poolMatches, playoffMatches };
+  const poolMatches = pools.flatMap((p) => p.matches);
+  return { pools, poolMatches, playoffMatches, playoffRounds };
+}
+
+/** Flatten pool + playoff matches for score-entry picker. */
+export async function listMatchesForBracket(tournamentId, bracketId) {
+  const data = await loadScoreEntryBracket(tournamentId, bracketId);
+  return {
+    poolMatches: data.poolMatches,
+    playoffMatches: data.playoffMatches,
+  };
+}
+
+export function classifyDivisionProgress(poolMatches = [], playoffMatches = []) {
+  const all = [...poolMatches, ...playoffMatches];
+  if (!all.length) return "not_started";
+  const completed = all.filter((m) => m.status === "completed").length;
+  const ongoing = all.filter((m) => m.status === "ongoing").length;
+  if (completed === all.length) return "completed";
+  if (completed > 0 || ongoing > 0) return "in_progress";
+  return "not_started";
 }
 
 function formatTeamName(team) {
@@ -125,12 +187,14 @@ function formatTeamName(team) {
   if (players.length) {
     return players
       .map((p) => {
+        if (typeof p === "string") return p;
         const u = p.User || p;
         return [u.firstname, u.lastname].filter(Boolean).join(" ");
       })
+      .filter(Boolean)
       .join(" / ");
   }
-  return `Team ${team.id}`;
+  return `Team ${team.id || team.team1Id || team.team2Id || ""}`.trim();
 }
 
 function teamLabel(teamBlock) {

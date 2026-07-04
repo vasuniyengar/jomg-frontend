@@ -1,58 +1,577 @@
+/* Score Entry — ported from FINAL Admin-journey-v60.html */
+
 .page {
   min-height: calc(100vh - 56px);
 }
 
-.scoreGrid {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 24px;
+.pickerGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pickerLabel {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.pickerLabelActive {
+  color: var(--primary-text);
+}
+
+.pickerLabelYts {
+  color: #e0a000;
+}
+
+.pickerLabelDone {
+  color: #00c84a;
+}
+
+.pickerSelect {
+  width: 200px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.pickerSelectActive {
+  border-color: var(--primary-border) !important;
+  background: var(--primary-dim) !important;
+  color: var(--primary-text) !important;
+  font-weight: 700;
+}
+
+.pickerSelectYts {
+  border-color: rgba(224, 160, 0, 0.5) !important;
+  background: rgba(224, 160, 0, 0.12) !important;
+  color: #e0a000 !important;
+  font-weight: 700;
+}
+
+.pickerSelectDone {
+  border-color: rgba(0, 200, 80, 0.45) !important;
+  background: rgba(0, 200, 80, 0.12) !important;
+  color: #00c84a !important;
+  font-weight: 700;
+}
+
+.poolLayoutToggle {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.poolLayoutBtn {
+  padding: 7px 12px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  background: transparent;
+  color: var(--text-sec);
+}
+
+.poolLayoutBtnOn {
+  background: var(--primary);
+  color: #000;
+}
+
+.divTitleRow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.divSwatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--primary);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.divTitle {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.divMeta {
+  font-size: 12px;
+  color: var(--text-ter);
+}
+
+.statusBanner {
+  display: flex;
   align-items: center;
-  margin: 24px 0;
+  gap: 10px;
+  margin-bottom: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 11px 16px;
 }
 
-.scoreTeam {
+.statusDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusDotPulse {
+  animation: seBlink 1.4s infinite;
+}
+
+@keyframes seBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.statusEyebrow {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-ter);
+}
+
+.statusLabel {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tabBar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.tabBtn {
+  padding: 9px 18px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: -1px;
+  color: var(--text-sec);
+  border-bottom: 2px solid transparent;
+}
+
+.tabBtnOn {
+  color: var(--text);
+  border-bottom-color: var(--primary);
+}
+
+.poolGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.poolGrid1 {
+  grid-template-columns: 1fr;
+}
+
+.poolGrid2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 900px) {
+  .poolGrid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.poolCard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.poolHead {
+  background: var(--badge-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.poolName {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.poolMeta {
+  font-size: 11px;
+  color: var(--text-ter);
+}
+
+.poolBody {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.matchCard {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.matchHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  font-family: inherit;
+}
+
+.matchHeaderOpen {
+  background: var(--badge-bg);
+}
+
+.matchTitle {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.matchSub {
+  font-size: 11px;
+  color: var(--text-ter);
+  margin-top: 2px;
+}
+
+.matchVs {
+  color: var(--text-ter);
+  font-weight: 400;
+}
+
+.statusPill {
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 100px;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+
+.chevron {
+  font-size: 11px;
+  color: var(--text-ter);
+  transition: transform 0.2s;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.matchBody {
+  border-top: 1px solid var(--border);
+  padding: 14px 12px;
+  background: var(--bg);
+}
+
+.scoreCourt {
+  display: grid;
+  grid-template-columns: 1fr 64px 1fr;
+  gap: 0;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 640px) {
+  .scoreCourt {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.scoreSide {
   text-align: center;
+  padding: 0 12px;
 }
 
-.scoreTeamName {
+.scoreSideName {
   font-family: var(--font-display);
   font-size: 18px;
   font-weight: 800;
-  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.15;
 }
 
-.scoreInputWrap {
+.scoreSideMeta {
+  font-size: 11px;
+  color: var(--text-sec);
+  margin-top: 4px;
+  margin-bottom: 14px;
+}
+
+.scoreRow {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
 }
 
-.scoreBtn {
-  width: 40px;
-  height: 40px;
+.scoreStep {
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--badge-bg);
-  font-size: 20px;
-  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--input-bg);
   color: var(--text);
+  font-size: 26px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.scoreStep:hover:not(:disabled) {
+  border-color: var(--primary-text);
+  color: var(--primary-text);
+  background: var(--primary-dim);
+}
+
+.scoreStep:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .scoreNum {
   font-family: var(--font-display);
-  font-size: 48px;
-  font-weight: 800;
-  min-width: 64px;
-  text-align: center;
+  font-size: 64px;
+  font-weight: 900;
   color: var(--primary-text);
+  line-height: 0.9;
+  min-width: 90px;
+  text-align: center;
 }
 
-.scoreVs {
-  font-size: 12px;
+.scoreNumLosing {
+  color: var(--text-ter);
+}
+
+.scoreCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.scoreCenterVs {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--text-ter);
+}
+
+.scoreCenterGame {
+  font-family: var(--font-display);
+  font-size: 11px;
   font-weight: 700;
-  color: var(--text-sec);
+  color: var(--primary-text);
+  background: var(--primary-dim);
+  border: 1px solid var(--primary-border);
+  border-radius: 100px;
+  padding: 2px 10px;
+}
+
+.matchActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+.matchActions .btn {
+  flex: 1;
+  min-width: 140px;
+  justify-content: center;
+}
+
+.emptyState {
+  padding: 40px 24px;
   text-align: center;
+  color: var(--text-ter);
+  font-size: 13px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.playoffCard {
+  margin-top: 4px;
+  background: var(--card);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.playoffHead {
+  background: var(--primary-dim);
+  border-bottom: 1px solid var(--primary-border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.playoffTitle {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.playoffSub {
+  font-size: 11px;
+  color: var(--text-sec);
+}
+
+.roundLabel {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-ter);
+  margin: 6px 0 2px;
+}
+
+.standingsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.standingsTable th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-ter);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.standingsTable td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.standingsTable tr:last-child td {
+  border-bottom: none;
+}
+
+.teamsList {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.teamRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 18px;
+  border-top: 1px solid var(--border);
+}
+
+.teamRow:first-child {
+  border-top: none;
+}
+
+.teamIndex {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--badge-bg);
+  color: var(--text-sec);
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.teamInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.teamName {
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.teamPoolBadge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-ter);
+  background: var(--badge-bg);
+  border-radius: 100px;
+  padding: 2px 8px;
+}
+
+.teamPlayers {
+  font-size: 11px;
+  color: var(--text-sec);
+  margin-top: 3px;
+}
+
+.teamRecord {
+  font-size: 11px;
+  color: var(--text-ter);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.teamRecord strong {
+  font-size: 13px;
+  color: var(--text);
 }
 
 .errorBanner {
@@ -65,39 +584,12 @@
   margin-bottom: 12px;
 }
 
-@media print {
-  .noPrint {
-    display: none !important;
-  }
-
-  .printSheet {
-    padding: 24px;
-    color: #000;
-    background: #fff;
-  }
-
-  .printSheet h1 {
-    font-size: 20px;
-    margin-bottom: 8px;
-  }
-
-  .printMeta {
-    font-size: 12px;
-    margin-bottom: 20px;
-  }
-
-  .printScores {
-    display: flex;
-    justify-content: space-around;
-    font-size: 36px;
-    font-weight: bold;
-    margin: 32px 0;
-  }
-
-  .printSig {
-    margin-top: 48px;
-    border-top: 1px solid #ccc;
-    padding-top: 8px;
-    font-size: 11px;
-  }
+.successBanner {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(0, 200, 80, 0.1);
+  border: 1px solid rgba(0, 200, 80, 0.3);
+  color: #00c84a;
+  font-size: 13px;
+  margin-bottom: 12px;
 }

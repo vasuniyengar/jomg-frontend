@@ -1,21 +1,243 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import TournamentPicker from "../../_components/TournamentPicker";
-import live from "../../_styles/livePlay.module.css";
+import TournamentSwitcher from "../../_components/TournamentSwitcher";
 import {
-  fetchMatchDetails,
-  listMatchesForBracket,
+  classifyDivisionProgress,
+  fetchOrCreatePlayoffs,
+  loadScoreEntryBracket,
   updateMatchScore,
 } from "@/lib/bracketProgression";
 import { fetchDivisions } from "@/lib/divisions";
 import { roundTypeLabel } from "@/lib/scoring";
+import { tournamentAdminPath } from "@/lib/tournaments";
+import styles from "../scoreentry.module.css";
 
-function winnerName(score1, score2, name1, name2) {
-  if (score1 > score2) return name1;
-  if (score2 > score1) return name2;
-  return "—";
+function statusMeta(status) {
+  if (status === "completed") {
+    return { label: "Complete", color: "#00c84a", bg: "rgba(0,200,80,0.12)" };
+  }
+  if (status === "ongoing") {
+    return { label: "● Live", color: "#e0a000", bg: "rgba(224,160,0,0.12)" };
+  }
+  return { label: "Not started", color: "var(--text-ter)", bg: "var(--badge-bg)" };
+}
+
+function divisionStatusMeta(progress) {
+  if (progress === "completed") {
+    return { label: "Completed", color: "#00c84a", phase: "complete" };
+  }
+  if (progress === "in_progress") {
+    return { label: "In progress", color: "var(--primary-text)", phase: "live" };
+  }
+  return { label: "Yet to start", color: "#e0a000", phase: "pending" };
+}
+
+function teamSeedLabel(seed, name) {
+  if (seed != null && seed !== "") return `#${seed} ${name}`;
+  return name || "TBD";
+}
+
+function playerDisplayName(player) {
+  if (!player) return "";
+  if (typeof player === "string") return player;
+  return [player.firstname, player.lastname].filter(Boolean).join(" ") || "—";
+}
+
+function TeamsTab({ pools }) {
+  const teams = [];
+  pools.forEach((pool, poolIndex) => {
+    (pool.teams || []).forEach((t) => {
+      teams.push({
+        id: t.id,
+        teamName: t.teamName || `Team ${t.id}`,
+        poolName: pool.poolName || `Pool ${poolIndex + 1}`,
+        players: t.players || [],
+        stats: t.stats || null,
+      });
+    });
+  });
+
+  if (!teams.length) {
+    return (
+      <div className={styles.emptyState}>
+        No teams in this division yet. Assign teams to pools first.
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.teamsList}>
+      {teams.map((t, i) => (
+        <div key={`${t.poolName}-${t.id}`} className={styles.teamRow}>
+          <span className={styles.teamIndex}>{i + 1}</span>
+          <div className={styles.teamInfo}>
+            <div className={styles.teamName}>
+              {t.teamName}
+              <span className={styles.teamPoolBadge}>{t.poolName}</span>
+            </div>
+            <div className={styles.teamPlayers}>
+              {t.players.length
+                ? t.players.map(playerDisplayName).filter(Boolean).join(" · ")
+                : "No players listed"}
+            </div>
+          </div>
+          <div className={styles.teamRecord}>
+            Record
+            <br />
+            <strong>
+              {t.stats?.wins ?? 0}–{t.stats?.losses ?? 0}
+            </strong>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MatchScoreCard({
+  match,
+  expanded,
+  onToggle,
+  draft,
+  onDraftChange,
+  onSave,
+  saving,
+  readOnly,
+}) {
+  const st = statusMeta(match.status);
+  const s1 = draft?.scoreTeam1 ?? match.scoreTeam1 ?? 0;
+  const s2 = draft?.scoreTeam2 ?? match.scoreTeam2 ?? 0;
+  const phase =
+    match.roundType === "pool"
+      ? "Round Robin"
+      : roundTypeLabel(match.roundType);
+
+  return (
+    <div className={styles.matchCard}>
+      <button
+        type="button"
+        className={`${styles.matchHeader}${expanded ? ` ${styles.matchHeaderOpen}` : ""}`}
+        onClick={onToggle}
+      >
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className={styles.matchTitle}>
+            {teamSeedLabel(match.team1Seed, match.team1Name)}{" "}
+            <span className={styles.matchVs}>vs</span>{" "}
+            {teamSeedLabel(match.team2Seed, match.team2Name)}
+          </div>
+          <div className={styles.matchSub}>
+            {phase}
+            {match.poolName ? ` · ${match.poolName}` : ""}
+            {match.roundNumber ? ` · Round ${match.roundNumber}` : ""}
+            {match.status === "completed" || match.status === "ongoing"
+              ? ` · ${match.scoreTeam1}–${match.scoreTeam2}`
+              : ""}
+          </div>
+        </div>
+        <span
+          className={styles.statusPill}
+          style={{ color: st.color, background: st.bg }}
+        >
+          {st.label}
+        </span>
+        <span
+          className={`${styles.chevron}${expanded ? ` ${styles.chevronOpen}` : ""}`}
+        >
+          ▾
+        </span>
+      </button>
+
+      {expanded ? (
+        <div className={styles.matchBody}>
+          <div className={styles.scoreCourt}>
+            <div className={styles.scoreSide}>
+              <div className={styles.scoreSideName}>{match.team1Name}</div>
+              <div className={styles.scoreSideMeta}>Team 1</div>
+              <div className={styles.scoreRow}>
+                <button
+                  type="button"
+                  className={styles.scoreStep}
+                  disabled={readOnly || s1 <= 0}
+                  onClick={() =>
+                    onDraftChange({ scoreTeam1: Math.max(0, s1 - 1), scoreTeam2: s2 })
+                  }
+                >
+                  −
+                </button>
+                <div
+                  className={`${styles.scoreNum}${s1 < s2 ? ` ${styles.scoreNumLosing}` : ""}`}
+                >
+                  {s1}
+                </div>
+                <button
+                  type="button"
+                  className={styles.scoreStep}
+                  disabled={readOnly}
+                  onClick={() =>
+                    onDraftChange({ scoreTeam1: s1 + 1, scoreTeam2: s2 })
+                  }
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.scoreCenter}>
+              <div className={styles.scoreCenterVs}>VS</div>
+              <div className={styles.scoreCenterGame}>FINAL</div>
+            </div>
+
+            <div className={styles.scoreSide}>
+              <div className={styles.scoreSideName}>{match.team2Name}</div>
+              <div className={styles.scoreSideMeta}>Team 2</div>
+              <div className={styles.scoreRow}>
+                <button
+                  type="button"
+                  className={styles.scoreStep}
+                  disabled={readOnly || s2 <= 0}
+                  onClick={() =>
+                    onDraftChange({ scoreTeam1: s1, scoreTeam2: Math.max(0, s2 - 1) })
+                  }
+                >
+                  −
+                </button>
+                <div
+                  className={`${styles.scoreNum}${s2 < s1 ? ` ${styles.scoreNumLosing}` : ""}`}
+                >
+                  {s2}
+                </div>
+                <button
+                  type="button"
+                  className={styles.scoreStep}
+                  disabled={readOnly}
+                  onClick={() =>
+                    onDraftChange({ scoreTeam1: s1, scoreTeam2: s2 + 1 })
+                  }
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.matchActions}>
+            <button
+              type="button"
+              className="btn btn-primary btn-md"
+              disabled={readOnly || saving}
+              onClick={onSave}
+            >
+              {saving ? "Saving…" : "✓ Confirm Final Score & Advance"}
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 export default function ScoreEntryScreen() {
@@ -24,412 +246,583 @@ export default function ScoreEntryScreen() {
 
   const [divisions, setDivisions] = useState([]);
   const [bracketId, setBracketId] = useState("");
-  const [stageFilter, setStageFilter] = useState("all");
-  const [matches, setMatches] = useState({ poolMatches: [], playoffMatches: [] });
-  const [selectedMatchId, setSelectedMatchId] = useState("");
-  const [matchDetail, setMatchDetail] = useState(null);
-  const [score1, setScore1] = useState(0);
-  const [score2, setScore2] = useState(0);
-  const [matchNotes, setMatchNotes] = useState("");
+  const [progressByDiv, setProgressByDiv] = useState({});
+  const [pools, setPools] = useState([]);
+  const [playoffMatches, setPlayoffMatches] = useState([]);
+  const [tab, setTab] = useState("rr");
+  const [poolCols, setPoolCols] = useState(2);
+  const [expandedId, setExpandedId] = useState("");
+  const [drafts, setDrafts] = useState({});
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [savingId, setSavingId] = useState("");
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [showPrint, setShowPrint] = useState(false);
-  const printTriggered = useRef(false);
 
-  useEffect(() => {
-    if (showPrint && !printTriggered.current) {
-      printTriggered.current = true;
-      const t = setTimeout(() => {
-        window.print();
-        printTriggered.current = false;
-      }, 300);
-      return () => clearTimeout(t);
-    }
-    return undefined;
-  }, [showPrint]);
-
-  const allMatches = useMemo(() => {
-    const list = [...matches.poolMatches, ...matches.playoffMatches];
-    if (stageFilter === "pool") return matches.poolMatches;
-    if (stageFilter === "playoff") return matches.playoffMatches;
-    return list;
-  }, [matches, stageFilter]);
-
-  const selectedMeta = useMemo(
-    () => allMatches.find((m) => String(m.matchId) === String(selectedMatchId)),
-    [allMatches, selectedMatchId]
+  const selectedDivision = useMemo(
+    () => divisions.find((d) => String(d.id) === String(bracketId)) || null,
+    [divisions, bracketId]
   );
 
-  const isLive = selectedMeta?.status === "ongoing";
+  const progress = progressByDiv[bracketId] || "not_started";
+  const status = divisionStatusMeta(progress);
+  const readOnly = progress === "completed";
+
+  const buckets = useMemo(() => {
+    const inProgress = [];
+    const notStarted = [];
+    const completed = [];
+    for (const d of divisions) {
+      const p = progressByDiv[String(d.id)] || "not_started";
+      if (p === "completed") completed.push(d);
+      else if (p === "in_progress") inProgress.push(d);
+      else notStarted.push(d);
+    }
+    return { inProgress, notStarted, completed };
+  }, [divisions, progressByDiv]);
 
   const loadDivisions = useCallback(async () => {
     if (!tournamentId) return;
     const divs = await fetchDivisions(tournamentId);
     setDivisions(divs);
-    if (!bracketId && divs[0]) setBracketId(String(divs[0].id));
-  }, [tournamentId, bracketId]);
 
-  const loadMatches = useCallback(async () => {
+    const progressMap = {};
+    await Promise.all(
+      divs.map(async (d) => {
+        try {
+          const data = await loadScoreEntryBracket(tournamentId, d.id);
+          progressMap[String(d.id)] = classifyDivisionProgress(
+            data.poolMatches,
+            data.playoffMatches
+          );
+        } catch {
+          progressMap[String(d.id)] = "not_started";
+        }
+      })
+    );
+    setProgressByDiv(progressMap);
+
+    setBracketId((current) => {
+      if (current && divs.some((d) => String(d.id) === String(current))) {
+        return current;
+      }
+      if (!divs.length) return "";
+      const prefer =
+        divs.find((d) => progressMap[String(d.id)] === "in_progress") ||
+        divs.find((d) => progressMap[String(d.id)] === "not_started") ||
+        divs[0];
+      return String(prefer.id);
+    });
+  }, [tournamentId]);
+
+  const loadBracket = useCallback(async () => {
     if (!tournamentId || !bracketId) return;
     setLoading(true);
     setError("");
     try {
-      const data = await listMatchesForBracket(tournamentId, bracketId);
-      setMatches(data);
-      const first = [...data.poolMatches, ...data.playoffMatches][0];
-      if (first && !selectedMatchId) setSelectedMatchId(String(first.matchId));
+      const data = await loadScoreEntryBracket(tournamentId, bracketId);
+      setPools(data.pools);
+      setPlayoffMatches(data.playoffMatches);
+      const p = classifyDivisionProgress(data.poolMatches, data.playoffMatches);
+      setProgressByDiv((prev) => ({ ...prev, [String(bracketId)]: p }));
+
+      const all = [...data.poolMatches, ...data.playoffMatches];
+      setDrafts((prev) => {
+        const next = { ...prev };
+        for (const m of all) {
+          next[m.matchId] = {
+            scoreTeam1: m.scoreTeam1,
+            scoreTeam2: m.scoreTeam2,
+          };
+        }
+        return next;
+      });
     } catch (err) {
       setError(err.message || "Failed to load matches");
+      setPools([]);
+      setPlayoffMatches([]);
     } finally {
       setLoading(false);
     }
-  }, [tournamentId, bracketId, selectedMatchId]);
-
-  const loadMatch = useCallback(async () => {
-    if (!selectedMatchId) {
-      setMatchDetail(null);
-      return;
-    }
-    try {
-      const detail = await fetchMatchDetails(selectedMatchId);
-      setMatchDetail(detail);
-      setScore1(Number(detail.scoreTeam1) || 0);
-      setScore2(Number(detail.scoreTeam2) || 0);
-    } catch (err) {
-      setError(err.message || "Failed to load match");
-    }
-  }, [selectedMatchId]);
+  }, [tournamentId, bracketId]);
 
   useEffect(() => {
     loadDivisions();
   }, [loadDivisions]);
 
   useEffect(() => {
-    loadMatches();
-  }, [loadMatches]);
+    loadBracket();
+  }, [loadBracket]);
 
-  useEffect(() => {
-    loadMatch();
-  }, [loadMatch]);
+  const selectDivision = (id) => {
+    if (!id) return;
+    setBracketId(String(id));
+    setExpandedId("");
+    setMessage("");
+    setTab("rr");
+  };
 
-  const handleSave = async () => {
-    if (!selectedMeta || !bracketId) return;
-    setSaving(true);
+  const handleSave = async (match) => {
+    const draft = drafts[match.matchId] || {
+      scoreTeam1: match.scoreTeam1,
+      scoreTeam2: match.scoreTeam2,
+    };
+    setSavingId(String(match.matchId));
     setError("");
     setMessage("");
     try {
-      await updateMatchScore(bracketId, selectedMatchId, {
-        scoreTeam1: score1,
-        scoreTeam2: score2,
+      await updateMatchScore(bracketId, match.matchId, {
+        scoreTeam1: Number(draft.scoreTeam1) || 0,
+        scoreTeam2: Number(draft.scoreTeam2) || 0,
       });
-      setMessage("Score saved.");
-      await loadMatches();
-      await loadMatch();
+      setMessage(`Score saved — ${match.team1Name} vs ${match.team2Name}`);
+      await loadBracket();
     } catch (err) {
       setError(err.message || "Failed to save score");
     } finally {
-      setSaving(false);
+      setSavingId("");
     }
   };
 
-  const teamName = (idx) => {
-    const t = matchDetail?.teams?.[idx];
-    if (!t) return selectedMeta?.[idx === 0 ? "team1Name" : "team2Name"] || "Team";
+  const handleGeneratePlayoffs = async () => {
+    if (!tournamentId || !bracketId) return;
+    setGenerating(true);
+    setError("");
+    setMessage("");
+    try {
+      await fetchOrCreatePlayoffs(tournamentId, bracketId);
+      setMessage("Playoff bracket ready.");
+      setTab("po");
+      await loadBracket();
+    } catch (err) {
+      setError(err.message || "Could not create playoffs");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const allPoolMatchesDone =
+    pools.length > 0 &&
+    pools.every((p) =>
+      p.matches.every((m) => m.status === "completed")
+    );
+
+  if (!tournamentId) {
+    return <TournamentPicker label="Score Entry" />;
+  }
+
+  const renderPicker = (bucket, kind) => {
+    const owns = bucket.some((d) => String(d.id) === String(bracketId));
+    const labelClass =
+      kind === "active"
+        ? styles.pickerLabelActive
+        : kind === "yts"
+          ? styles.pickerLabelYts
+          : styles.pickerLabelDone;
+    const selectClass =
+      kind === "active"
+        ? styles.pickerSelectActive
+        : kind === "yts"
+          ? styles.pickerSelectYts
+          : styles.pickerSelectDone;
+    const placeholder =
+      kind === "active"
+        ? `● In-Progress (${bucket.length})`
+        : kind === "yts"
+          ? `○ Yet to start (${bucket.length})`
+          : `✓ Completed (${bucket.length})`;
+
+    if (!bucket.length && kind !== "active") return null;
+
     return (
-      t.teamName ||
-      t.players?.map((p) => `${p.firstname} ${p.lastname}`).join(" / ") ||
-      `Team ${t.id}`
+      <div className={styles.pickerGroup} key={kind}>
+        <div className={`${styles.pickerLabel} ${labelClass}`}>
+          {kind === "active"
+            ? "● In-Progress"
+            : kind === "yts"
+              ? "○ Yet to start"
+              : "✓ Completed"}
+        </div>
+        <select
+          className={`form-select ${styles.pickerSelect}${owns ? ` ${selectClass}` : ""}`}
+          value={owns ? String(bracketId) : ""}
+          disabled={!bucket.length}
+          onChange={(e) => selectDivision(e.target.value)}
+        >
+          {!owns ? <option value="">{placeholder}</option> : null}
+          {bucket.length ? (
+            bucket.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))
+          ) : (
+            <option value="">— None in progress —</option>
+          )}
+        </select>
+      </div>
     );
   };
 
-  const n1 = teamName(0);
-  const n2 = teamName(1);
-  const finalWinner = winnerName(score1, score2, n1, n2);
-
-  if (!tournamentId) {
-    return (
-      <div className="screen active">
-        <div className="page-title">Score Entry</div>
-        <div className="content">
-          <p>Select a tournament first.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <>
-      <div className={`screen active ${showPrint ? live.noPrint : ""}`}>
-        <div className="page-header">
-          <div className="page-title-group">
-            <div className="page-eyebrow">Phase 4 · Live Play</div>
-            <div className="page-title">Score Entry</div>
-            <div className="page-sub">Enter & confirm match scores in real time</div>
-          </div>
-          <div className="page-actions">
-            <select
-              className="form-select"
-              style={{ width: 200, padding: "8px 12px", fontSize: 13 }}
-              value={selectedMatchId}
-              onChange={(e) => setSelectedMatchId(e.target.value)}
-              disabled={loading || !allMatches.length}
-            >
-              {allMatches.map((m) => (
-                <option key={m.matchId} value={m.matchId}>
-                  {m.poolName ? `${m.poolName} · ` : ""}
-                  {roundTypeLabel(m.roundType)} — {m.team1Name} vs {m.team2Name}
-                </option>
-              ))}
-            </select>
-            <TournamentPicker tournamentId={tournamentId} />
+    <div className={`screen active ${styles.page}`}>
+      <div className="page-header">
+        <div className="page-title-group">
+          <div className="page-eyebrow">Phase 4 · Control Hub</div>
+          <div className="page-title">Score Entry</div>
+          <div className="page-sub">
+            Pick a division, then enter match scores pool by pool
           </div>
         </div>
-
-        <div className="content">
-          {error ? <div className={live.errorBanner}>{error}</div> : null}
-          {message ? (
-            <div className="alert alert-info" style={{ marginBottom: 12 }}>
-              {message}
-            </div>
-          ) : null}
-
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
-            <select
-              className="form-select"
-              style={{ maxWidth: 240 }}
-              value={bracketId}
-              onChange={(e) => {
-                setBracketId(e.target.value);
-                setSelectedMatchId("");
-              }}
-            >
-              {divisions.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-            <select
-              className="form-select"
-              style={{ maxWidth: 140 }}
-              value={stageFilter}
-              onChange={(e) => setStageFilter(e.target.value)}
-            >
-              <option value="all">All stages</option>
-              <option value="pool">Pool</option>
-              <option value="playoff">Playoff</option>
-            </select>
+        <div className="page-actions" style={{ alignItems: "flex-end" }}>
+          {renderPicker(buckets.inProgress, "active")}
+          {renderPicker(buckets.notStarted, "yts")}
+          {renderPicker(buckets.completed, "done")}
+          <Link
+            href={tournamentAdminPath("/admin/divisions", tournamentId)}
+            className="btn btn-ghost btn-md"
+            title="Edit this division's settings"
+          >
+            ⚙ Manage Division
+          </Link>
+          <div className={styles.poolLayoutToggle}>
+            {[1, 2].map((n) => (
+              <button
+                key={n}
+                type="button"
+                className={`${styles.poolLayoutBtn}${poolCols === n ? ` ${styles.poolLayoutBtnOn}` : ""}`}
+                onClick={() => setPoolCols(n)}
+                title={`${n} pool${n > 1 ? "s" : ""} per row`}
+              >
+                {n} {n === 1 ? "pool" : "pools"}
+              </button>
+            ))}
           </div>
-
-          {isLive ? (
-            <div className="alert alert-info" style={{ marginBottom: 16 }}>
-              ● Live · {selectedMeta?.poolName || "Court —"} ·{" "}
-              {roundTypeLabel(selectedMeta?.roundType)}
-              {matchDetail?.scoringSetup ? ` · ${matchDetail.scoringSetup}` : ""}
-            </div>
-          ) : null}
-
-          {selectedMeta ? (
-            <div className={live.scoreEntryGrid}>
-              <div className={live.scoreTeam}>
-                <div className={live.scoreTeamName}>{n1.toUpperCase()}</div>
-                <div className={live.scoreTeamMeta}>
-                  {selectedMeta.poolName || roundTypeLabel(selectedMeta.roundType)}
-                </div>
-                <div className={live.scoreInputWrap}>
-                  <button
-                    type="button"
-                    className={live.scoreBtn}
-                    onClick={() => setScore1((s) => Math.max(0, s - 1))}
-                  >
-                    −
-                  </button>
-                  <div className={live.scoreNum}>{score1}</div>
-                  <button
-                    type="button"
-                    className={live.scoreBtn}
-                    onClick={() => setScore1((s) => s + 1)}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-              <div className={live.scoreVs}>
-                <span style={{ letterSpacing: 0 }}>FINAL</span>
-              </div>
-              <div className={live.scoreTeam}>
-                <div className={live.scoreTeamName}>{n2.toUpperCase()}</div>
-                <div className={live.scoreTeamMeta}>
-                  {matchDetail?.scoringSetup || "Match total"}
-                </div>
-                <div className={live.scoreInputWrap}>
-                  <button
-                    type="button"
-                    className={live.scoreBtn}
-                    onClick={() => setScore2((s) => Math.max(0, s - 1))}
-                  >
-                    −
-                  </button>
-                  <div className={live.scoreNum}>{score2}</div>
-                  <button
-                    type="button"
-                    className={live.scoreBtn}
-                    onClick={() => setScore2((s) => s + 1)}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <p>{loading ? "Loading matches…" : "No matches available. Generate pools first."}</p>
-          )}
-
-          <div className="grid-2">
-            <div className="card">
-              <div className="card-header">
-                <span className="card-title">Game History</span>
-              </div>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Game</th>
-                    <th>{n1}</th>
-                    <th>{n2}</th>
-                    <th>Winner</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Final</td>
-                    <td
-                      style={{
-                        color: score1 >= score2 ? "var(--primary-text)" : "var(--text-ter)",
-                        fontWeight: score1 > score2 ? 700 : 400,
-                      }}
-                    >
-                      {score1}
-                    </td>
-                    <td
-                      style={{
-                        color: score2 >= score1 ? "var(--primary-text)" : "var(--text-ter)",
-                        fontWeight: score2 > score1 ? 700 : 400,
-                      }}
-                    >
-                      {score2}
-                    </td>
-                    <td>
-                      {isLive ? (
-                        <span className="pill pill-live">● Live</span>
-                      ) : (
-                        <span className="pill pill-done">{finalWinner}</span>
-                      )}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="card">
-              <div className="card-header">
-                <span className="card-title">Match Actions</span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <button
-                  type="button"
-                  className="btn btn-primary btn-md"
-                  style={{ justifyContent: "center" }}
-                  onClick={handleSave}
-                  disabled={saving || !selectedMatchId}
-                >
-                  {saving ? "Saving…" : "✓ Confirm Final Score & Advance"}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-md"
-                  style={{ justifyContent: "center" }}
-                  disabled
-                  title="Coming soon"
-                >
-                  ↩ Correct Previous Game Score
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-md"
-                  style={{ justifyContent: "center" }}
-                  disabled
-                  title="Coming soon"
-                >
-                  ⏸ Suspend Match
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-danger btn-md"
-                  style={{ justifyContent: "center" }}
-                  disabled
-                  title="Coming soon"
-                >
-                  ⚠️ Report Dispute
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-md"
-                  style={{ justifyContent: "center" }}
-                  onClick={() => setShowPrint(true)}
-                  disabled={!selectedMatchId}
-                >
-                  Print score sheet
-                </button>
-              </div>
-              <div className="divider" />
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Match Notes</label>
-                <textarea
-                  className="form-textarea"
-                  placeholder="Optional: injuries, disputes, delays..."
-                  value={matchNotes}
-                  onChange={(e) => setMatchNotes(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
+          <TournamentSwitcher tournamentId={tournamentId} />
         </div>
       </div>
 
-      {showPrint && selectedMeta ? (
-        <div className={live.printSheet}>
-          <h1>Match Score Sheet</h1>
-          <div className={live.printMeta}>
-            <div>
-              {roundTypeLabel(selectedMeta.roundType)}
-              {selectedMeta.poolName ? ` · ${selectedMeta.poolName}` : ""}
+      <div className="content">
+        {error ? <div className={styles.errorBanner}>{error}</div> : null}
+        {message ? <div className={styles.successBanner}>{message}</div> : null}
+
+        {selectedDivision ? (
+          <>
+            <div className={styles.divTitleRow}>
+              <span className={styles.divSwatch} />
+              <h2 className={styles.divTitle}>{selectedDivision.name}</h2>
+              <span className={styles.divMeta}>
+                {[selectedDivision.skillLevel, selectedDivision.ageGroup]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </span>
             </div>
-            <div>Scoring: {matchDetail?.scoringSetup || "—"}</div>
+
+            <div
+              className={styles.statusBanner}
+              style={{ borderLeft: `3px solid ${status.color}` }}
+            >
+              <span
+                className={`${styles.statusDot}${status.phase !== "complete" ? ` ${styles.statusDotPulse}` : ""}`}
+                style={{ background: status.color }}
+              />
+              <div className={styles.statusEyebrow}>Division Status</div>
+              <div className={styles.statusLabel} style={{ color: status.color }}>
+                {status.label}
+              </div>
+            </div>
+
+            <div className={styles.tabBar}>
+              {[
+                { k: "rr", label: "Round Robin" },
+                { k: "st", label: "Standings" },
+                {
+                  k: "po",
+                  label: `Playoffs${allPoolMatchesDone && !playoffMatches.length ? " •" : ""}`,
+                },
+                { k: "tm", label: "Teams" },
+              ].map((t) => (
+                <button
+                  key={t.k}
+                  type="button"
+                  className={`${styles.tabBtn}${tab === t.k ? ` ${styles.tabBtnOn}` : ""}`}
+                  onClick={() => setTab(t.k)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {tab === "rr" ? (
+              loading ? (
+                <div className={styles.emptyState}>Loading pools…</div>
+              ) : !pools.length ? (
+                <div className={styles.emptyState}>
+                  No pools to score yet. Generate a pool schedule from Bracket
+                  Progression first.
+                </div>
+              ) : (
+                <>
+                  {allPoolMatchesDone && !playoffMatches.length ? (
+                    <div
+                      className={styles.playoffCard}
+                      style={{ marginBottom: 18, padding: 20 }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 16,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <div style={{ fontSize: 30 }}>🏆</div>
+                        <div style={{ flex: 1, minWidth: 220 }}>
+                          <div
+                            style={{
+                              fontFamily: "var(--font-display)",
+                              fontSize: 15,
+                              fontWeight: 800,
+                            }}
+                          >
+                            Round robin complete — generate playoffs
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "var(--text-sec)",
+                              marginTop: 3,
+                            }}
+                          >
+                            All pool matches have saved results. Generate the
+                            playoff bracket to continue scoring.
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-md"
+                          onClick={handleGeneratePlayoffs}
+                          disabled={generating}
+                        >
+                          {generating ? "Working…" : "Generate Playoff Bracket"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div
+                    className={`${styles.poolGrid} ${poolCols === 1 ? styles.poolGrid1 : styles.poolGrid2}`}
+                  >
+                    {pools.map((pool) => (
+                      <div key={pool.id} className={styles.poolCard}>
+                        <div className={styles.poolHead}>
+                          <div className={styles.poolName}>{pool.poolName}</div>
+                          <div className={styles.poolMeta}>
+                            {pool.teams?.length || 0} teams ·{" "}
+                            {pool.matches.length} matches
+                          </div>
+                        </div>
+                        <div className={styles.poolBody}>
+                          {pool.matches.length ? (
+                            pool.matches.map((m) => (
+                              <MatchScoreCard
+                                key={m.matchId}
+                                match={m}
+                                expanded={String(expandedId) === String(m.matchId)}
+                                onToggle={() =>
+                                  setExpandedId((id) =>
+                                    String(id) === String(m.matchId)
+                                      ? ""
+                                      : String(m.matchId)
+                                  )
+                                }
+                                draft={drafts[m.matchId]}
+                                onDraftChange={(next) =>
+                                  setDrafts((prev) => ({
+                                    ...prev,
+                                    [m.matchId]: next,
+                                  }))
+                                }
+                                onSave={() => handleSave(m)}
+                                saving={String(savingId) === String(m.matchId)}
+                                readOnly={readOnly}
+                              />
+                            ))
+                          ) : (
+                            <div className={styles.emptyState}>
+                              No matches in this pool.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )
+            ) : null}
+
+            {tab === "st" ? (
+              !pools.length ? (
+                <div className={styles.emptyState}>No standings yet.</div>
+              ) : (
+                <div
+                  className={`${styles.poolGrid} ${poolCols === 1 ? styles.poolGrid1 : styles.poolGrid2}`}
+                >
+                  {pools.map((pool) => {
+                    const teams = [...(pool.teams || [])].sort((a, b) => {
+                      const aw = a.stats?.wins ?? 0;
+                      const bw = b.stats?.wins ?? 0;
+                      if (bw !== aw) return bw - aw;
+                      return (b.stats?.pointDifference ?? 0) - (a.stats?.pointDifference ?? 0);
+                    });
+                    return (
+                      <div key={pool.id} className={styles.poolCard}>
+                        <div className={styles.poolHead}>
+                          <div className={styles.poolName}>
+                            {pool.poolName} Standings
+                          </div>
+                        </div>
+                        <div className={styles.poolBody}>
+                          <table className={styles.standingsTable}>
+                            <thead>
+                              <tr>
+                                <th>#</th>
+                                <th>Team</th>
+                                <th>W</th>
+                                <th>L</th>
+                                <th>PD</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {teams.map((t, i) => (
+                                <tr key={t.id}>
+                                  <td>{i + 1}</td>
+                                  <td>
+                                    <strong>{t.teamName || `Team ${t.id}`}</strong>
+                                  </td>
+                                  <td style={{ color: "var(--primary-text)", fontWeight: 700 }}>
+                                    {t.stats?.wins ?? 0}
+                                  </td>
+                                  <td style={{ color: "var(--text-ter)" }}>
+                                    {t.stats?.losses ?? 0}
+                                  </td>
+                                  <td>{t.stats?.pointDifference ?? 0}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            ) : null}
+
+            {tab === "po" ? (
+              playoffMatches.length ? (
+                <div className={styles.playoffCard}>
+                  <div className={styles.playoffHead}>
+                    <div className={styles.playoffTitle}>🏆 Playoffs</div>
+                    <div className={styles.playoffSub}>
+                      Single elimination · enter scores as matches finish
+                    </div>
+                  </div>
+                  <div className={styles.poolBody}>
+                    {Object.entries(
+                      playoffMatches.reduce((acc, m) => {
+                        const key = roundTypeLabel(m.roundType);
+                        if (!acc[key]) acc[key] = [];
+                        acc[key].push(m);
+                        return acc;
+                      }, {})
+                    ).map(([roundName, matches]) => (
+                      <div key={roundName}>
+                        <div className={styles.roundLabel}>{roundName}</div>
+                        {matches.map((m) => (
+                          <MatchScoreCard
+                            key={m.matchId}
+                            match={m}
+                            expanded={String(expandedId) === String(m.matchId)}
+                            onToggle={() =>
+                              setExpandedId((id) =>
+                                String(id) === String(m.matchId)
+                                  ? ""
+                                  : String(m.matchId)
+                              )
+                            }
+                            draft={drafts[m.matchId]}
+                            onDraftChange={(next) =>
+                              setDrafts((prev) => ({
+                                ...prev,
+                                [m.matchId]: next,
+                              }))
+                            }
+                            onSave={() => handleSave(m)}
+                            saving={String(savingId) === String(m.matchId)}
+                            readOnly={readOnly}
+                          />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : allPoolMatchesDone ? (
+                <div className={styles.emptyState}>
+                  <div style={{ fontSize: 30, marginBottom: 8 }}>🏆</div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: 15,
+                      fontWeight: 800,
+                      marginBottom: 4,
+                      color: "var(--text)",
+                    }}
+                  >
+                    Round robin complete
+                  </div>
+                  <div style={{ marginBottom: 14 }}>
+                    Generate the playoff bracket to start scoring playoff matches.
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-md"
+                    onClick={handleGeneratePlayoffs}
+                    disabled={generating}
+                  >
+                    {generating ? "Working…" : "Generate Playoff Bracket"}
+                  </button>
+                </div>
+              ) : (
+                <div className={styles.emptyState}>
+                  <div style={{ fontSize: 30, marginBottom: 8 }}>🏆</div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: 15,
+                      fontWeight: 800,
+                      marginBottom: 4,
+                      color: "var(--text)",
+                    }}
+                  >
+                    Playoffs not ready
+                  </div>
+                  Finish all Round Robin matches first — the playoff bracket can
+                  be generated once every pool match has a saved result.
+                </div>
+              )
+            ) : null}
+
+            {tab === "tm" ? <TeamsTab pools={pools} /> : null}
+          </>
+        ) : (
+          <div className={styles.emptyState}>
+            {loading
+              ? "Loading divisions…"
+              : "No published divisions with pools to score yet."}
           </div>
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <strong style={{ fontSize: 16 }}>{n1}</strong>
-            <span style={{ margin: "0 16px" }}>vs</span>
-            <strong style={{ fontSize: 16 }}>{n2}</strong>
-          </div>
-          <div className={live.printScores}>
-            <span>{score1}</span>
-            <span>—</span>
-            <span>{score2}</span>
-          </div>
-          <p style={{ fontSize: 12 }}>Final match totals (games not tracked in v1).</p>
-          <div className={live.printSig}>Official signature</div>
-          <button
-            type="button"
-            className={`btn btn-ghost btn-sm ${live.noPrint}`}
-            style={{ marginTop: 16 }}
-            onClick={() => setShowPrint(false)}
-          >
-            Close print view
-          </button>
-        </div>
-      ) : null}
-    </>
+        )}
+      </div>
+    </div>
   );
 }

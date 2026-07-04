@@ -189,7 +189,6 @@ export default function DetailsTab({ data, venue, organizer }) {
           id="details-courts"
           title={courtsTitle}
           titleStyle={{ fontSize: 26 }}
-          className="about"
           card={false}
           desktop={courtsDesktop}
         >
