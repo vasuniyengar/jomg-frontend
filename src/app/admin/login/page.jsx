@@ -1,20 +1,89 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./login.module.css";
+import { apiRequest } from "@/lib/api";
+import { isAuthenticated, saveAuthSession } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [redirecting, setRedirecting] = useState(false);
 
-  const handleSignIn = (e) => {
-    e.preventDefault();
-    console.log({ email, password, rememberMe });
-    router.push("/admin/dashboard");
+  useEffect(() => {
+    if (isAuthenticated()) {
+      setRedirecting(true);
+      router.replace("/admin/dashboard");
+    }
+  }, [router]);
+
+  const mapLoginError = (error) => {
+    if (!error) {
+      return "Unable to sign in";
+    }
+    if (error.status === 401) {
+      return "Invalid email or password.";
+    }
+    if (error.status === 403) {
+      return error.message || "You do not have access to this account.";
+    }
+    if (error.status === 0 || error.code === "ERR_NETWORK" || error.code === "ECONNABORTED") {
+      return (
+        error.message ||
+        "Cannot reach the API server. Ensure the backend is running on port 4000."
+      );
+    }
+    if (error.status === 500) {
+      return error.message || "Server issue. Please try again in a moment.";
+    }
+    return error.message || "Unable to sign in";
   };
+
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+    setErrorMessage("");
+    setLoading(true);
+
+    try {
+      const response = await apiRequest("/api/organizer/signin", {
+        method: "POST",
+        body: {
+          email,
+          password,
+        },
+      });
+
+      saveAuthSession({
+        accessToken: response.accessToken,
+        rememberMe,
+        user: {
+          firstname: response.user?.firstname || "",
+          roles: response.user?.roles || [],
+        },
+      });
+
+      router.replace("/admin/dashboard");
+    } catch (error) {
+      setErrorMessage(mapLoginError(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (redirecting) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.card} style={{ textAlign: "center", color: "var(--text-sec)" }}>
+          Redirecting…
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>
@@ -75,9 +144,26 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <button type="submit" className={styles.btnPrimary}>
-            Sign In →
+          <button
+            type="submit"
+            className={styles.btnPrimary}
+            disabled={loading}
+            aria-disabled={loading}
+          >
+            {loading ? "Signing In..." : "Sign In →"}
           </button>
+          {errorMessage ? (
+            <div
+              style={{
+                marginTop: "10px",
+                color: "#ff7b7b",
+                fontSize: "12px",
+                fontWeight: 600,
+              }}
+            >
+              {errorMessage}
+            </div>
+          ) : null}
 
         </form>
 

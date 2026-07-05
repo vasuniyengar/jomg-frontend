@@ -1,5 +1,20 @@
-import ComingSoon from "../_components/ComingSoon";
+import { Suspense } from "react";
+import DrawPageClient from "./DrawPageClient";
 
-export default function Page() {
-  return <ComingSoon name="Generate Draw" />;
+function Fallback() {
+  return (
+    <div className="screen active">
+      <div className="content" style={{ padding: 24, color: "var(--text-sec)" }}>
+        Loading…
+      </div>
+    </div>
+  );
+}
+
+export default function DrawPage() {
+  return (
+    <Suspense fallback={<Fallback />}>
+      <DrawPageClient />
+    </Suspense>
+  );
 }

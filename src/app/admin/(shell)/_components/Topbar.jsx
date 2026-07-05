@@ -1,9 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { labelForPath } from "./route-labels";
 import { useTheme } from "./ThemeProvider";
+import { clearAuthSession, getStoredUser } from "@/lib/auth";
+import { organizerLogout } from "@/lib/api";
+import { fetchTournamentById } from "@/lib/tournaments";
 
 const DARK_SWATCHES = [
   { name: "Graphite", palette: "", gradient: "linear-gradient(135deg,#34383e 50%,#23262a 50%)" },
@@ -58,9 +62,70 @@ function LogoSvg() {
 }
 
 export default function Topbar() {
+  const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tournamentId = searchParams.get("tournamentId");
   const { theme, palette, setPalette, toggleTheme } = useTheme();
   const swatches = theme === "dark" ? DARK_SWATCHES : LIGHT_SWATCHES;
+  const user = getStoredUser();
+  const userName = user?.firstname || "Admin";
+  const userInitials = userName.slice(0, 2).toUpperCase();
+  const [tournamentName, setTournamentName] = useState(null);
+  const [loadingTournament, setLoadingTournament] = useState(false);
+
+  useEffect(() => {
+    if (!tournamentId) {
+      setTournamentName(null);
+      setLoadingTournament(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingTournament(true);
+
+    (async () => {
+      try {
+        const data = await fetchTournamentById(tournamentId);
+        if (!cancelled) {
+          setTournamentName(data?.name || "Tournament");
+        }
+      } catch {
+        if (!cancelled) {
+          setTournamentName("Tournament");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingTournament(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tournamentId]);
+
+  const tournamentLabel = useMemo(() => {
+    if (tournamentId) {
+      if (loadingTournament && !tournamentName) return "Loading…";
+      return tournamentName || "Tournament";
+    }
+    if (pathname === "/admin/tournaments") return "My Tournaments";
+    return "Select tournament";
+  }, [tournamentId, loadingTournament, tournamentName, pathname]);
+
+  const handleSignOut = async (event) => {
+    event.preventDefault();
+    try {
+      await organizerLogout();
+    } catch {
+      // Proceed with local cleanup even when logout API fails.
+    } finally {
+      clearAuthSession();
+      router.replace("/admin/login");
+    }
+  };
 
   return (
     <header className="topbar">
@@ -70,8 +135,19 @@ export default function Topbar() {
       </div>
       <div className="topbar-divider" />
       <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-        <span style={{ fontSize: "11px", color: "var(--text-sec)", fontWeight: 600 }}>
-          Austin Open 2025
+        <span
+          style={{
+            fontSize: "11px",
+            color: "var(--text-sec)",
+            fontWeight: 600,
+            maxWidth: 220,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+          title={tournamentLabel}
+        >
+          {tournamentLabel}
         </span>
         <span className="status-dot" />
       </div>
@@ -164,11 +240,16 @@ export default function Topbar() {
         />
       </div>
 
-      <Link href="/admin/login" className="topbar-user" title="Sign out">
-        <div className="user-avatar">AD</div>
-        <span className="user-name">Admin</span>
+      <button
+        type="button"
+        className="topbar-user"
+        title="Sign out"
+        onClick={handleSignOut}
+      >
+        <div className="user-avatar">{userInitials}</div>
+        <span className="user-name">{userName}</span>
         <span style={{ fontSize: "11px", color: "var(--text-ter)", marginLeft: "2px" }}>↩</span>
-      </Link>
+      </button>
     </header>
   );
 }

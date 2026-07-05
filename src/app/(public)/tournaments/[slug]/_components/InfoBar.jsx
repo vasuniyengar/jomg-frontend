@@ -1,0 +1,57 @@
+const FOUNDING_STAR_SRC = "/tournaments/founding-star.png";
+
+function FormatIcon() {
+  return (
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="9.5" fill="var(--accent)" />
+      <g fill="var(--surface)">
+        <circle cx="12" cy="6.5" r="1.3" />
+        <circle cx="8.2" cy="9" r="1.3" />
+        <circle cx="15.8" cy="9" r="1.3" />
+        <circle cx="12" cy="11.5" r="1.3" />
+        <circle cx="8.2" cy="14" r="1.3" />
+        <circle cx="15.8" cy="14" r="1.3" />
+        <circle cx="12" cy="16.5" r="1.3" />
+      </g>
+    </svg>
+  );
+}
+
+function FoundingClubsIcon() {
+  return (
+    <img
+      className="ib-ic-star"
+      src={FOUNDING_STAR_SRC}
+      alt=""
+      width={18}
+      height={18}
+    />
+  );
+}
+
+function InfoBarIcon({ icon }) {
+  if (icon === "calendar") return "🗓";
+  if (icon === "format") return <FormatIcon />;
+  if (icon === "clubs") return <FoundingClubsIcon />;
+  return "•";
+}
+
+export default function InfoBar({ items }) {
+  return (
+    <div className="o3-ibar-wrap">
+      <div className="ibar">
+        {items.map((item) => (
+          <div className="ib" key={`${item.icon}-${item.label}-${item.value}`}>
+            <span className="ib-ic">
+              <InfoBarIcon icon={item.icon} />
+            </span>
+            <div>
+              <div className="ib-k">{item.label}</div>
+              <div className="ib-v">{item.value}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

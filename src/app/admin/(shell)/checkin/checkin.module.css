@@ -1,0 +1,692 @@
+.page {
+  min-height: calc(100vh - 56px);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.stat {
+  padding: 10px 14px;
+  background: var(--badge-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+}
+
+.stat strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--primary-text);
+}
+
+.dotIn {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00b84a;
+  margin-right: 6px;
+}
+
+.dotOut {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-ter);
+  margin-right: 6px;
+}
+
+.errorBanner {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 85, 85, 0.1);
+  border: 1px solid rgba(255, 85, 85, 0.35);
+  color: #ff8a80;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+/* Kiosk mode (demo staff-view) */
+.kioskPanel {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 220px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--badge-bg);
+}
+
+.kioskToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+.kioskSearch {
+  flex: 1;
+  min-width: 220px;
+  padding: 12px 16px;
+  font-size: 15px;
+}
+
+.kioskProgress {
+  text-align: right;
+  min-width: 100px;
+}
+
+.kioskProgressLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-sec);
+}
+
+.kioskProgressValue {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: #00c84a;
+}
+
+.kioskProgressTotal {
+  font-size: 14px;
+  color: var(--text-sec);
+  font-weight: 600;
+}
+
+.kioskProgressPct {
+  font-size: 12px;
+  color: var(--text-ter);
+}
+
+.kioskBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px 24px;
+}
+
+.kioskLoading,
+.kioskEmpty {
+  font-size: 14px;
+  color: var(--text-sec);
+  padding: 24px;
+  text-align: center;
+}
+
+.kioskBracketCard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.kioskBracketHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+
+.kioskBracketHeader:hover {
+  background: var(--badge-bg);
+}
+
+.kioskBracketDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary-text);
+  flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(170, 255, 0, 0.35);
+}
+
+.kioskBracketMeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.kioskBracketName {
+  display: block;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.kioskBracketSub {
+  display: block;
+  font-size: 12px;
+  color: var(--text-sec);
+  margin-top: 2px;
+}
+
+.kioskBracketPill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 100px;
+  background: var(--badge-bg);
+  border: 1px solid var(--border);
+  color: var(--text-sec);
+  flex-shrink: 0;
+}
+
+.kioskBracketPillDone {
+  color: #00c84a;
+  background: rgba(0, 200, 80, 0.12);
+  border-color: rgba(0, 200, 80, 0.35);
+}
+
+.kioskChevron {
+  font-size: 12px;
+  color: var(--text-ter);
+  flex-shrink: 0;
+}
+
+.kioskPlayerList {
+  border-top: 1px solid var(--border);
+}
+
+.kioskPlayerRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.08);
+}
+
+.kioskPlayerRowIn {
+  background: rgba(0, 200, 80, 0.04);
+}
+
+.kioskAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary-dim);
+  border: 1px solid var(--primary-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--primary-text);
+  flex-shrink: 0;
+}
+
+.kioskPlayerInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.kioskPlayerName {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.kioskPlayerSub {
+  font-size: 12px;
+  color: var(--text-sec);
+  margin-top: 2px;
+}
+
+.kioskPlayerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.kioskTime {
+  font-size: 12px;
+  color: var(--text-ter);
+  white-space: nowrap;
+}
+
+.kioskCheckBtn {
+  min-height: 44px;
+  min-width: 120px;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .kioskPlayerRow {
+    flex-wrap: wrap;
+  }
+
+  .kioskCheckBtn {
+    width: 100%;
+  }
+}
+
+/* Landing — demo action cards */
+.landingCards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 768px) {
+  .landingCards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.landingCard {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 28px 24px;
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.landingCard:hover {
+  border-color: var(--primary-border);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.landingCardPrimary {
+  background: linear-gradient(135deg, var(--primary-dim), rgba(170, 255, 0, 0.04));
+  border-color: var(--primary-border);
+}
+
+.landingCardPrimary:hover {
+  box-shadow: 0 6px 20px rgba(170, 255, 0, 0.12);
+}
+
+.landingCardIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  background: var(--primary-dim);
+  border: 1.5px solid var(--primary-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.landingCardIconPrimary {
+  background: var(--primary);
+  border: none;
+}
+
+.landingCardText {
+  flex: 1;
+  min-width: 0;
+}
+
+.landingCardTitle {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.landingCardTitlePrimary {
+  color: var(--primary-text);
+}
+
+.landingCardDesc {
+  font-size: 13px;
+  color: var(--text-sec);
+  line-height: 1.4;
+}
+
+.landingCardArrow {
+  margin-left: auto;
+  color: var(--primary-text);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* Bracket queue stub */
+.queueSection {
+  margin-top: 28px;
+}
+
+.queueSectionTitle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-sec);
+  margin-bottom: 12px;
+}
+
+.queueEmpty {
+  padding: 24px 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-ter);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+/* Fullscreen overlays */
+.checkinOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.checkinOverlayHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.checkinOverlayHeaderMeta {
+  flex: 1;
+  min-width: 160px;
+}
+
+.checkinOverlayTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary-text);
+}
+
+.checkinOverlaySub {
+  font-size: 12px;
+  color: var(--text-sec);
+  margin-top: 2px;
+}
+
+.checkinOverlayHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.staffOverlaySearch {
+  width: 200px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.checkinOverlayBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.staffUndoBtn {
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ff5555;
+}
+
+.kioskTimeIn {
+  font-size: 12px;
+  font-weight: 700;
+  color: #00c84a;
+  white-space: nowrap;
+}
+
+/* Kiosk overlay — player grid */
+.kioskOverlayHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.kioskOverlayHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.kioskOverlayBrand {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary-text);
+}
+
+.kioskOverlayEvent {
+  font-size: 12px;
+  color: var(--text-sec);
+}
+
+.kioskOverlayProgress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.kioskOverlayProgressText {
+  text-align: right;
+}
+
+.kioskProgressRing {
+  width: 56px;
+  height: 56px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.kioskProgressRing svg {
+  width: 56px;
+  height: 56px;
+}
+
+.kioskProgressRingPct {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #00c84a;
+}
+
+.kioskOverlaySearchBar {
+  padding: 14px 24px;
+  background: var(--surface, var(--badge-bg));
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.kioskOverlaySearch {
+  width: 100%;
+  padding: 12px 18px;
+  font-size: 16px;
+}
+
+.kioskOverlayGridWrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px 24px;
+}
+
+.kioskPlayerGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 900px) {
+  .kioskPlayerGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .kioskPlayerGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kioskPlayerCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  transition: all 0.2s;
+}
+
+.kioskPlayerCard:not(:disabled):hover {
+  border-color: var(--primary);
+  background: var(--primary-dim);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.kioskPlayerCardDone {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.kioskPlayerCardAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--primary-dim);
+  border: 2px solid var(--primary-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary-text);
+  flex-shrink: 0;
+}
+
+.kioskPlayerCardBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.kioskPlayerCardName {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 5px;
+}
+
+.kioskPlayerCardChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-bottom: 6px;
+}
+
+.kioskDivChip {
+  display: inline-flex;
+  padding: 3px 9px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.kioskPlayerCardEmail {
+  font-size: 11px;
+  color: var(--text-ter);
+}
+
+.kioskPlayerCardCta {
+  margin-top: 8px;
+  padding: 7px 0;
+  background: var(--primary-dim);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-sm);
+  color: var(--primary-text);
+  font-weight: 700;
+  font-size: 12px;
+  text-align: center;
+}
+
+.kioskPlayerCardChecked {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #00c84a;
+}
+
+.kioskCheckedFooter {
+  text-align: center;
+  padding: 16px;
+  color: var(--text-ter);
+  font-size: 13px;
+  border-top: 1px solid rgba(128, 128, 128, 0.08);
+  margin-top: 8px;
+}
+
+.kioskOverlayFooter {
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--card);
+  text-align: center;
+  color: var(--text-ter);
+  font-size: 13px;
+  flex-shrink: 0;
+}

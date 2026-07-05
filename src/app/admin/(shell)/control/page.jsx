@@ -1,5 +1,5 @@
 import ComingSoon from "../_components/ComingSoon";
 
 export default function Page() {
-  return <ComingSoon name="Control Center" />;
+  return <ComingSoon name="Live Play" />;
 }

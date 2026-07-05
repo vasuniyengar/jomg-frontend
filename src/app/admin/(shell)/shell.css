@@ -140,9 +140,14 @@
   background:var(--card); border:1px solid var(--border); border-radius:var(--radius-sm);
   padding: 4px 12px 4px 4px; cursor:pointer; transition:all var(--transition); flex-shrink:0;
 }
-a.topbar-user {
+a.topbar-user,
+button.topbar-user {
   text-decoration: none;
   color: inherit;
+  font: inherit;
+}
+button.topbar-user {
+  appearance: none;
 }
 .topbar-user:hover { border-color:var(--primary-text); }
 .user-avatar {
@@ -1671,4 +1676,15 @@ a.qa-card {
   .bulk-upload-grid {
     gap: 10px;
   }
+}
+
+/* Tournaments hub — full-width without sidebar */
+.hub-mode .sidebar {
+  display: none;
+}
+.hub-mode .body-area {
+  overflow-y: auto;
+}
+.hub-mode .main {
+  overflow: visible;
 }

@@ -1,0 +1,1051 @@
+/* Score Entry — ported from FINAL Admin-journey-v60.html */
+
+.page {
+  min-height: calc(100vh - 56px);
+}
+
+.pickerGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pickerLabel {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.pickerLabelActive {
+  color: var(--primary-text);
+}
+
+.pickerLabelYts {
+  color: #e0a000;
+}
+
+.pickerLabelDone {
+  color: #00c84a;
+}
+
+.pickerSelect {
+  width: 200px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.pickerSelectActive {
+  border-color: var(--primary-border) !important;
+  background: var(--primary-dim) !important;
+  color: var(--primary-text) !important;
+  font-weight: 700;
+}
+
+.pickerSelectYts {
+  border-color: rgba(224, 160, 0, 0.5) !important;
+  background: rgba(224, 160, 0, 0.12) !important;
+  color: #e0a000 !important;
+  font-weight: 700;
+}
+
+.pickerSelectDone {
+  border-color: rgba(0, 200, 80, 0.45) !important;
+  background: rgba(0, 200, 80, 0.12) !important;
+  color: #00c84a !important;
+  font-weight: 700;
+}
+
+.poolLayoutToggle {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.poolLayoutBtn {
+  padding: 7px 12px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  background: transparent;
+  color: var(--text-sec);
+}
+
+.poolLayoutBtnOn {
+  background: var(--primary);
+  color: #000;
+}
+
+.divTitleRow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.divSwatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--primary);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.divTitle {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.divMeta {
+  font-size: 12px;
+  color: var(--text-ter);
+}
+
+.statusBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 11px 16px;
+}
+
+.statusDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusDotPulse {
+  animation: seBlink 1.4s infinite;
+}
+
+@keyframes seBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.statusEyebrow {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-ter);
+}
+
+.statusLabel {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tabBar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.tabBtn {
+  padding: 9px 18px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: -1px;
+  color: var(--text-sec);
+  border-bottom: 2px solid transparent;
+}
+
+.tabBtnOn {
+  color: var(--text);
+  border-bottom-color: var(--primary);
+}
+
+.poolGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.poolGrid1 {
+  grid-template-columns: 1fr;
+}
+
+.poolGrid2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.poolGrid3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.poolGrid4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.poolGridLocked {
+  opacity: 0.5;
+  pointer-events: none;
+  filter: grayscale(0.6);
+}
+
+@media (max-width: 1200px) {
+  .poolGrid4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .poolGrid2,
+  .poolGrid3,
+  .poolGrid4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.poolCard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.poolHead {
+  background: var(--badge-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.poolName {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.poolMeta {
+  font-size: 11px;
+  color: var(--text-ter);
+}
+
+.poolBody {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.matchCard {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.matchHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  font-family: inherit;
+}
+
+.matchHeaderOpen {
+  background: var(--badge-bg);
+}
+
+.matchTitle {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.matchSub {
+  font-size: 11px;
+  color: var(--text-ter);
+  margin-top: 2px;
+}
+
+.matchVs {
+  color: var(--text-ter);
+  font-weight: 400;
+}
+
+.statusPill {
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 100px;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+
+.chevron {
+  font-size: 11px;
+  color: var(--text-ter);
+  transition: transform 0.2s;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.matchBody {
+  border-top: 1px solid var(--border);
+  padding: 14px 12px;
+  background: var(--bg);
+}
+
+.scoreCourt {
+  display: grid;
+  grid-template-columns: 1fr 64px 1fr;
+  gap: 0;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 640px) {
+  .scoreCourt {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.scoreSide {
+  text-align: center;
+  padding: 0 12px;
+}
+
+.scoreSideName {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.15;
+}
+
+.scoreSideMeta {
+  font-size: 11px;
+  color: var(--text-sec);
+  margin-top: 4px;
+  margin-bottom: 14px;
+}
+
+.scoreRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.scoreStep {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 26px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.scoreStep:hover:not(:disabled) {
+  border-color: var(--primary-text);
+  color: var(--primary-text);
+  background: var(--primary-dim);
+}
+
+.scoreStep:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.scoreNum {
+  font-family: var(--font-display);
+  font-size: 64px;
+  font-weight: 900;
+  color: var(--primary-text);
+  line-height: 0.9;
+  min-width: 90px;
+  text-align: center;
+}
+
+.scoreNumLosing {
+  color: var(--text-ter);
+}
+
+.scoreCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.scoreCenterVs {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--text-ter);
+}
+
+.scoreCenterGame {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-text);
+  background: var(--primary-dim);
+  border: 1px solid var(--primary-border);
+  border-radius: 100px;
+  padding: 2px 10px;
+}
+
+.matchActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+.matchActions .btn {
+  flex: 1;
+  min-width: 140px;
+  justify-content: center;
+}
+
+.emptyState {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--text-ter);
+  font-size: 13px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.playoffCard {
+  margin-top: 4px;
+  background: var(--card);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.playoffHead {
+  background: var(--primary-dim);
+  border-bottom: 1px solid var(--primary-border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.playoffTitle {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.playoffSub {
+  font-size: 11px;
+  color: var(--text-sec);
+}
+
+.roundLabel {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-ter);
+  margin: 6px 0 2px;
+}
+
+.standingsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.standingsTable th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-ter);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.standingsTable td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.standingsTable tr:last-child td {
+  border-bottom: none;
+}
+
+.teamsList {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.teamRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 18px;
+  border-top: 1px solid var(--border);
+}
+
+.teamRow:first-child {
+  border-top: none;
+}
+
+.teamIndex {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--badge-bg);
+  color: var(--text-sec);
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.teamInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.teamName {
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.teamPoolBadge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-ter);
+  background: var(--badge-bg);
+  border-radius: 100px;
+  padding: 2px 8px;
+}
+
+.teamPlayers {
+  font-size: 11px;
+  color: var(--text-sec);
+  margin-top: 3px;
+}
+
+.teamRecord {
+  font-size: 11px;
+  color: var(--text-ter);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.teamRecord strong {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.errorBanner {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 85, 85, 0.1);
+  border: 1px solid rgba(255, 85, 85, 0.35);
+  color: #ff8a80;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.successBanner {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(0, 200, 80, 0.1);
+  border: 1px solid rgba(0, 200, 80, 0.3);
+  color: #00c84a;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.courtChip {
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  background: #3b9eff;
+  border-radius: 100px;
+  padding: 3px 9px;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+.courtChipInline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  margin-left: 6px;
+  background: #3b9eff;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 100px;
+}
+
+.duprRow,
+.courtRow,
+.courtWarn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.duprCopy,
+.courtCopy,
+.courtWarnCopy {
+  flex: 1;
+  min-width: 0;
+}
+
+.duprTitle,
+.courtTitle,
+.courtWarnTitle {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.duprSub,
+.courtSub,
+.courtWarnSub {
+  font-size: 10px;
+  color: var(--text-sec);
+  margin-top: 2px;
+}
+
+.courtWarn {
+  border-color: rgba(224, 160, 0, 0.4);
+  background: rgba(224, 160, 0, 0.08);
+}
+
+.courtWarnLink,
+.playGateLink {
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-sm);
+  background: var(--primary-dim);
+  color: var(--primary-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.courtSelect {
+  width: 140px;
+  padding: 6px 8px;
+  font-size: 11px;
+}
+
+.gameRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 7px 9px;
+  margin-bottom: 6px;
+}
+
+.gameLabelCol {
+  width: 118px;
+  flex-shrink: 0;
+}
+
+.gameLabel {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.gameHint {
+  font-size: 9px;
+  color: var(--text-ter);
+}
+
+.gameLineupCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.lineupLine {
+  font-size: 11px;
+  color: var(--text-sec);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gameDbHint {
+  font-size: 11px;
+  color: var(--text-ter);
+}
+
+.gameScoreCol {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.gameScoreInput {
+  width: 46px;
+  height: 34px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--text);
+}
+
+.gameScoreDash {
+  color: var(--text-ter);
+  font-weight: 700;
+}
+
+.gameSavedBtn {
+  flex-shrink: 0;
+  width: 78px;
+  height: 34px;
+  border: 1px solid rgba(0, 200, 80, 0.4);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 200, 80, 0.12);
+  color: #00c84a;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.gameSubmitBtn {
+  flex-shrink: 0;
+  width: 78px;
+  height: 34px;
+  justify-content: center;
+}
+
+.gameResetBtn {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--badge-bg);
+  color: var(--text-sec);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.gameResetBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.submitAllBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
+.submitAllHint {
+  font-size: 11px;
+  color: var(--text-ter);
+  flex: 1;
+}
+
+.playGate {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  background: rgba(224, 160, 0, 0.08);
+  border: 1px solid rgba(224, 160, 0, 0.4);
+  border-left: 3px solid #e0a000;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+}
+
+.playGateIcon {
+  font-size: 18px;
+}
+
+.playGateTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: #e0a000;
+}
+
+.playGateSub {
+  font-size: 11px;
+  color: var(--text-sec);
+  margin-top: 2px;
+}
+
+.standingsSubTabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.standingsSubBtn {
+  padding: 6px 14px;
+  border-radius: 100px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-sec);
+}
+
+.standingsSubBtnOn {
+  border-color: var(--primary-border);
+  background: var(--primary-dim);
+  color: var(--primary-text);
+}
+
+.standingsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.poolOverviewCard,
+.bracketStandingsCard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.poolOverviewHead {
+  background: var(--badge-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.poolOverviewTitle {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.poolOverviewActions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.poolProgress {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.scoreMatchesBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 13px;
+  border-radius: var(--radius-md);
+  background: var(--primary-dim);
+  border: 1px solid var(--primary-border);
+  color: var(--primary-text);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.poolOverviewTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.poolOverviewTable th {
+  text-align: left;
+  padding: 9px 18px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-ter);
+}
+
+.poolOverviewTable th:not(:first-child) {
+  text-align: center;
+  padding: 9px 8px;
+}
+
+.poolOverviewTable td {
+  padding: 10px 18px;
+  border-top: 1px solid var(--border);
+}
+
+.poolOverviewTable td:not(:first-child) {
+  text-align: center;
+  padding: 10px 8px;
+}
+
+.standingsTeamCell {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.standingsRank {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--badge-bg);
+  color: var(--text-sec);
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.standingsNum {
+  font-weight: 800;
+}
+
+.standingsMuted {
+  color: var(--text-sec);
+}
+
+.standingsPd {
+  font-weight: 700;
+}
+
+.matchStatusStrip {
+  border-top: 1px solid var(--border);
+  padding: 10px 18px 14px;
+}
+
+.matchStatusLabel {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-ter);
+  margin-bottom: 8px;
+}
+
+.matchStatusRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  margin-bottom: 5px;
+}
+
+.matchStatusRound {
+  color: var(--text-ter);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.matchStatusTeams {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.matchStatusScore {
+  color: var(--text-sec);
+  flex-shrink: 0;
+}
+
+.matchStatusPill {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 800;
+  border-radius: 100px;
+  padding: 2px 8px;
+}

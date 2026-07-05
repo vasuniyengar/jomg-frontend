@@ -1,0 +1,61 @@
+import Avatar from "./Avatar";
+
+function YoutubeIcon() {
+  return (
+    <svg viewBox="0 0 24 24">
+      <path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z" />
+    </svg>
+  );
+}
+
+export default function CourtCard({ court }) {
+  const cardClass = `court-card${court.championship ? " champ" : ""}${court.idle ? " idle" : ""}`;
+
+  return (
+    <div className={cardClass}>
+      <div className="court-head">
+        <div className="court-no">{court.number}</div>
+        {court.championship ? (
+          <span className="court-champ-tag">Championship</span>
+        ) : null}
+        {court.youtubeUrl ? (
+          <a
+            className="court-yt"
+            href={court.youtubeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <YoutubeIcon />
+            Live
+          </a>
+        ) : null}
+      </div>
+
+      {court.idleMessage ? (
+        <div className="court-idle-msg">{court.idleMessage}</div>
+      ) : (
+        <>
+          {court.live ? (
+            <div className="court-status">
+              <span className="live-dot" />
+              {court.status}
+            </div>
+          ) : null}
+          {court.division ? <div className="court-div">{court.division}</div> : null}
+          {court.teams?.map((team) => (
+            <div className="court-match" key={team.name}>
+              <div className={`court-team${team.lead ? " lead" : ""}`}>
+                <Avatar initials={team.initials} size={24} seed={team.lead} />
+                {team.name}
+              </div>
+              <div className="court-score">
+                {team.score === null || team.score === undefined ? "—" : team.score}
+              </div>
+            </div>
+          ))}
+          {court.meta ? <div className="court-meta">{court.meta}</div> : null}
+        </>
+      )}
+    </div>
+  );
+}

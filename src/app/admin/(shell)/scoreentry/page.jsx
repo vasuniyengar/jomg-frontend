@@ -1,5 +1,5 @@
-import ComingSoon from "../_components/ComingSoon";
+import ScoreEntryScreen from "./_components/ScoreEntryScreen";
 
 export default function Page() {
-  return <ComingSoon name="Score Entry" />;
+  return <ScoreEntryScreen />;
 }

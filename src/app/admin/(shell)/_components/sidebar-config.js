@@ -1,35 +1,39 @@
 /** Sidebar phases + nav — mirrors 04-dashboard-page-4.html */
 export const PHASES = [
-  {
-    id: "phase-1",
-    num: 1,
-    label: "Setup",
-    sub: "Pre-tournament",
-    items: [
-      {
-        href: "/admin/dashboard",
-        icon: "🏠",
-        label: "Dashboard",
-        badge: { text: "3", variant: "red" },
-      },
-      { href: "/admin/settings", icon: "⚙️", label: "Tournament Settings" },
-      { href: "/admin/divisions", icon: "🗂", label: "Manage Divisions" },
-      { href: "/admin/courtsetup", icon: "🏟️", label: "Court Setup" },
-      {
-        comingSoon: true,
-        icon: "📋",
-        label: "Event Planner",
-        version: "v1.01",
-      },
-      { href: "/admin/coupons", icon: "🏷️", label: "Discounts" },
-      {
-        comingSoon: true,
-        icon: "👕",
-        label: "Shop",
-        version: "v1.01",
-      },
-    ],
-  },
+    {
+  id: "phase-1",
+  num: 1,
+  label: "Setup",
+  sub: "Pre-tournament",
+  items: [
+    {
+      href: "/admin/dashboard",
+      icon: "🏠",
+      label: "Dashboard",
+      badge: { text: "3", variant: "red" },
+    },
+    { href: "/admin/settings", icon: "⚙️", label: "Tournament Settings" },
+    { href: "/admin/divisions", icon: "🗂", label: "Manage Divisions" },
+    { href: "/admin/courtsetup", icon: "🏟️", label: "Court Setup" },
+    {
+      comingSoon: true,
+      icon: "📋",
+      label: "Event Planner",
+      version: "v1.01",
+    },
+    {
+      comingSoon: true,
+      icon: "🏷️",
+      label: "Discounts",
+    },
+    {
+      comingSoon: true,
+      icon: "👕",
+      label: "Shop",
+      version: "v1.01",
+    },
+  ],
+},
   {
     id: "phase-2",
     num: 2,
@@ -40,8 +44,9 @@ export const PHASES = [
         href: "/admin/reglist",
         icon: "👥",
         label: "Players List",
-        badge: { text: "48", variant: "default" },
+        
       },
+      { href: "/admin/teams", icon: "👥", label: "Manage Teams" },
       {
         comingSoon: true,
         icon: "⏳",
@@ -58,33 +63,40 @@ export const PHASES = [
     sub: "Before play begins",
     items: [
       { href: "/admin/draw", icon: "🎯", label: "Generate Draw" },
+      { href: "/admin/published", icon: "✅", label: "Published Draws" },
+      { href: "/admin/playoffBracket", icon: "🏆", label: "Playoff Bracket" },
       { href: "/admin/schedule", icon: "📅", label: "Schedule Builder" },
     ],
   },
   {
     id: "phase-4",
     num: 4,
-    label: "Live Play",
+    label: "Control Hub",
     sub: "Day-of operations",
     items: [
       {
-        href: "/admin/control",
-        icon: "🎮",
-        label: "Control Center",
-        liveDot: true,
-      },
-      {
         href: "/admin/checkin",
         icon: "✅",
-        label: "Player Check-In",
+        label: "Check-In",
         badge: {
           text: "94%",
           variant: "green",
           style: { background: "rgba(0,200,80,0.15)", color: "#00b84a" },
         },
       },
+      {
+        href: "/admin/control",
+        icon: "🎮",
+        label: "Live Play",
+        liveDot: true,
+      },
       { href: "/admin/courts", icon: "🏟", label: "Court Center" },
-      { href: "/admin/autopilot", icon: "🛫", label: "Auto-Pilot" },
+      {
+        comingSoon: true,
+        icon: "🛫",
+        label: "Auto-Pilot",
+        version: "Soon",
+      },
       { href: "/admin/scoreentry", icon: "📋", label: "Score Entry" },
       { href: "/admin/bracket", icon: "📊", label: "Bracket Progression" },
     ],
