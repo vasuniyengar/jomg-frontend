@@ -2,14 +2,24 @@
 
 import { usePublicTheme } from "../../../_components/PublicThemeProvider";
 
-export default function TopChrome({ brandTitle, brandSubtitle }) {
+export default function TopChrome({ brandTitle, brandSubtitle, brandLogoUrl }) {
   const { theme, toggleTheme } = usePublicTheme();
   const isDark = theme === "dark";
 
   return (
     <div className="cs">
       <div className="cs-brand">
-        <span className="dot">🥒</span> {brandTitle}{" "}
+        {brandLogoUrl ? (
+          <img
+            className="cs-brand-logo"
+            src={brandLogoUrl}
+            alt={brandTitle || "JOMG"}
+          />
+        ) : (
+          <>
+            <span className="dot">🥒</span> {brandTitle}
+          </>
+        )}{" "}
         <span className="muted">{brandSubtitle}</span>
       </div>
       <div className="cs-right">

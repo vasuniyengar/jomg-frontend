@@ -17,6 +17,7 @@ export function mapPublicTournamentResponse(apiData) {
     slug: apiData.slug,
     brandTitle: PUBLIC_BRAND.brandTitle,
     brandSubtitle: PUBLIC_BRAND.brandSubtitle,
+    brandLogoUrl: PUBLIC_BRAND.brandLogoUrl,
     title: apiData.title || STATIC_BANNER_TITLE,
     badge: STATIC_BANNER_BADGE,
     bannerUrl: apiData.bannerUrl || "",

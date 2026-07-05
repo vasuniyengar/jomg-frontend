@@ -3,6 +3,7 @@ export const mockTournamentPageData = {
   "slug": "central-texas-championship",
   "brandTitle": "JOMG PCC",
   "brandSubtitle": "Pickleball Club Championship",
+  "brandLogoUrl": "/tournaments/jomg-logo.png",
   "title": "Central Texas Championship",
   "badge": "CLUB VS CLUB",
   "bannerUrl": "/tournaments/central-texas-championship-banner.jpg",
@@ -77,7 +78,10 @@ export const mockTournamentPageData = {
     "format": {
       "tag": "MLP style",
       "intro": "Major League Pickleball format \u2014 team play across four doubles games (men's doubles, women's doubles, and two mixed doubles), plus a Dream Breaker tiebreaker if the games finish tied 2\u20132.",
-      "mlpNote": "All four games are played in every round-robin match \u2014 even if a team clinches 3\u20130 after three games. Because match points are awarded by total game wins, teams must complete all four games.",
+      "mlpNotes": [
+        "All four games are played in every round-robin match \u2014 even if a team clinches 3\u20130 after three games. The fourth game matters because if two or more teams finish level on standings points, the tiebreaker is applied on total game wins vs. losses \u2014 so every game won or lost can affect final placement.",
+        "In bracket/playoff knockout matches, the fourth game is not necessary if a team is already up 3\u20130, since advancement is decided by match win rather than total game wins."
+      ],
       "mlpScoring": [
         {
           "label": "Men's doubles",

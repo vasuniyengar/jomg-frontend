@@ -38,6 +38,7 @@ export default function TournamentPage({ data, slug, preview = false }) {
       <TopChrome
         brandTitle={data.brandTitle}
         brandSubtitle={data.brandSubtitle}
+        brandLogoUrl={data.brandLogoUrl}
       />
       <div className="wrap">
         {preview ? (

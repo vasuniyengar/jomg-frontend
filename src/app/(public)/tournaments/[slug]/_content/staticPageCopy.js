@@ -1,6 +1,7 @@
 export const PUBLIC_BRAND = {
   brandTitle: "JOMG PCC",
   brandSubtitle: "Pickleball Club Championship",
+  brandLogoUrl: "/tournaments/jomg-logo.png",
   volairLogoUrl: "/tournaments/volair-logo.png",
 };
 
@@ -76,8 +77,10 @@ export const STATIC_FORMAT = {
   tag: "MLP style",
   intro:
     "Major League Pickleball format — team play across four doubles games (men's doubles, women's doubles, and two mixed doubles), plus a Dream Breaker tiebreaker if the games finish tied 2–2.",
-  mlpNote:
-    "All four games are played in every round-robin match — even if a team clinches 3–0 after three games. Because match points are awarded by total game wins, teams must complete all four games.",
+  mlpNotes: [
+    "All four games are played in every round-robin match — even if a team clinches 3–0 after three games. The fourth game matters because if two or more teams finish level on standings points, the tiebreaker is applied on total game wins vs. losses — so every game won or lost can affect final placement.",
+    "In bracket/playoff knockout matches, the fourth game is not necessary if a team is already up 3–0, since advancement is decided by match win rather than total game wins.",
+  ],
   mlpScoring: [
     { label: "Men's doubles", value: "1 game to 11, win by 2" },
     { label: "Women's doubles", value: "1 game to 11, win by 2" },

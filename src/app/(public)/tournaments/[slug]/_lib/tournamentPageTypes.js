@@ -24,6 +24,7 @@
  * @property {string} slug
  * @property {string} brandTitle
  * @property {string} brandSubtitle
+ * @property {string} brandLogoUrl
  * @property {string} title
  * @property {string} badge
  * @property {string} bannerUrl

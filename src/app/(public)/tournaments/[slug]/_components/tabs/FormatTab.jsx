@@ -27,7 +27,11 @@ export default function FormatTab({ data }) {
         <p className="fc-intro">{format.intro}</p>
 
         <div className="fc-section tight">MLP game scoring</div>
-        {format.mlpNote ? <p className="fc-note">{format.mlpNote}</p> : null}
+        {(format.mlpNotes || []).map((note) => (
+          <p className="fc-note" key={note}>
+            {note}
+          </p>
+        ))}
         <FormatGrid cols={4} items={format.mlpScoring} />
 
         <div className="fc-section">Dream Breaker (tiebreaker) if necessary</div>
