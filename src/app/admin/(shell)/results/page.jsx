@@ -1,5 +1,5 @@
-import ComingSoon from "../_components/ComingSoon";
+import ResultsScreen from "./_components/ResultsScreen";
 
 export default function Page() {
-  return <ComingSoon name="Results & Prizes" />;
+  return <ResultsScreen />;
 }

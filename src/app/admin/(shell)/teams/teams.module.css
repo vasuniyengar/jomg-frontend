@@ -1,0 +1,533 @@
+.teamsPage {
+  min-height: calc(100vh - 56px);
+}
+
+.divTabs {
+  padding: 14px 28px;
+  background: var(--topbar-bg);
+  border-bottom: 1px solid var(--border);
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.divTabsLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-ter);
+}
+
+.divSelect {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 36px 9px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  min-width: 280px;
+  max-width: 100%;
+  cursor: pointer;
+}
+
+.divSummary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.divDot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.divNav {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.overrideBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(90deg, rgba(170, 255, 0, 0.08), rgba(170, 255, 0, 0.03));
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+.overrideDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+
+.overrideLabel {
+  font-weight: 700;
+  color: var(--primary-text);
+}
+
+.overrideSub {
+  color: var(--text-sec);
+  margin-left: 4px;
+}
+
+.bannerActions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.lockBanner {
+  background: rgba(91, 140, 255, 0.1);
+  border: 1px solid rgba(91, 140, 255, 0.35);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.rosterCard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.rosterHead {
+  display: grid;
+  grid-template-columns: 40px 24px 1fr auto auto auto;
+  gap: 14px;
+  padding: 10px 16px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-ter);
+  border-bottom: 1px solid var(--border);
+}
+
+.rosterRow {
+  display: grid;
+  grid-template-columns: 40px 24px 1fr auto auto auto;
+  gap: 14px;
+  padding: 14px 16px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.rosterRow:hover {
+  background: var(--badge-bg);
+}
+
+.rosterRowInactive {
+  opacity: 0.5;
+  background: var(--badge-bg);
+}
+
+.seedNum {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-sec);
+}
+
+.dragHandle {
+  color: var(--text-ter);
+  cursor: grab;
+  font-size: 16px;
+  user-select: none;
+}
+
+.teamMain {
+  min-width: 0;
+}
+
+.teamTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.teamSub {
+  font-size: 11px;
+  color: var(--text-sec);
+  margin-top: 3px;
+}
+
+.combinedRating {
+  text-align: right;
+}
+
+.combinedVal {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary-text);
+}
+
+.combinedLbl {
+  font-size: 10px;
+  color: var(--text-ter);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.poolSelect {
+  width: 90px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.menuWrap {
+  position: relative;
+}
+
+.menuPanel {
+  position: absolute;
+  right: 0;
+  top: 36px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  z-index: 50;
+  min-width: 200px;
+  overflow: hidden;
+}
+
+.menuItem {
+  padding: 10px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.1s;
+}
+
+.menuItem:hover {
+  background: var(--badge-bg);
+}
+
+.menuItemDisabled {
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--text-ter);
+  cursor: not-allowed;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menuItemDanger {
+  color: #ff5555;
+}
+
+.menuItemDanger:hover {
+  background: rgba(255, 85, 85, 0.1);
+}
+
+.menuDivider {
+  height: 1px;
+  background: var(--border);
+  margin: 0;
+}
+
+.statusPill {
+  display: inline-block;
+  padding: 2px 9px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-radius: 10px;
+}
+
+.pillPending {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.pillWaitlist {
+  background: rgba(180, 120, 255, 0.15);
+  color: #b478ff;
+  border: 1px solid rgba(180, 120, 255, 0.35);
+}
+
+.pillLate {
+  background: rgba(91, 140, 255, 0.15);
+  color: #5b8cff;
+  border: 1px solid rgba(91, 140, 255, 0.35);
+}
+
+.pillWithdrawn,
+.pillForfeit {
+  background: var(--badge-bg);
+  color: var(--text-sec);
+  border: 1px solid var(--border);
+}
+
+.emptyState {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-ter);
+}
+
+.emptyIcon {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.emptyTitle {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-sec);
+  margin-bottom: 6px;
+}
+
+.emptySub {
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+
+.emptyActions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.errorBanner {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 85, 85, 0.1);
+  border: 1px solid rgba(255, 85, 85, 0.35);
+  color: #ff8a80;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.infoBanner {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(91, 140, 255, 0.1);
+  border: 1px solid rgba(91, 140, 255, 0.35);
+  color: #9bb8ff;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 220;
+  padding: 20px;
+}
+
+.modalPanel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.modalPanelWide {
+  max-width: 680px;
+}
+
+.modalPanelSm {
+  max-width: 440px;
+}
+
+.modalHeader {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.modalTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.modalSubtitle {
+  font-size: 11px;
+  color: var(--text-sec);
+  margin-top: 2px;
+}
+
+.modalBody {
+  padding: 14px 22px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modalFooter {
+  padding: 14px 22px 18px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.modalFooterActions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.restrictions {
+  padding: 10px 22px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(91, 140, 255, 0.06);
+}
+
+.restrictionChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.restrictionChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 12px;
+}
+
+.selectionTray {
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--border);
+  background: var(--badge-bg);
+}
+
+.selectionSlots {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.selectionSlot {
+  flex: 1;
+  min-width: 160px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-sm);
+}
+
+.selectionSlotEmpty {
+  flex: 1;
+  min-width: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-ter);
+  font-size: 11px;
+  font-style: italic;
+}
+
+.candidateList {
+  padding: 8px 12px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 200px;
+}
+
+.candidateRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.candidateRow:hover {
+  background: var(--badge-bg);
+}
+
+.candidateName {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.candidateMeta {
+  font-size: 11px;
+  color: var(--text-sec);
+}
+
+.rosterSlot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--badge-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+}
+
+.sectionEyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-ter);
+  margin-bottom: 8px;
+}

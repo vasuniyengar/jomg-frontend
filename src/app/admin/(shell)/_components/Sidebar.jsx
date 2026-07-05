@@ -1,20 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { tournamentAdminPath } from "@/lib/tournaments";
 import { PHASES } from "./sidebar-config";
 
 const COLLAPSED_KEY = "jomg-sidebar-collapsed";
 
-export default function Sidebar() {
+function SidebarNav() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tournamentId = searchParams.get("tournamentId");
   const [collapsed, setCollapsed] = useState(false);
   const [phaseOpen, setPhaseOpen] = useState({
     "phase-1": true,
     "phase-2": true,
     "phase-3": false,
-    "phase-4": false,
+    "phase-4": true,
     "phase-5": false,
   });
 
@@ -40,10 +43,13 @@ export default function Sidebar() {
     });
   }, []);
 
-  const togglePhase = useCallback((phaseId) => {
-    if (collapsed) return;
-    setPhaseOpen((prev) => ({ ...prev, [phaseId]: !prev[phaseId] }));
-  }, [collapsed]);
+  const togglePhase = useCallback(
+    (phaseId) => {
+      if (collapsed) return;
+      setPhaseOpen((prev) => ({ ...prev, [phaseId]: !prev[phaseId] }));
+    },
+    [collapsed]
+  );
 
   return (
     <aside className={`sidebar${collapsed ? " collapsed" : ""}`} id="sidebar">
@@ -110,6 +116,9 @@ export default function Sidebar() {
                     </div>
                   );
                 }
+                const href = tournamentId
+                  ? tournamentAdminPath(item.href, tournamentId)
+                  : item.href;
                 const active = pathname === item.href;
                 const badgeCls =
                   item.badge?.variant === "red"
@@ -122,23 +131,17 @@ export default function Sidebar() {
                 return (
                   <Link
                     key={item.href}
-                    href={item.href}
+                    href={href}
                     className={`nav-item${active ? " active" : ""}`}
                     data-label={item.label}
                   >
                     <span className="nav-icon">{item.icon}</span>
                     {item.label}
                     {item.liveDot ? (
-                      <span
-                        className="status-dot"
-                        style={{ marginLeft: "auto" }}
-                      />
+                      <span className="status-dot" style={{ marginLeft: "auto" }} />
                     ) : null}
                     {item.badge ? (
-                      <span
-                        className={badgeCls}
-                        style={item.badge.style}
-                      >
+                      <span className={badgeCls} style={item.badge.style}>
                         {item.badge.text}
                       </span>
                     ) : null}
@@ -150,5 +153,17 @@ export default function Sidebar() {
         );
       })}
     </aside>
+  );
+}
+
+function SidebarFallback() {
+  return <aside className="sidebar" id="sidebar" aria-hidden />;
+}
+
+export default function Sidebar() {
+  return (
+    <Suspense fallback={<SidebarFallback />}>
+      <SidebarNav />
+    </Suspense>
   );
 }
