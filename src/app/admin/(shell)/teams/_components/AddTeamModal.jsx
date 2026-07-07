@@ -52,8 +52,7 @@ export default function AddTeamModal({
           .filter((p) =>
             (p.events || []).some((e) => String(e.bracketId) === String(row.id))
           )
-          .map((p) => mapRegistrationToCandidate(p, row.id))
-          .filter((p) => p.paymentStatus === "paid");
+          .map((p) => mapRegistrationToCandidate(p, row.id));
         setCandidates(mapped);
       } catch {
         if (!cancelled) setCandidates([]);

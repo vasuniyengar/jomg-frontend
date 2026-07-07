@@ -8,6 +8,7 @@ import { useTheme } from "./ThemeProvider";
 import { clearAuthSession, getStoredUser } from "@/lib/auth";
 import { organizerLogout } from "@/lib/api";
 import { fetchTournamentById } from "@/lib/tournaments";
+import ChangePasswordModal from "./ChangePasswordModal";
 
 const DARK_SWATCHES = [
   { name: "Graphite", palette: "", gradient: "linear-gradient(135deg,#34383e 50%,#23262a 50%)" },
@@ -73,6 +74,8 @@ export default function Topbar() {
   const userInitials = userName.slice(0, 2).toUpperCase();
   const [tournamentName, setTournamentName] = useState(null);
   const [loadingTournament, setLoadingTournament] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
 
   useEffect(() => {
     if (!tournamentId) {
@@ -106,6 +109,21 @@ export default function Topbar() {
     };
   }, [tournamentId]);
 
+  useEffect(() => {
+    if (!userMenuOpen) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event) => {
+      if (!event.target.closest(".topbar-user-menu")) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [userMenuOpen]);
+
   const tournamentLabel = useMemo(() => {
     if (tournamentId) {
       if (loadingTournament && !tournamentName) return "Loading…";
@@ -117,6 +135,7 @@ export default function Topbar() {
 
   const handleSignOut = async (event) => {
     event.preventDefault();
+    setUserMenuOpen(false);
     try {
       await organizerLogout();
     } catch {
@@ -125,6 +144,12 @@ export default function Topbar() {
       clearAuthSession();
       router.replace("/admin/login");
     }
+  };
+
+  const handlePasswordChanged = () => {
+    setChangePasswordOpen(false);
+    clearAuthSession();
+    router.replace("/admin/login?passwordChanged=1");
   };
 
   return (
@@ -240,16 +265,53 @@ export default function Topbar() {
         />
       </div>
 
-      <button
-        type="button"
-        className="topbar-user"
-        title="Sign out"
-        onClick={handleSignOut}
-      >
-        <div className="user-avatar">{userInitials}</div>
-        <span className="user-name">{userName}</span>
-        <span style={{ fontSize: "11px", color: "var(--text-ter)", marginLeft: "2px" }}>↩</span>
-      </button>
+      <div className="topbar-user-menu">
+        <button
+          type="button"
+          className="topbar-user"
+          title="Account menu"
+          aria-expanded={userMenuOpen}
+          aria-haspopup="menu"
+          onClick={() => setUserMenuOpen((open) => !open)}
+        >
+          <div className="user-avatar">{userInitials}</div>
+          <span className="user-name">{userName}</span>
+          <span style={{ fontSize: "11px", color: "var(--text-ter)", marginLeft: "2px" }}>
+            ▾
+          </span>
+        </button>
+
+        {userMenuOpen ? (
+          <div className="topbar-user-dropdown" role="menu">
+            <button
+              type="button"
+              className="topbar-user-dropdown-item"
+              role="menuitem"
+              onClick={() => {
+                setUserMenuOpen(false);
+                setChangePasswordOpen(true);
+              }}
+            >
+              Change password
+            </button>
+            <button
+              type="button"
+              className="topbar-user-dropdown-item danger"
+              role="menuitem"
+              onClick={handleSignOut}
+            >
+              Sign out
+            </button>
+          </div>
+        ) : null}
+      </div>
+
+      {changePasswordOpen ? (
+        <ChangePasswordModal
+          onClose={() => setChangePasswordOpen(false)}
+          onSuccess={handlePasswordChanged}
+        />
+      ) : null}
     </header>
   );
 }
