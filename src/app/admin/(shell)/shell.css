@@ -158,6 +158,22 @@ button.topbar-user {
 }
 .user-name { font-size:12px; font-weight:600; color:var(--text); }
 
+.topbar-user-menu { position:relative; flex-shrink:0; }
+.topbar-user-dropdown {
+  position:absolute; right:0; top:calc(100% + 6px); min-width:180px;
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius-sm);
+  box-shadow:0 12px 32px rgba(0,0,0,0.35); padding:6px; z-index:120;
+}
+.topbar-user-dropdown-item {
+  width:100%; display:block; text-align:left;
+  background:transparent; border:none; border-radius:calc(var(--radius-sm) - 2px);
+  padding:9px 12px; font:inherit; font-size:12px; font-weight:600;
+  color:var(--text); cursor:pointer; transition:background var(--transition);
+}
+.topbar-user-dropdown-item:hover { background:var(--primary-dim); }
+.topbar-user-dropdown-item.danger { color:#ff7b7b; }
+.topbar-user-dropdown-item.danger:hover { background:rgba(255,123,123,0.12); }
+
 /* ── BODY AREA ── */
 .body-area { display:flex; flex:1; overflow:hidden; }
 

@@ -11,13 +11,14 @@ export const STATIC_BANNER_TITLE = "Central Texas Championship";
 
 /** Info bar below banner — static copy from PHASE 1 reference HTML */
 export const STATIC_INFO_BAR = [
-  { icon: "calendar", label: "Masters 50+", value: "Sat, Aug 8" },
-  { icon: "calendar", label: "Open 18+", value: "Sat, Sep 19" },
+  { icon: "calendar", label: "DATES", value: "Sat, Aug 8" },
+  { icon: "calendar", label: "AGE GROUPS", value: "Sat, Sep 19" },
   { icon: "clubs", label: "Founding Clubs", value: "14" },
   { icon: "format", label: "Format", value: "MLP Style" },
 ];
 
-export const STATIC_FIRST_EVENT_DAY_LABEL = "Masters 50+";
+export const STATIC_INFO_BAR_DATE_LABEL = "DATES";
+export const STATIC_INFO_BAR_AGE_GROUP_LABEL = "AGE GROUPS";
 export const STATIC_CLUBS_COUNT = "14";
 export const STATIC_INFO_BAR_FORMAT = {
   icon: "format",
@@ -46,8 +47,8 @@ export function applyStaticInfoBarLabels(items) {
     if (item.icon === "calendar") {
       processed.push(
         !firstCalendarSeen
-          ? { ...item, label: STATIC_FIRST_EVENT_DAY_LABEL }
-          : item
+          ? { ...item, label: STATIC_INFO_BAR_DATE_LABEL }
+          : { ...item, label: STATIC_INFO_BAR_AGE_GROUP_LABEL }
       );
       firstCalendarSeen = true;
       continue;

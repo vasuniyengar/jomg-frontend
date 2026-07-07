@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import styles from "./login.module.css";
 import { apiRequest } from "@/lib/api";
@@ -8,12 +8,15 @@ import { isAuthenticated, saveAuthSession } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const passwordChanged = searchParams.get("passwordChanged") === "1";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [redirecting, setRedirecting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated()) {
@@ -106,6 +109,23 @@ export default function LoginPage() {
         </div>
         <div className={styles.tagline}>Tournament Director Portal</div>
 
+        {passwordChanged ? (
+          <div
+            style={{
+              marginBottom: "14px",
+              padding: "10px 12px",
+              borderRadius: "8px",
+              background: "rgba(170,255,0,0.12)",
+              border: "1px solid rgba(170,255,0,0.35)",
+              color: "var(--text)",
+              fontSize: "12px",
+              fontWeight: 600,
+            }}
+          >
+            Password updated. Please sign in with your new password.
+          </div>
+        ) : null}
+
         <form onSubmit={handleSignIn}>
           <div className={styles.formGroup}>
             <label className={styles.label}>Email Address</label>
@@ -119,15 +139,28 @@ export default function LoginPage() {
             />
           </div>
           <div className={styles.formGroup}>
-            <label className={styles.label}>Password</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              className={styles.input}
-            />
+            <label className={styles.label} htmlFor="login-password">
+              Password
+            </label>
+            <div className={styles.passwordWrap}>
+              <input
+                id="login-password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                className={styles.input}
+              />
+              <button
+                type="button"
+                className={styles.passwordToggle}
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
           <div className={styles.rememberRow}>
             <label className={styles.rememberLabel}>

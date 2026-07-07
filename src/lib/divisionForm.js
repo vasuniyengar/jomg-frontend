@@ -1,6 +1,11 @@
 /** Build scoringConfig payload for division create/update APIs. */
 
 import { DIVISION_COLORS } from "./divisions";
+import {
+  formatDuprField,
+  parseCombinedDupr,
+  parseIndividualDupr,
+} from "./duprInput";
 
 export const DEFAULT_DIVISION_FORM = {
   bracketName: "",
@@ -46,14 +51,8 @@ export function scoringConfigFromDivision(div, tournament) {
       cfg.duprEnforced !== undefined
         ? Boolean(cfg.duprEnforced)
         : Boolean(tournament?.duprEnforced ?? false),
-    duprCombinedMin:
-      cfg.duprCombinedMin != null && cfg.duprCombinedMin !== ""
-        ? String(cfg.duprCombinedMin)
-        : "",
-    duprCombinedMax:
-      cfg.duprCombinedMax != null && cfg.duprCombinedMax !== ""
-        ? String(cfg.duprCombinedMax)
-        : "",
+    duprCombinedMin: formatDuprField(cfg.duprCombinedMin),
+    duprCombinedMax: formatDuprField(cfg.duprCombinedMax),
     skillLevel: cfg.skillLevel || "",
     teamsPerPool:
       cfg.teamsPerPool != null && cfg.teamsPerPool !== ""
@@ -74,14 +73,8 @@ export function buildDivisionSavePayload(form, { tournament } = {}) {
     showPublic: Boolean(form.showPublic),
     duprRecorded: Boolean(form.duprRecorded),
     duprEnforced: Boolean(form.duprEnforced),
-    duprCombinedMin:
-      form.duprCombinedMin !== "" && form.duprCombinedMin != null
-        ? Number(form.duprCombinedMin)
-        : null,
-    duprCombinedMax:
-      form.duprCombinedMax !== "" && form.duprCombinedMax != null
-        ? Number(form.duprCombinedMax)
-        : null,
+    duprCombinedMin: parseCombinedDupr(form.duprCombinedMin),
+    duprCombinedMax: parseCombinedDupr(form.duprCombinedMax),
     skillLevel: (form.skillLevel || "").trim(),
     teamsPerPool: Number(form.teamsPerPool) || 4,
   };
@@ -116,8 +109,8 @@ export function buildDivisionSavePayload(form, { tournament } = {}) {
       : Number(form.registrationFee) || 0,
     minAge: Number(form.minAge) || 0,
     maxAge: Number(form.maxAge) || 0,
-    minRating: Number(form.minRating) || 0,
-    maxRating: Number(form.maxRating) || 0,
+    minRating: parseIndividualDupr(form.minRating) ?? 0,
+    maxRating: parseIndividualDupr(form.maxRating) ?? 0,
     startDate: form.startDate,
     endDate: form.endDate,
     startTime: form.startTime || null,

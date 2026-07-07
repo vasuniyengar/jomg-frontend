@@ -3,6 +3,7 @@
 import Link from "next/link";
 import styles from "../divisions.module.css";
 import { DIVISION_COLORS } from "@/lib/divisions";
+import { sanitizeDuprInput } from "@/lib/duprInput";
 import { SCORING_OPTIONS, SEEDING_METHOD_OPTIONS } from "@/lib/tournamentSettings";
 import { tournamentAdminPath } from "@/lib/tournaments";
 
@@ -334,28 +335,34 @@ export default function DivisionFormModal({
               <label className="form-label">Min Individual DUPR</label>
               <input
                 className="form-input"
-                type="number"
-                min={0}
-                max={8}
-                step="0.01"
-                placeholder="e.g. 3.5"
+                type="text"
+                inputMode="decimal"
+                placeholder="e.g. 3.50"
                 value={form.minRating}
                 disabled={poolStarted}
-                onChange={(e) => setForm((f) => ({ ...f, minRating: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    minRating: sanitizeDuprInput(e.target.value),
+                  }))
+                }
               />
             </div>
             <div className="form-group">
               <label className="form-label">Max Individual DUPR</label>
               <input
                 className="form-input"
-                type="number"
-                min={0}
-                max={8}
-                step="0.01"
-                placeholder="e.g. 4.5"
+                type="text"
+                inputMode="decimal"
+                placeholder="e.g. 4.50"
                 value={form.maxRating}
                 disabled={poolStarted}
-                onChange={(e) => setForm((f) => ({ ...f, maxRating: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    maxRating: sanitizeDuprInput(e.target.value),
+                  }))
+                }
               />
             </div>
           </div>
@@ -365,15 +372,16 @@ export default function DivisionFormModal({
               <label className="form-label">Min Combined DUPR</label>
               <input
                 className="form-input"
-                type="number"
-                min={0}
-                max={20}
-                step="0.01"
-                placeholder="e.g. 8.0"
+                type="text"
+                inputMode="decimal"
+                placeholder="e.g. 8.00"
                 value={form.duprCombinedMin}
                 disabled={poolStarted}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, duprCombinedMin: e.target.value }))
+                  setForm((f) => ({
+                    ...f,
+                    duprCombinedMin: sanitizeDuprInput(e.target.value),
+                  }))
                 }
               />
             </div>
@@ -381,15 +389,16 @@ export default function DivisionFormModal({
               <label className="form-label">Max Combined DUPR</label>
               <input
                 className="form-input"
-                type="number"
-                min={0}
-                max={20}
-                step="0.01"
-                placeholder="e.g. 16.0"
+                type="text"
+                inputMode="decimal"
+                placeholder="e.g. 20.30"
                 value={form.duprCombinedMax}
                 disabled={poolStarted}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, duprCombinedMax: e.target.value }))
+                  setForm((f) => ({
+                    ...f,
+                    duprCombinedMax: sanitizeDuprInput(e.target.value),
+                  }))
                 }
               />
             </div>

@@ -11,12 +11,12 @@ export const mockTournamentPageData = {
   "infoBar": [
     {
       "icon": "calendar",
-      "label": "Masters 50+",
+      "label": "DATES",
       "value": "Sat, Aug 8"
     },
     {
       "icon": "calendar",
-      "label": "Open 18+",
+      "label": "AGE GROUPS",
       "value": "Sat, Sep 19"
     },
     {

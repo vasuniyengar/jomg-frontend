@@ -119,4 +119,11 @@ export function organizerLogout() {
   return apiRequest("/api/organizer/logout", { method: "POST" });
 }
 
+export function changePassword({ currentPassword, newPassword, confirmPassword }) {
+  return apiRequest("/api/users/change-password", {
+    method: "PUT",
+    body: { currentPassword, newPassword, confirmPassword },
+  });
+}
+
 export { API_BASE_URL, apiClient };
