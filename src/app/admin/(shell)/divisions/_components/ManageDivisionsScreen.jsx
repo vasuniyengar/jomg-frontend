@@ -21,6 +21,7 @@ import {
   divisionAccentColor,
   scoringConfigFromDivision,
 } from "@/lib/divisionForm";
+import { formatDuprField } from "@/lib/duprInput";
 import { getStageScoringLabel } from "@/lib/scoring";
 import { fetchTournamentById, tournamentAdminPath } from "@/lib/tournaments";
 
@@ -173,8 +174,8 @@ export default function ManageDivisionsScreen() {
       registrationFee: String(div.registrationFee ?? 0),
       minAge: div.minAge ? String(div.minAge) : "",
       maxAge: div.maxAge ? String(div.maxAge) : "",
-      minRating: div.minRating ? String(div.minRating) : "",
-      maxRating: div.maxRating ? String(div.maxRating) : "",
+      minRating: formatDuprField(div.minRating),
+      maxRating: formatDuprField(div.maxRating),
       startDate: toDateInput(div.startDate),
       endDate: toDateInput(div.endDate),
       startTime: div.startTime ? String(div.startTime).slice(0, 5) : "",

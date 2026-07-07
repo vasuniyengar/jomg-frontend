@@ -84,6 +84,33 @@
   box-shadow: 0 0 0 3px rgba(170, 255, 0, 0.12);
 }
 
+.passwordWrap {
+  position: relative;
+}
+
+.passwordWrap .input {
+  padding-right: 56px;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: #b4b9c1;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.passwordToggle:hover {
+  color: #aaff00;
+}
+
 /* ── Remember row ── */
 .rememberRow {
   display: flex;

@@ -2,9 +2,9 @@ function FormatGrid({ cols, items }) {
   return (
     <div className={`fc-grid cols-${cols}`}>
       {items.map((item) => (
-        <div className="fc-cell" key={item.label}>
-          <div className="fc-label">{item.label}</div>
-          <div className="fc-value">{item.value}</div>
+        <div className="fmt-card" key={item.label}>
+          <div className="fmt-card-k">{item.label}</div>
+          <div className="fmt-card-v">{item.value}</div>
         </div>
       ))}
     </div>
@@ -16,44 +16,58 @@ export default function FormatTab({ data }) {
 
   return (
     <div className="o3-pane active">
-      <div className="format-card">
+      <div className="vcard dsec">
         <h2 className="sr-only">MLP-style pickleball match format details.</h2>
 
-        <div className="fc-header">
-          <span className="fc-title">Format</span>
-          <span className="fc-badge">{format.tag}</span>
+        <div className="sh">
+          <div className="sh-title">FORMAT</div>
+          <span className="fmt-tag">{format.tag}</span>
         </div>
 
-        <p className="fc-intro">{format.intro}</p>
+        <div className="about-body" style={{ marginBottom: 18 }}>
+          <p>{format.intro}</p>
+        </div>
 
-        <div className="fc-section tight">MLP game scoring</div>
-        {(format.mlpNotes || []).map((note) => (
-          <p className="fc-note" key={note}>
-            {note}
-          </p>
-        ))}
-        <FormatGrid cols={4} items={format.mlpScoring} />
+        <div className="fmt-group">
+          <div className="fmt-glabel">MLP game scoring</div>
+          <div className="about-body" style={{ marginBottom: 10 }}>
+            {(format.mlpNotes || []).map((note) => (
+              <p key={note}>{note}</p>
+            ))}
+          </div>
+          <FormatGrid cols={4} items={format.mlpScoring} />
+        </div>
 
-        <div className="fc-section">Dream Breaker (tiebreaker) if necessary</div>
-        <FormatGrid cols={3} items={format.dreamBreaker} />
+        <div className="fmt-group">
+          <div className="fmt-glabel">Dream Breaker (tiebreaker) if necessary</div>
+          <FormatGrid cols={3} items={format.dreamBreaker} />
+        </div>
 
-        <div className="fc-section">Team setup</div>
-        <FormatGrid cols={3} items={format.teamSetup} />
+        <div className="fmt-group">
+          <div className="fmt-glabel">Team setup</div>
+          <FormatGrid cols={3} items={format.teamSetup} />
+        </div>
 
-        <div className="fc-section">Scoring type &amp; timing</div>
-        <FormatGrid cols={2} items={format.scoringTiming} />
+        <div className="fmt-group">
+          <div className="fmt-glabel">Scoring type &amp; timing</div>
+          <FormatGrid cols={2} items={format.scoringTiming} />
+        </div>
 
-        <div className="fc-section">Switch sides</div>
-        <FormatGrid cols={2} items={format.switchSides} />
+        <div className="fmt-group">
+          <div className="fmt-glabel">Switch sides</div>
+          <FormatGrid cols={2} items={format.switchSides} />
+        </div>
 
-        <div className="fc-section">Time out per game</div>
-        <FormatGrid cols={1} items={format.timeouts} />
+        <div className="fmt-group">
+          <div className="fmt-glabel">Time out per game</div>
+          <FormatGrid cols={1} items={format.timeouts} />
+        </div>
 
         <div className="fc-footer">
           {format.notes.map((note) => (
-            <div key={note.label}>
-              <div className="fc-label">{note.label}</div>
-              <div className="fc-value">{note.text}</div>
+            <div className="info-block" key={note.label}>
+              <div className="info-k">{note.label}</div>
+              <div className="info-v">{note.text}</div>
             </div>
           ))}
         </div>
