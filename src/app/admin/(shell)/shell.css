@@ -156,7 +156,7 @@ button.topbar-user {
   font-family:var(--font-display); font-size:13px; font-weight:800;
   display:flex; align-items:center; justify-content:center;
 }
-.user-name { font-size:12px; font-weight:600; color:var(--text); }
+.user-name { font-size:12px; font-weight:600; color:var(--text); max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
 .topbar-user-menu { position:relative; flex-shrink:0; }
 .topbar-user-dropdown {
