@@ -5,8 +5,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { labelForPath } from "./route-labels";
 import { useTheme } from "./ThemeProvider";
-import { clearAuthSession, getStoredUser } from "@/lib/auth";
-import { organizerLogout } from "@/lib/api";
+import { clearAuthSession, getStoredUser, getUserDisplayName, updateStoredUser } from "@/lib/auth";
+import { fetchCurrentUser, organizerLogout } from "@/lib/api";
 import { fetchTournamentById } from "@/lib/tournaments";
 import ChangePasswordModal from "./ChangePasswordModal";
 
@@ -69,13 +69,42 @@ export default function Topbar() {
   const tournamentId = searchParams.get("tournamentId");
   const { theme, palette, setPalette, toggleTheme } = useTheme();
   const swatches = theme === "dark" ? DARK_SWATCHES : LIGHT_SWATCHES;
-  const user = getStoredUser();
-  const userName = user?.firstname || "Admin";
-  const userInitials = userName.slice(0, 2).toUpperCase();
+  const [user, setUser] = useState(null);
+  const userName = getUserDisplayName(user) || "Admin";
+  const userInitials = (user?.firstname || userName).slice(0, 2).toUpperCase();
   const [tournamentName, setTournamentName] = useState(null);
   const [loadingTournament, setLoadingTournament] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+
+  useEffect(() => {
+    const stored = getStoredUser();
+    if (stored) {
+      setUser(stored);
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const profile = await fetchCurrentUser();
+        if (cancelled || !profile) return;
+        const updated = updateStoredUser({
+          id: profile.id,
+          firstname: profile.firstname,
+          lastname: profile.lastname,
+          email: profile.email,
+          roles: profile.roles,
+        });
+        setUser(updated);
+      } catch {
+        // Keep stored session user when profile refresh fails.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!tournamentId) {
@@ -269,7 +298,7 @@ export default function Topbar() {
         <button
           type="button"
           className="topbar-user"
-          title="Account menu"
+          title={userName}
           aria-expanded={userMenuOpen}
           aria-haspopup="menu"
           onClick={() => setUserMenuOpen((open) => !open)}

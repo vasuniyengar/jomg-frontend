@@ -46,6 +46,28 @@ export function getStoredUser() {
   }
 }
 
+export function getUserDisplayName(user) {
+  if (!user) return "";
+  const full = [user.firstname, user.lastname].filter(Boolean).join(" ").trim();
+  if (full) return full;
+  if (user.email) return String(user.email);
+  return "";
+}
+
+export function updateStoredUser(patch) {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const current = getStoredUser() || {};
+  const next = { ...current, ...patch };
+  const raw = JSON.stringify(next);
+  localStorage.setItem(USER_KEY, raw);
+  if (sessionStorage.getItem(ACCESS_TOKEN_KEY)) {
+    sessionStorage.setItem(USER_KEY, raw);
+  }
+  return next;
+}
+
 export function isAuthenticated() {
   if (typeof window === "undefined") {
     return false;
