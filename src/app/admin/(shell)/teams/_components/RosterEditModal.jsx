@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import styles from "../teams.module.css";
 import { fetchRegisteredPlayers } from "@/lib/divisions";
-import { mapRegistrationToCandidate } from "@/lib/teamsUi";
+import {
+  mapRegistrationToCandidate,
+  playerRegisteredForBracket,
+  resolveDivisionBracketId,
+} from "@/lib/teamsUi";
 
 export default function RosterEditModal({
   open,
@@ -17,6 +21,9 @@ export default function RosterEditModal({
   const [search, setSearch] = useState("");
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
+
+  const bracketId = resolveDivisionBracketId(row);
 
   useEffect(() => {
     if (open && team) {
@@ -28,17 +35,25 @@ export default function RosterEditModal({
   }, [open, team]);
 
   useEffect(() => {
-    if (!open || !tournamentId || !row?.id) return;
+    if (!open || !tournamentId || !bracketId) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
+      setLoadError("");
       try {
-        const players = await fetchRegisteredPlayers(tournamentId);
+        const players = await fetchRegisteredPlayers(tournamentId, { bracketId });
         if (!cancelled) {
-          setCandidates(players.map((p) => mapRegistrationToCandidate(p, row.id)));
+          setCandidates(
+            players
+              .filter((p) => playerRegisteredForBracket(p, bracketId))
+              .map((p) => mapRegistrationToCandidate(p, bracketId))
+          );
         }
-      } catch {
-        if (!cancelled) setCandidates([]);
+      } catch (err) {
+        if (!cancelled) {
+          setCandidates([]);
+          setLoadError(err.message || "Failed to load registered players");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -46,7 +61,7 @@ export default function RosterEditModal({
     return () => {
       cancelled = true;
     };
-  }, [open, tournamentId, row?.id]);
+  }, [open, tournamentId, bracketId]);
 
   if (!open || !team || !row) return null;
 
@@ -114,6 +129,9 @@ export default function RosterEditModal({
             onChange={(e) => setSearch(e.target.value)}
             style={{ marginBottom: 8 }}
           />
+          <div style={{ fontSize: 11, color: "var(--text-sec)", margin: "0 0 8px" }}>
+            {loading ? "Loading players…" : loadError || `${filtered.length} available`}
+          </div>
           <div className={styles.candidateList} style={{ maxHeight: 200 }}>
             {filtered.slice(0, 20).map((p) => (
               <div key={p.id} className={styles.candidateRow} onClick={() => addPlayer(p)}>

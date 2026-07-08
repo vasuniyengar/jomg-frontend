@@ -1,6 +1,18 @@
 import { divisionAccentColor } from "./divisionForm";
 import { formatShortDate, formatTime12, toDateKey, validateDivisionForDraw } from "./drawUi";
 
+export function resolveDivisionBracketId(row) {
+  return row?.id ?? row?.raw?.id ?? row?.bracketId ?? row?.raw?.bracketId ?? null;
+}
+
+export function playerRegisteredForBracket(player, bracketId) {
+  const target = String(bracketId ?? "");
+  if (!target) return false;
+  return (player?.events || []).some(
+    (event) => String(event?.bracketId ?? "") === target
+  );
+}
+
 export function mapDivisionToTeamsRow(division, index = 0) {
   const cfg = division?.scoringConfig || {};
   const formatLabel = division?.formatLabel || division?.Event?.eventName || "Division";
