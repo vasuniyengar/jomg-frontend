@@ -56,9 +56,14 @@ export async function bulkUploadPlayers(tournamentId, rows, sendEmails = true) {
   return response?.data;
 }
 
-export async function fetchRegisteredPlayers(tournamentId, { paymentStatus } = {}) {
+export async function fetchRegisteredPlayers(
+  tournamentId,
+  { paymentStatus, bracketId, unassignedOnly } = {}
+) {
   const params = new URLSearchParams();
   if (paymentStatus) params.set("paymentStatus", paymentStatus);
+  if (bracketId) params.set("bracketId", String(bracketId));
+  if (unassignedOnly) params.set("unassignedOnly", "true");
   const qs = params.toString();
   const path = qs
     ? `/api/players/tournaments/${tournamentId}?${qs}`

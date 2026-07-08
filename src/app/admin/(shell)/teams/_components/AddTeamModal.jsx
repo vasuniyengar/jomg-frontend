@@ -3,7 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import styles from "../teams.module.css";
 import { fetchRegisteredPlayers } from "@/lib/divisions";
-import { mapRegistrationToCandidate } from "@/lib/teamsUi";
+import {
+  mapRegistrationToCandidate,
+  playerRegisteredForBracket,
+  resolveDivisionBracketId,
+} from "@/lib/teamsUi";
 
 export default function AddTeamModal({
   open,
@@ -17,8 +21,11 @@ export default function AddTeamModal({
   const [search, setSearch] = useState("");
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+
+  const bracketId = resolveDivisionBracketId(row);
 
   const isDoubles = row?.type === "Doubles" || row?.type === "Mixed Doubles";
   const isMlp = row?.type === "MLP";
@@ -26,10 +33,14 @@ export default function AddTeamModal({
 
   const usedPlayerIds = useMemo(() => {
     const ids = new Set();
+    const addId = (value) => {
+      if (value == null || value === "") return;
+      ids.add(String(value));
+    };
     (existingTeams || []).forEach((t) => {
-      (t.players || []).forEach((p) => ids.add(p.id));
+      (t.players || []).forEach((p) => addId(p.id ?? p.playerId));
     });
-    selection.forEach((p) => ids.add(p.id));
+    selection.forEach((p) => addId(p.id ?? p.playerId));
     return ids;
   }, [existingTeams, selection]);
 
@@ -38,24 +49,30 @@ export default function AddTeamModal({
       setSelection([]);
       setSearch("");
       setSubmitError("");
+      setLoadError("");
       setSubmitting(false);
       return;
     }
-    if (!tournamentId || !row?.id) return;
+    if (!tournamentId || !bracketId) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
+      setLoadError("");
       try {
-        const players = await fetchRegisteredPlayers(tournamentId);
+        const players = await fetchRegisteredPlayers(tournamentId, {
+          bracketId,
+          unassignedOnly: true,
+        });
         if (cancelled) return;
         const mapped = players
-          .filter((p) =>
-            (p.events || []).some((e) => String(e.bracketId) === String(row.id))
-          )
-          .map((p) => mapRegistrationToCandidate(p, row.id));
+          .filter((p) => playerRegisteredForBracket(p, bracketId))
+          .map((p) => mapRegistrationToCandidate(p, bracketId));
         setCandidates(mapped);
-      } catch {
-        if (!cancelled) setCandidates([]);
+      } catch (err) {
+        if (!cancelled) {
+          setCandidates([]);
+          setLoadError(err.message || "Failed to load registered players");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -63,12 +80,18 @@ export default function AddTeamModal({
     return () => {
       cancelled = true;
     };
-  }, [open, tournamentId, row?.id]);
+  }, [open, tournamentId, bracketId]);
 
   if (!open || !row) return null;
 
   const filtered = candidates.filter((p) => {
-    if (usedPlayerIds.has(p.id) && !selection.find((s) => s.id === p.id)) return false;
+    const playerKey = String(p.id ?? p.playerId ?? "");
+    if (
+      usedPlayerIds.has(playerKey) &&
+      !selection.find((s) => String(s.id ?? s.playerId) === playerKey)
+    ) {
+      return false;
+    }
     const q = search.toLowerCase().trim();
     if (!q) return true;
     return p.name.toLowerCase().includes(q) || String(p.dupr).includes(q);
@@ -175,11 +198,21 @@ export default function AddTeamModal({
             style={{ fontSize: 13 }}
           />
           <div style={{ fontSize: 11, color: "var(--text-sec)", marginTop: 8 }}>
-            {loading ? "Loading…" : `${filtered.length} eligible player(s)`}
+            {loading
+              ? "Loading…"
+              : loadError
+                ? loadError
+                : `${filtered.length} eligible player(s) · paid and unpaid`}
           </div>
         </div>
 
         <div className={styles.candidateList}>
+          {!loading && !loadError && filtered.length === 0 ? (
+            <div style={{ padding: "18px 22px", fontSize: 12, color: "var(--text-sec)" }}>
+              No unassigned players in this division. Players already on a team are hidden here.
+              Add registrations from the Players List, or use Edit roster on an existing team.
+            </div>
+          ) : null}
           {filtered.map((p) => (
             <div key={p.id} className={styles.candidateRow} onClick={() => pick(p)}>
               <div>

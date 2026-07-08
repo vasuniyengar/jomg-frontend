@@ -120,8 +120,9 @@ export function useTeamsState(tournamentId) {
 
   const getTeamsForBracket = useCallback(
     (bracketId) => {
-      const api = apiTeamsById[bracketId] || [];
-      const local = localById[bracketId] || {};
+      const key = String(bracketId);
+      const api = apiTeamsById[key] || apiTeamsById[bracketId] || [];
+      const local = localById[key] || localById[bracketId] || {};
       return mergeTeamsState(api, local);
     },
     [apiTeamsById, localById]
