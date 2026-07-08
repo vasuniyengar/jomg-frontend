@@ -61,6 +61,25 @@ function formatRating(value) {
   return Number.isFinite(n) ? n.toFixed(2).replace(/\.?0+$/, "") : String(value);
 }
 
+function isMlpDivision(div) {
+  const eventName = div?.Event?.eventName || div?.formatLabel || "";
+  return /mlp/i.test(eventName);
+}
+
+function getMlpReadOnlyItems(tournament) {
+  const playRules = tournament?.settings?.playRules || {};
+  const mlp = playRules?.mlp || {};
+  return [
+    { label: "Men's doubles", value: mlp.mensDoubles || "—" },
+    { label: "Women's doubles", value: mlp.womensDoubles || "—" },
+    { label: "Mixed doubles 1", value: mlp.mixed1 || "—" },
+    { label: "Mixed doubles 2", value: mlp.mixed2 || "—" },
+    { label: "Dream breaker", value: mlp.dreamBreaker || "—" },
+    { label: "Rotation", value: mlp.rotation || "—" },
+    { label: "Trigger", value: mlp.trigger || "—" },
+  ];
+}
+
 function statusPillClass(status) {
   switch (status) {
     case "active":
@@ -281,6 +300,7 @@ export default function ManageDivisionsScreen() {
             ? Math.min(100, Math.round(((div.registeredCount || 0) / div.maxTeams) * 100))
             : 0;
           const isOpen = openId === div.id;
+          const isMlp = isMlpDivision(div);
           return (
             <div
               key={div.id}
@@ -406,7 +426,7 @@ export default function ManageDivisionsScreen() {
                       {toDateInput(div.startDate)} – {toDateInput(div.endDate)}
                     </strong>
                   </div>
-                  {(div.scoringLabels || div.scoringConfig) && isOpen ? (
+                  {isOpen ? (
                     <div
                       style={{
                         marginTop: 10,
@@ -426,22 +446,34 @@ export default function ManageDivisionsScreen() {
                       >
                         Match scoring (read-only)
                       </div>
-                      {["pool", "playoff", "semi", "gold", "bronze"].map((stage) => (
-                        <div key={stage} style={{ marginBottom: 4 }}>
-                          <span style={{ color: "var(--text-sec)", textTransform: "capitalize" }}>
-                            {stage}:{" "}
-                          </span>
-                          <strong>
-                            {getStageScoringLabel(
-                              div,
-                              stage === "semi" ? "semifinal" : stage
-                            ) ||
-                              div.scoringLabels?.[stage] ||
-                              div.scoringConfig?.[stage]?.label ||
-                              "—"}
-                          </strong>
-                        </div>
-                      ))}
+                      {isMlp
+                        ? getMlpReadOnlyItems(tournament).map((item) => (
+                            <div key={item.label} style={{ marginBottom: 4 }}>
+                              <span style={{ color: "var(--text-sec)" }}>{item.label}: </span>
+                              <strong>{item.value}</strong>
+                            </div>
+                          ))
+                        : ["pool", "playoff", "semi", "gold", "bronze"].map((stage) => (
+                            <div key={stage} style={{ marginBottom: 4 }}>
+                              <span
+                                style={{
+                                  color: "var(--text-sec)",
+                                  textTransform: "capitalize",
+                                }}
+                              >
+                                {stage}:{" "}
+                              </span>
+                              <strong>
+                                {getStageScoringLabel(
+                                  div,
+                                  stage === "semi" ? "semifinal" : stage
+                                ) ||
+                                  div.scoringLabels?.[stage] ||
+                                  div.scoringConfig?.[stage]?.label ||
+                                  "—"}
+                              </strong>
+                            </div>
+                          ))}
                     </div>
                   ) : null}
                 </div>

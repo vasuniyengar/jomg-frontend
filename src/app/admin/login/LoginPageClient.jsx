@@ -65,7 +65,10 @@ export default function LoginPageClient() {
         accessToken: response.accessToken,
         rememberMe,
         user: {
+          id: response.user?.id,
           firstname: response.user?.firstname || "",
+          lastname: response.user?.lastname || "",
+          email: response.user?.email || "",
           roles: response.user?.roles || [],
         },
       });

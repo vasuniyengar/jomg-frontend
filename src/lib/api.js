@@ -126,4 +126,9 @@ export function changePassword({ currentPassword, newPassword, confirmPassword }
   });
 }
 
+export async function fetchCurrentUser() {
+  const response = await apiRequest("/api/users/me");
+  return response?.data || null;
+}
+
 export { API_BASE_URL, apiClient };
