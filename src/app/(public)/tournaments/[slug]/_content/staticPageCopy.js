@@ -11,7 +11,7 @@ export const STATIC_BANNER_TITLE = "Central Texas Championship";
 
 /** Info bar below banner — static copy from PHASE 1 reference HTML */
 export const STATIC_INFO_BAR = [
-  { icon: "calendar", label: "DATES", value: "AUG 8 & SEP 19" },
+  { icon: "calendar", label: "DATES", value: "Aug 8 & Sep 19 - 20" },
   { icon: "calendar", label: "AGE GROUPS", value: "MASTERS 50+ & OPEN 18+" },
   { icon: "clubs", label: "Founding Clubs", value: "14" },
   { icon: "format", label: "Format", value: "MLP Style" },
