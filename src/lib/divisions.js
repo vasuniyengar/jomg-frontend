@@ -106,9 +106,17 @@ export async function bulkUpdateRegistrationPayments(
 }
 
 export async function updateRegistration(tournamentId, registrationId, payload) {
+  const tid = Number(tournamentId);
   const regId = Number(registrationId);
+  if (!Number.isInteger(tid) || tid <= 0) {
+    throw new Error("Invalid tournament id");
+  }
+  if (!Number.isInteger(regId) || regId <= 0) {
+    throw new Error("Invalid registration id — refresh the player list and try again");
+  }
+  const path = `/api/tournaments/${tid}/registrations/${regId}`;
   const response = await apiRequest(
-    `/api/tournaments/${tournamentId}/registrations/${regId}`,
+    path,
     {
       method: "PATCH",
       body: payload,

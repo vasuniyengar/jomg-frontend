@@ -6,8 +6,12 @@ function stripEnvUrl(value) {
   return String(value).trim().replace(/^["']|["']$/g, "");
 }
 
-const API_BASE_URL =
+const SERVER_API_BASE_URL =
   stripEnvUrl(process.env.NEXT_PUBLIC_API_BASE_URL) || "http://127.0.0.1:4000";
+
+// Browser uses same-origin /api/* (proxied by Next.js) to avoid CORS / private-network blocks.
+const API_BASE_URL =
+  typeof window !== "undefined" ? "" : SERVER_API_BASE_URL;
 
 function resolveToken() {
   if (typeof window === "undefined") {
