@@ -184,38 +184,19 @@ export default function TournamentsPage() {
 
   const renderActions = (tournament) => {
     const status = tournament.hubStatus;
-    if (status === "draft" || status === "upcoming") {
-      return (
-        <>
-          <button
-            type="button"
-            className="hub-mini-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              openEditWizard(tournament);
-            }}
-            title="Edit tournament"
-          >
-            Edit
-          </button>
-          {status === "draft" ? (
-            <button
-              type="button"
-              className="hub-mini-btn danger"
-              onClick={(e) => {
-                e.stopPropagation();
-                setPendingDelete(tournament);
-              }}
-              title="Delete draft"
-            >
-              ✕ Delete
-            </button>
-          ) : null}
-        </>
-      );
-    }
-    if (status === "active") {
-      return (
+    return (
+      <>
+        <button
+          type="button"
+          className="hub-mini-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            openEditWizard(tournament);
+          }}
+          title="Edit tournament"
+        >
+          Edit
+        </button>
         <button
           type="button"
           className="hub-mini-btn"
@@ -227,21 +208,31 @@ export default function TournamentsPage() {
         >
           Settings
         </button>
-      );
-    }
-    if (status === "completed") {
-      return (
-        <button
-          type="button"
-          className="hub-mini-btn"
-          onClick={(e) => e.stopPropagation()}
-          title="Duplicate as new tournament"
-        >
-          ⎘ Duplicate
-        </button>
-      );
-    }
-    return null;
+        {status === "draft" ? (
+          <button
+            type="button"
+            className="hub-mini-btn danger"
+            onClick={(e) => {
+              e.stopPropagation();
+              setPendingDelete(tournament);
+            }}
+            title="Delete draft"
+          >
+            ✕ Delete
+          </button>
+        ) : null}
+        {status === "completed" ? (
+          <button
+            type="button"
+            className="hub-mini-btn"
+            onClick={(e) => e.stopPropagation()}
+            title="Duplicate as new tournament"
+          >
+            ⎘ Duplicate
+          </button>
+        ) : null}
+      </>
+    );
   };
 
   return (

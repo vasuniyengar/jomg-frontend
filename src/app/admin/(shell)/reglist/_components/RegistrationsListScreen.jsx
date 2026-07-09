@@ -49,6 +49,13 @@ function registrationStatusMeta(status) {
   }
 }
 
+function normalizeGenderForForm(gender) {
+  const g = String(gender || "").trim().toLowerCase();
+  if (g.startsWith("f")) return "female";
+  if (g.startsWith("m")) return "male";
+  return "male";
+}
+
 function mapApiPlayersToRows(apiList, tournamentClubName = "") {
   const rows = [];
   for (const p of apiList || []) {
@@ -90,6 +97,8 @@ function mapApiPlayersToRows(apiList, tournamentClubName = "") {
         name: p.name,
         email: p.email,
         gender: p.gender?.[0]?.toUpperCase() || "M",
+        genderForEdit: normalizeGenderForForm(p.gender),
+        partnerOriginal: event?.partnerName && event.partnerName !== "—" ? event.partnerName : "",
         age: p.age || "—",
         date: new Date().toLocaleDateString("en-US"),
         phone: p.phoneNumber || "—",
@@ -102,6 +111,7 @@ function mapApiPlayersToRows(apiList, tournamentClubName = "") {
         rosterNumber: event?.rosterNumber || "",
         playerRole: event?.playerRole || "",
         registrationStatus: event?.status || "registered",
+        checkInStatus: event?.checkInStatus || "not_checked_in",
         paid: paid.label,
         paidClass: paid.cls,
         status: regStatus.label,

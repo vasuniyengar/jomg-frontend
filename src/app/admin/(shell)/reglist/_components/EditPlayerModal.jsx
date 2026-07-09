@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { updateRegistration } from "@/lib/divisions";
+import { formatDuprField, parseIndividualDupr, sanitizeDuprInput } from "@/lib/duprInput";
 import styles from "../reglist.module.css";
 
 const STATUS_OPTIONS = [
@@ -11,6 +12,24 @@ const STATUS_OPTIONS = [
   { value: "withdraw", label: "Withdrawn" },
   { value: "not_registered", label: "Not registered" },
 ];
+
+const PAYMENT_OPTIONS = [
+  { value: "unpaid", label: "Unpaid" },
+  { value: "paid", label: "Paid" },
+  { value: "refunded", label: "Refunded" },
+];
+
+const CHECKIN_OPTIONS = [
+  { value: "not_checked_in", label: "Not checked in" },
+  { value: "checked_in", label: "Checked in" },
+];
+
+function normalizeGenderForForm(gender) {
+  const g = String(gender || "").trim().toLowerCase();
+  if (g.startsWith("f")) return "female";
+  if (g.startsWith("m")) return "male";
+  return "male";
+}
 
 function splitName(fullName) {
   const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
@@ -47,7 +66,7 @@ export default function EditPlayerModal({
       email: player.email || "",
       phoneNumber: player.phone === "—" ? "" : player.phone || "",
       age: player.age === "—" ? "30" : String(player.age || "30"),
-      gender: player.gender === "F" ? "female" : "male",
+      gender: player.genderForEdit || normalizeGenderForForm(player.gender),
       bracketId: player.bracketId ? String(player.bracketId) : "",
       clubName: player.clubName || "",
       partner: player.partner === "—" ? "" : player.partner || "",
@@ -56,6 +75,8 @@ export default function EditPlayerModal({
       rosterNumber: player.rosterNumber || "",
       playerRole: player.playerRole || "starter",
       status: player.registrationStatus || "registered",
+      paymentStatus: player.paymentStatus || "unpaid",
+      checkInStatus: player.checkInStatus || "not_checked_in",
     });
     setError("");
   }, [open, player]);
@@ -94,15 +115,28 @@ export default function EditPlayerModal({
         gender: form.gender,
         bracketId: Number(form.bracketId),
         clubName: form.clubName.trim(),
-        partner: form.partner.trim() || undefined,
         rosterNumber: form.rosterNumber.trim() || undefined,
         playerRole: form.playerRole || undefined,
         status: form.status,
+        paymentStatus: form.paymentStatus,
+        checkInStatus: form.checkInStatus,
         duprId: form.duprId.trim() || undefined,
       };
-      if (form.duprRating !== "") {
-        payload.duprRating = Number(form.duprRating);
+      const originalPartner = String(player.partnerOriginal ?? "").trim();
+      const partnerTrimmed = form.partner.trim();
+      if (partnerTrimmed !== originalPartner) {
+        payload.partner = partnerTrimmed || undefined;
       }
+
+      const hadDupr =
+        player.duprRaw != null && player.duprRaw !== "" && Number(player.duprRaw) !== 0;
+      const duprVal = parseIndividualDupr(form.duprRating);
+      if (duprVal !== null) {
+        payload.duprRating = duprVal;
+      } else if (hadDupr && (form.duprRating === "" || form.duprRating == null)) {
+        payload.duprRating = null;
+      }
+
       await updateRegistration(tournamentId, player.registrationId, payload);
       await onSaved?.();
       onClose();
@@ -153,7 +187,7 @@ export default function EditPlayerModal({
                 <option value="">Select division…</option>
                 {divisions.map((d) => (
                   <option key={d.id} value={d.id}>
-                    {d.name}
+                    {d.name || d.bracketName || `Division ${d.id}`}
                   </option>
                 ))}
               </select>
@@ -227,13 +261,22 @@ export default function EditPlayerModal({
                 <label className="form-label">DUPR</label>
                 <input
                   className="form-input"
-                  type="number"
-                  min={0}
-                  max={8}
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   placeholder="Optional"
                   value={form.duprRating}
-                  onChange={(e) => setForm((f) => ({ ...f, duprRating: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      duprRating: sanitizeDuprInput(e.target.value),
+                    }))
+                  }
+                  onBlur={() =>
+                    setForm((f) => ({
+                      ...f,
+                      duprRating: formatDuprField(f.duprRating),
+                    }))
+                  }
                 />
               </div>
             </div>
@@ -282,6 +325,40 @@ export default function EditPlayerModal({
                   <option value="starter">Starter</option>
                   <option value="bench">Bench</option>
                   <option value="captain">Captain</option>
+                </select>
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div className="form-group">
+                <label className="form-label">Payment status</label>
+                <select
+                  className="form-select"
+                  value={form.paymentStatus}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, paymentStatus: e.target.value }))
+                  }
+                >
+                  {PAYMENT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Check-in status</label>
+                <select
+                  className="form-select"
+                  value={form.checkInStatus}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, checkInStatus: e.target.value }))
+                  }
+                >
+                  {CHECKIN_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
