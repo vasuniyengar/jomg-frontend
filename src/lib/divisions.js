@@ -125,6 +125,20 @@ export async function updateRegistration(tournamentId, registrationId, payload) 
   return response?.data;
 }
 
+export async function deleteRegistration(tournamentId, registrationId) {
+  const tid = Number(tournamentId);
+  const regId = Number(registrationId);
+  if (!Number.isInteger(tid) || tid <= 0) {
+    throw new Error("Invalid tournament id");
+  }
+  if (!Number.isInteger(regId) || regId <= 0) {
+    throw new Error("Invalid registration id — refresh the player list and try again");
+  }
+  return apiRequest(`/api/tournaments/${tid}/registrations/${regId}`, {
+    method: "DELETE",
+  });
+}
+
 export async function addPlayerByHost(tournamentId, bracketId, data) {
   const response = await apiRequest(
     `/api/host/tournaments/${tournamentId}/brackets/${bracketId}/add-player`,

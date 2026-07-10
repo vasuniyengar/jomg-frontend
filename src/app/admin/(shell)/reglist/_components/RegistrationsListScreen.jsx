@@ -7,10 +7,12 @@ import * as XLSX from "xlsx";
 import TournamentPicker from "../../_components/TournamentPicker";
 import AddPlayerModal from "./AddPlayerModal";
 import EditPlayerModal from "./EditPlayerModal";
+import DeletePlayerModal from "./DeletePlayerModal";
 import {
   MAX_PAYMENT_EMAILS,
   bulkUpdateRegistrationPayments,
   bulkUploadPlayers,
+  deleteRegistration,
   fetchDivisions,
   fetchRegisteredPlayers,
   resendPaymentEmails,
@@ -21,11 +23,39 @@ import {
   normalizeBulkUploadRow,
 } from "@/lib/bulkUpload";
 import { fetchHostTournaments, fetchTournamentById, tournamentAdminPath } from "@/lib/tournaments";
+import styles from "../reglist.module.css";
 
 function formatDupr(value) {
   if (value == null || value === "") return "—";
   const n = Number(value);
   return Number.isFinite(n) ? n.toFixed(2) : "—";
+}
+
+function SortableColumnHeader({ label, columnKey, sortKey, sortDir, onSort }) {
+  const active = sortKey === columnKey;
+  return (
+    <button
+      type="button"
+      className={`${styles.sortHeader}${active ? ` ${styles.sortHeaderActive}` : ""}`}
+      onClick={() => onSort(columnKey)}
+      title={`Sort by ${label.toLowerCase()}`}
+      aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
+    >
+      <span>{label}</span>
+      <span className={styles.sortIcons} aria-hidden="true">
+        <span
+          className={`${styles.sortArrow}${active && sortDir === "asc" ? ` ${styles.sortArrowActive}` : ""}`}
+        >
+          ▲
+        </span>
+        <span
+          className={`${styles.sortArrow}${active && sortDir === "desc" ? ` ${styles.sortArrowActive}` : ""}`}
+        >
+          ▼
+        </span>
+      </span>
+    </button>
+  );
 }
 
 function paymentMeta(paymentStatus) {
@@ -148,6 +178,12 @@ export default function RegistrationsListScreen() {
   const [editPlayer, setEditPlayer] = useState(null);
   const [divisions, setDivisions] = useState([]);
   const [tournamentClubName, setTournamentClubName] = useState("");
+  const [sortKey, setSortKey] = useState(null);
+  const [sortDir, setSortDir] = useState("asc");
+  const [deletingId, setDeletingId] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteMessage, setDeleteMessage] = useState("");
+  const [playerToDelete, setPlayerToDelete] = useState(null);
 
   const loadPlayers = useCallback(async () => {
     if (!tournamentId) return;
@@ -189,16 +225,38 @@ export default function RegistrationsListScreen() {
       .catch(() => setTournamentClubName(""));
   }, [tournamentId]);
 
+  const toggleSort = useCallback((key) => {
+    if (sortKey === key) {
+      setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortKey(key);
+    setSortDir("asc");
+  }, [sortKey]);
+
   const filteredPlayers = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return players;
-    return players.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.email.toLowerCase().includes(q) ||
-        p.division.toLowerCase().includes(q)
-    );
-  }, [search, players]);
+    let rows = players;
+    if (q) {
+      rows = players.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.email.toLowerCase().includes(q) ||
+          p.division.toLowerCase().includes(q) ||
+          (p.clubName || "").toLowerCase().includes(q)
+      );
+    }
+    if (!sortKey) return rows;
+
+    const dir = sortDir === "desc" ? -1 : 1;
+    return [...rows].sort((a, b) => {
+      const av = String(a[sortKey] || "").trim().toLowerCase();
+      const bv = String(b[sortKey] || "").trim().toLowerCase();
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+  }, [search, players, sortKey, sortDir]);
 
   const selectablePlayers = useMemo(
     () => filteredPlayers.filter((p) => p.registrationId),
@@ -289,6 +347,28 @@ export default function RegistrationsListScreen() {
       setPaymentError(err.message || "Failed to update payment");
     } finally {
       setPaymentUpdating(false);
+    }
+  };
+
+  const handleDeletePlayer = async () => {
+    const player = playerToDelete;
+    if (!tournamentId || !player?.registrationId) return;
+
+    setDeletingId(player.registrationId);
+    setDeleteError("");
+    setDeleteMessage("");
+    try {
+      await deleteRegistration(tournamentId, player.registrationId);
+      setDeleteMessage(`${player.name} removed from ${player.division}.`);
+      if (editPlayer?.registrationId === player.registrationId) {
+        setEditPlayer(null);
+      }
+      setPlayerToDelete(null);
+      await loadPlayers();
+    } catch (err) {
+      setDeleteError(err.message || "Failed to delete player");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -482,6 +562,19 @@ export default function RegistrationsListScreen() {
             {paymentError}
           </div>
         ) : null}
+        {deleteMessage ? (
+          <div className="bulk-upload-success" style={{ marginBottom: 12 }}>
+            {deleteMessage}
+          </div>
+        ) : null}
+        {deleteError ? (
+          <div
+            className="bulk-upload-error"
+            style={{ marginBottom: 12, whiteSpace: "pre-wrap" }}
+          >
+            {deleteError}
+          </div>
+        ) : null}
 
         {showBulkUpload ? (
           <div className="card bulk-upload-card">
@@ -637,19 +730,43 @@ export default function RegistrationsListScreen() {
                     />
                   </th>
                   <th style={{ width: 44 }} />
-                  <th>Player</th>
+                  <th>
+                    <SortableColumnHeader
+                      label="Player"
+                      columnKey="name"
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={toggleSort}
+                    />
+                  </th>
                   <th>Gender & Age</th>
                   <th>Phone</th>
                   <th>Partner</th>
-                  <th>Division</th>
+                  <th>
+                    <SortableColumnHeader
+                      label="Division"
+                      columnKey="division"
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={toggleSort}
+                    />
+                  </th>
                   <th>DUPR</th>
                   <th>DUPR ID</th>
-                  <th>Club</th>
+                  <th>
+                    <SortableColumnHeader
+                      label="Club"
+                      columnKey="clubName"
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={toggleSort}
+                    />
+                  </th>
                   <th>Roster</th>
                   <th>Paid</th>
                   <th>Payment email</th>
                   <th>Status</th>
-                  <th style={{ width: 72 }} />
+                  <th style={{ width: 140 }} />
                 </tr>
               </thead>
               <tbody>
@@ -737,14 +854,29 @@ export default function RegistrationsListScreen() {
                       <span className={`pill ${p.statusClass}`}>{p.status}</span>
                     </td>
                     <td>
-                      <button
-                        type="button"
-                        className="btn btn-ghost btn-sm"
-                        disabled={!p.registrationId}
-                        onClick={() => setEditPlayer(p)}
-                      >
-                        Edit
-                      </button>
+                      <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          disabled={!p.registrationId || deletingId === p.registrationId}
+                          onClick={() => setEditPlayer(p)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          disabled={!p.registrationId || deletingId === p.registrationId}
+                          style={{ color: "var(--danger, #ef4444)" }}
+                          title="Remove player from this division"
+                          onClick={() => {
+                            setDeleteError("");
+                            setPlayerToDelete(p);
+                          }}
+                        >
+                          {deletingId === p.registrationId ? "…" : "Delete"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -776,6 +908,18 @@ export default function RegistrationsListScreen() {
         player={editPlayer}
         divisions={divisions}
         onSaved={loadPlayers}
+      />
+      <DeletePlayerModal
+        open={Boolean(playerToDelete)}
+        player={playerToDelete}
+        deleting={Boolean(deletingId)}
+        error={deleteError}
+        onClose={() => {
+          if (deletingId) return;
+          setPlayerToDelete(null);
+          setDeleteError("");
+        }}
+        onConfirm={handleDeletePlayer}
       />
     </div>
   );
