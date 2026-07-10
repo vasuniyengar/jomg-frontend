@@ -30,6 +30,14 @@ export async function updateBracketTeamStatus(tournamentId, bracketId, teamId, s
   return response?.data;
 }
 
+export async function deleteBracketTeam(tournamentId, bracketId, teamId) {
+  const response = await apiRequest(
+    `/api/host/tournaments/${tournamentId}/brackets/${bracketId}/teams/${teamId}`,
+    { method: "DELETE" }
+  );
+  return response;
+}
+
 export async function fetchBracketTeams(tournamentId, bracketId) {
   const response = await apiRequest(
     `/api/host/tournaments/${tournamentId}/brackets/${bracketId}/pools/teams`
