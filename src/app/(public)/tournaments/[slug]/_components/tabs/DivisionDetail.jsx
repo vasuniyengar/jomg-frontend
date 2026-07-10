@@ -120,7 +120,7 @@ export default function DivisionDetail({ detail, onBack }) {
             {detail.teams.length} teams · seeded by team DUPR
           </div>
           {detail.teams.map((team) => (
-            <TeamRow key={team.name} team={team} />
+            <TeamRow key={`${team.seed}-${team.name}`} team={team} />
           ))}
         </div>
       ) : null}
