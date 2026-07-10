@@ -26,8 +26,6 @@ export default function DivisionsTab({ data, slug, preview = false }) {
     setSelectedDivisionId(division.id);
     window.scrollTo(0, 0);
 
-    if (divisionDetails[division.id]) return;
-
     if (!slug) return;
 
     setLoadingDetail(true);

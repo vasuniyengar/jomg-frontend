@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchDivisions } from "@/lib/divisions";
-import { fetchBracketTeams, generateBracketTeams, createBracketTeam, updateBracketTeamStatus } from "@/lib/teams";
+import { fetchBracketTeams, generateBracketTeams, createBracketTeam, updateBracketTeamStatus, deleteBracketTeam } from "@/lib/teams";
 import {
   autoSuggestPools,
   getActiveTeamsForDraw,
@@ -321,22 +321,55 @@ export function useTeamsState(tournamentId) {
   );
 
   const removeTeam = useCallback(
-    (row, teamId) => {
+    async (row, teamId) => {
       const team = getTeamsForBracket(row.id).find((t) => String(t.id) === String(teamId));
       if (!team) return;
+
       if (team.localOnly) {
         updateTeams(
           row.id,
           getTeamsForBracket(row.id).filter((t) => String(t.id) !== String(teamId))
         );
-      } else {
-        const local = localById[row.id] || {};
-        const removed = [...(local.removedApiIds || []), String(team.apiId ?? team.id)];
-        const teams = getTeamsForBracket(row.id).filter((t) => String(t.id) !== String(teamId));
-        persistLocal(row.id, { ...local, removedApiIds: removed, teams, order: teams.map((t) => t.id) });
+        return;
+      }
+
+      const bracketId = row.id;
+      const apiTeamId = team.apiId ?? team.id;
+      setBusy(bracketId, true);
+      setActionMessage("");
+      try {
+        await deleteBracketTeam(tournamentId, bracketId, apiTeamId);
+        await refreshBracketTeams(bracketId);
+        setLocalById((prev) => {
+          const local = prev[bracketId] || {};
+          const removedApiIds = (local.removedApiIds || []).filter(
+            (id) => String(id) !== String(apiTeamId)
+          );
+          const teams = (local.teams || []).filter((t) => String(t.id) !== String(teamId));
+          const next = { ...prev };
+          if (removedApiIds.length || teams.length || local.order?.length) {
+            next[bracketId] = {
+              ...local,
+              removedApiIds,
+              teams,
+              order: teams.map((t) => t.id),
+            };
+          } else {
+            delete next[bracketId];
+          }
+          writeStored(tournamentId, next);
+          return next;
+        });
+        setError("");
+        setActionMessage("Team removed");
+      } catch (err) {
+        setActionMessage(err.message || "Failed to remove team");
+        throw err;
+      } finally {
+        setBusy(bracketId, false);
       }
     },
-    [getTeamsForBracket, localById, persistLocal, updateTeams]
+    [getTeamsForBracket, tournamentId, refreshBracketTeams, setBusy, updateTeams]
   );
 
   const replaceTeamPlayers = useCallback(
