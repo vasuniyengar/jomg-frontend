@@ -124,9 +124,13 @@ export default function DivisionsTab({ data, slug, preview = false }) {
                     View full division →
                   </button>
                 </div>
-                {division.previewTeam ? (
-                  <TeamRow team={division.previewTeam} />
-                ) : null}
+                {division.teams?.length
+                  ? division.teams.map((team) => (
+                      <TeamRow key={`${team.seed}-${team.name}`} team={team} />
+                    ))
+                  : division.previewTeam
+                    ? <TeamRow team={division.previewTeam} />
+                    : null}
               </div>
             </details>
           ))}
