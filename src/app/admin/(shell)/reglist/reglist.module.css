@@ -20,6 +20,10 @@
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
 }
 
+.modalPanelNarrow {
+  max-width: 420px;
+}
+
 .modalHeader {
   display: flex;
   align-items: center;
@@ -62,4 +66,71 @@
   gap: 8px;
   padding: 12px 24px 20px;
   border-top: 1px solid var(--border);
+}
+
+.sortHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.sortHeader:hover {
+  color: var(--primary-text);
+}
+
+.sortHeaderActive {
+  color: var(--primary-text);
+}
+
+.sortIcons {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 0.7;
+  gap: 1px;
+}
+
+.sortArrow {
+  font-size: 8px;
+  color: var(--text-ter);
+  opacity: 0.55;
+}
+
+.sortArrowActive {
+  color: var(--primary-text);
+  opacity: 1;
+}
+
+.deleteCopy {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.deleteHint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-sec);
+}
+
+.deleteConfirmBtn {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+}
+
+.deleteConfirmBtn:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
 }

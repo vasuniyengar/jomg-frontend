@@ -1,6 +1,16 @@
 import Avatar from "./Avatar";
 import PlayerChip from "./PlayerChip";
 
+function formatTeamDupr(team) {
+  const starters = team.players || [];
+  const fromStarters = starters
+    .reduce((sum, player) => sum + (Number(player.dupr) || 0), 0)
+    .toFixed(1);
+  // Prefer recomputing from starters so subs never inflate Team DUPR.
+  if (starters.length) return fromStarters;
+  return team.teamDupr ?? "0.0";
+}
+
 export default function TeamRow({ team, showRoster = true }) {
   return (
     <div className="tl-team">
@@ -29,7 +39,7 @@ export default function TeamRow({ team, showRoster = true }) {
           </div>
         ) : null}
         <div className="tl-tdupr">
-          <div className="tl-tdupr-n">{team.teamDupr}</div>
+          <div className="tl-tdupr-n">{formatTeamDupr(team)}</div>
           <div className="tl-tdupr-l">Team DUPR</div>
         </div>
       </div>
