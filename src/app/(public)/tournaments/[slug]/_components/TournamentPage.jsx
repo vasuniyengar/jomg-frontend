@@ -12,6 +12,7 @@ import DivisionsTab from "./tabs/DivisionsTab";
 import SponsorsTab from "./tabs/SponsorsTab";
 import RefundTab from "./tabs/RefundTab";
 import LivePlayTab from "./tabs/LivePlayTab";
+import ScrollToTopButton from "./ScrollToTopButton";
 
 const DESKTOP_ONLY_TABS = new Set(["sponsors", "refund"]);
 const MOBILE_QUERY = "(max-width: 760px)";
@@ -85,6 +86,7 @@ export default function TournamentPage({ data, slug, preview = false }) {
           ) : null}
         </section>
       </div>
+      <ScrollToTopButton />
     </>
   );
 }
