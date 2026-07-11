@@ -215,7 +215,7 @@ a{color:inherit;text-decoration:none;} button{font-family:inherit;cursor:pointer
 .tl-tplayers{display:flex;flex-direction:column;gap:7px;flex:1;}
 .tl-prow{display:flex;flex-wrap:wrap;gap:6px;}
 .tl-subs-label{font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text3);align-self:center;margin-right:2px;}
-.tl-pchip{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border2);border-radius:999px;padding:3px 4px 3px 4px;font-size:12px;font-weight:600;color:var(--text2);white-space:nowrap;}
+.tl-pchip{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border2);border-radius:999px;padding:3px 4px 3px 4px;font-size:14px;font-weight:600;color:var(--text2);white-space:nowrap;}
 .tl-pchip .av{width:18px;height:18px;font-size:8px;}
 .tl-pchip.cap .av{background:var(--seed-bg);color:var(--seed-fg);}
 .tl-pchip .pd{display:inline-flex;align-items:center;font-family:var(--display);font-size:12px;letter-spacing:.3px;color:var(--accent-deep);background:var(--accent-soft);border-radius:999px;padding:1px 8px;margin-left:1px;}
@@ -423,7 +423,7 @@ a{color:inherit;text-decoration:none;} button{font-family:inherit;cursor:pointer
 .tl-team{background:var(--surface);border:1px solid var(--border2);border-radius:11px;margin-top:8px;overflow:hidden;}
 .tl-trow{display:flex;align-items:center;gap:14px;padding:12px 16px;}
 .tl-tseed{font-family:var(--display);font-size:18px;color:var(--text);text-align:center;width:24px;flex-shrink:0;}
-.tl-tname{font-family:var(--display);font-size:19px;letter-spacing:.3px;line-height:1;color:var(--text);} .tl-tloc{font-size:11px;color:var(--text3);margin-top:2px;}
+.tl-tname{font-family:var(--display);font-size:30px;letter-spacing:.3px;line-height:1;color:var(--text);} .tl-tloc{font-size:11px;color:var(--text3);margin-top:2px;}
 .tl-tdupr{text-align:right;flex-shrink:0;margin-left:auto;} .tl-tdupr-n{font-family:var(--display);font-size:20px;line-height:1;color:var(--text);} .tl-tdupr-l{font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);}
 .tl-trost{padding:4px 16px 16px;}
 @media(max-width:720px){
