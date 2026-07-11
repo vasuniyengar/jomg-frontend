@@ -44,3 +44,14 @@ export async function fetchBracketTeams(tournamentId, bracketId) {
   );
   return response?.data || [];
 }
+
+export async function updateBracketTeamName(tournamentId, bracketId, teamId, teamName) {
+  const response = await apiRequest(
+    `/api/host/tournaments/${tournamentId}/brackets/${bracketId}/teams/${teamId}/team-name`,
+    {
+      method: "PATCH",
+      body: { teamName },
+    }
+  );
+  return response?.data;
+}

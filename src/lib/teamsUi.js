@@ -55,7 +55,6 @@ function isGenericTeamName(name) {
 }
 
 export function teamDisplayName(team) {
-  if (team?.customName) return team.customName;
   const name = team?.teamName?.trim();
   if (name && !isGenericTeamName(name)) return name;
   return null;
@@ -120,23 +119,22 @@ export function mapApiTeamToUiTeam(apiTeam, seedIndex = 0) {
     incomplete &&
     (teamType === "mlp" ? players.length < 4 : players.length < 2);
 
-  return {
-    id: String(apiTeam.id),
-    apiId: apiTeam.id,
-    teamName: apiTeam.teamName || `Team ${seedIndex + 1}`,
-    customName: null,
-    players,
-    subs: [],
-    combinedDupr,
-    combinedRel: 0,
-    seed: seedIndex + 1,
-    pool: poolNum,
-    status: mapApiStatusToUi(apiTeam.status),
-    partnerNeeded,
-    forfeitReason: "",
-    type: teamType,
-    localOnly: false,
-  };
+ return {
+  id: String(apiTeam.id),
+  apiId: apiTeam.id,
+  teamName: apiTeam.teamName || `Team ${seedIndex + 1}`,
+  players,
+  subs: [],
+  combinedDupr,
+  combinedRel: 0,
+  seed: seedIndex + 1,
+  pool: poolNum,
+  status: mapApiStatusToUi(apiTeam.status),
+  partnerNeeded,
+  forfeitReason: "",
+  type: teamType,
+  localOnly: false,
+};
 }
 
 export function mapRegistrationToCandidate(player, bracketId) {

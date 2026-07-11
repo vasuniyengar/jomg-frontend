@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchDivisions } from "@/lib/divisions";
-import { fetchBracketTeams, generateBracketTeams, createBracketTeam, updateBracketTeamStatus, deleteBracketTeam } from "@/lib/teams";
+import { fetchBracketTeams, generateBracketTeams, createBracketTeam, updateBracketTeamStatus, updateBracketTeamName, deleteBracketTeam } from "@/lib/teams";
 import {
   autoSuggestPools,
   getActiveTeamsForDraw,
@@ -297,15 +297,26 @@ export function useTeamsState(tournamentId) {
     [tournamentId, getTeamsForBracket, refreshBracketTeams, setBusy]
   );
 
-  const setTeamCustomName = useCallback(
-    (row, teamId, customName) => {
-      const teams = getTeamsForBracket(row.id).map((t) =>
-        String(t.id) === String(teamId) ? { ...t, customName: customName || null } : t
-      );
-      updateTeams(row.id, teams);
-    },
-    [getTeamsForBracket, updateTeams]
-  );
+ const setTeamCustomName = useCallback(
+  async (row, teamId, name) => {
+    if (!tournamentId || !row?.id) return;
+    const id = row.id;
+    setBusy(id, true);
+    setActionMessage("");
+    try {
+      await updateBracketTeamName(tournamentId, id, teamId, name);
+      await refreshBracketTeams(id);
+      setError("");
+      setActionMessage("Team name updated");
+    } catch (err) {
+      setActionMessage(err.message || "Failed to update team name");
+      throw err;
+    } finally {
+      setBusy(id, false);
+    }
+  },
+  [tournamentId, refreshBracketTeams, setBusy]
+);
 
   const moveTeamToSeed = useCallback(
     (row, teamId, newSeed) => {
