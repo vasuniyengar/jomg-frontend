@@ -145,6 +145,26 @@ export default function DrawDivisionRow({
                   Publish →
                 </button>
               </>
+            ) : row.drawStatus === "published" ? (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  disabled={busy}
+                  onClick={() => onPreview?.(row)}
+                >
+                  Preview
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  style={{ color: "var(--text-sec)" }}
+                  disabled={busy}
+                  onClick={() => onUnpublish?.(row)}
+                >
+                  🔓 Unpublish
+                </button>
+              </>
             ) : v.ok ? (
               <button
                 type="button"
@@ -178,6 +198,7 @@ export default function DrawDivisionRow({
             row={row}
             tournamentId={tournamentId}
             busy={busy}
+            locked={row.drawStatus === "published"}
             onRegenerate={() => onRegenerate?.(row)}
             onDelete={() => onDelete?.(row)}
           />

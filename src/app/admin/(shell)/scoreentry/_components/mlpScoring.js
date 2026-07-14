@@ -11,10 +11,34 @@ export function emptyMlpMatchState(duprOn = true) {
   return {
     games: Array(5)
       .fill(null)
-      .map(() => ({ a: "", b: "", saved: false })),
+      .map(() => ({ a: "", b: "", saved: false, matchId: null })),
     duprOn,
     court: "",
   };
+}
+
+/** Build MLP UI state from persisted series game Match rows. */
+export function hydrateFromSeriesGames(series, duprOn = true) {
+  const st = emptyMlpMatchState(duprOn);
+  const games = series?.games || [];
+  st.court =
+    series?.courtAssignment ||
+    games.find((g) => g.courtAssignment)?.courtAssignment ||
+    "";
+  for (let i = 0; i < 5; i++) {
+    const gameType = i + 1;
+    const g = games.find((x) => Number(x.gameType) === gameType) || games[i];
+    if (!g) continue;
+    const saved = g.status === "completed";
+    st.games[i] = {
+      a: saved ? String(g.scoreTeam1 ?? "") : "",
+      b: saved ? String(g.scoreTeam2 ?? "") : "",
+      saved,
+      matchId: g.matchId,
+      gameType: g.gameType ?? gameType,
+    };
+  }
+  return st;
 }
 
 export function gamesWon(st) {
@@ -60,6 +84,7 @@ export function finalGamesWon(st) {
 
 export function hydrateCompletedState(match, duprOn = true) {
   const st = emptyMlpMatchState(duprOn);
+  st.court = match?.courtAssignment || "";
   const h = Number(match.scoreTeam1) || 0;
   const a = Number(match.scoreTeam2) || 0;
   let hi = 0;
@@ -84,18 +109,49 @@ export function hydrateCompletedState(match, duprOn = true) {
   return st;
 }
 
+function playerDisplayName(player) {
+  if (!player) return "—";
+  if (typeof player === "string") return player;
+  return (
+    [player.firstname, player.lastname].filter(Boolean).join(" ") || "—"
+  );
+}
+
+function normalizeGender(player) {
+  if (!player || typeof player === "string") return null;
+  const g = String(player.gender || "").toLowerCase();
+  if (g.startsWith("f")) return "female";
+  if (g.startsWith("m")) return "male";
+  return null;
+}
+
+/** Build WD / MD / mixed pairs from roster gender (not array order). */
 export function mlpLineupFromPlayers(players = []) {
-  const names = players.map((p) => {
-    if (!p) return "—";
-    if (typeof p === "string") return p;
-    return [p.firstname, p.lastname].filter(Boolean).join(" ") || "—";
-  });
-  const pick = (i) => names[i] || "—";
+  const females = [];
+  const males = [];
+  const unknown = [];
+
+  for (const p of players || []) {
+    const gender = normalizeGender(p);
+    if (gender === "female") females.push(p);
+    else if (gender === "male") males.push(p);
+    else unknown.push(p);
+  }
+
+  // Prefer known genders; fill gaps from unknown so the UI still shows names.
+  while (females.length < 2 && unknown.length) females.push(unknown.shift());
+  while (males.length < 2 && unknown.length) males.push(unknown.shift());
+
+  const w1 = playerDisplayName(females[0]);
+  const w2 = playerDisplayName(females[1]);
+  const m1 = playerDisplayName(males[0]);
+  const m2 = playerDisplayName(males[1]);
+
   return {
-    wd: [pick(0), pick(1)],
-    md: [pick(2), pick(3)],
-    x1: [pick(0), pick(2)],
-    x2: [pick(1), pick(3)],
+    wd: [w1, w2],
+    md: [m1, m2],
+    x1: [w1, m1],
+    x2: [w2, m2],
   };
 }
 
