@@ -12,7 +12,10 @@ import {
   createRoundRobin,
   deleteRoundRobin,
   fetchRoundRobinPools,
+  publishRoundRobin,
+  unpublishRoundRobin,
 } from "@/lib/roundRobin";
+
 
 async function loadPoolsForDivisions(tournamentId, divisions) {
   const entries = await Promise.all(
@@ -63,7 +66,13 @@ export function useDrawState(tournamentId) {
       const pools = await fetchRoundRobinPools(tournamentId, bracketId);
       const bracket = mapPoolsApiToBracket(pools);
       const patch = { bracket, hasPools: Boolean(bracket) };
-      setPoolDataById((prev) => ({ ...prev, [bracketId]: patch }));
+      // Merge onto the existing entry instead of replacing it outright —
+      // otherwise fields like bracketStatus (set by publishDraw/unpublishDraw)
+      // get wiped out the moment this refresh runs right after them.
+      setPoolDataById((prev) => ({
+        ...prev,
+        [bracketId]: { ...(prev[bracketId] || {}), ...patch },
+      }));
       return patch;
     },
     [tournamentId]
@@ -176,13 +185,59 @@ export function useDrawState(tournamentId) {
     [tournamentId, setRowBusy, setRowError]
   );
 
-  const publishDraw = useCallback(async () => {
-    setActionMessage("Publish API coming soon — draw stays in draft until published.");
-  }, []);
+  const publishDraw = useCallback(
+    async (row) => {
+      if (!tournamentId || !row?.id) return;
+      const id = row.id;
+      setRowBusy(id, true);
+      setRowError(id, "");
+      setActionMessage("");
+      try {
+        await publishRoundRobin(tournamentId, id);
+        setPoolDataById((prev) => ({
+          ...prev,
+          [id]: {
+            ...(prev[id] || {}),
+            bracketStatus: "published",
+          },
+        }));
+        await refreshPoolsForRow(id);
+      } catch (err) {
+        setRowError(id, err.message || "Failed to publish draw");
+        throw err;
+      } finally {
+        setRowBusy(id, false);
+      }
+    },
+    [tournamentId, refreshPoolsForRow, setRowBusy, setRowError]
+  );
 
-  const unpublishDraw = useCallback(async () => {
-    setActionMessage("Unpublish API coming soon.");
-  }, []);
+  const unpublishDraw = useCallback(
+    async (row) => {
+      if (!tournamentId || !row?.id) return;
+      const id = row.id;
+      setRowBusy(id, true);
+      setRowError(id, "");
+      setActionMessage("");
+      try {
+        await unpublishRoundRobin(tournamentId, id);
+        setPoolDataById((prev) => ({
+          ...prev,
+          [id]: {
+            ...(prev[id] || {}),
+            bracketStatus: "draft",
+          },
+        }));
+        await refreshPoolsForRow(id);
+      } catch (err) {
+        setRowError(id, err.message || "Failed to unpublish draw");
+        throw err;
+      } finally {
+        setRowBusy(id, false);
+      }
+    },
+    [tournamentId, refreshPoolsForRow, setRowBusy, setRowError]
+  );
 
   const generateAllReady = useCallback(async () => {
     const ready = rows.filter((row) => {

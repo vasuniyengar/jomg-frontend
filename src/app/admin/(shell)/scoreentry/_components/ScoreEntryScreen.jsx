@@ -8,15 +8,20 @@ import TournamentSwitcher from "../../_components/TournamentSwitcher";
 import MatchScoreCard from "./MatchScoreCard";
 import {
   emptyMlpMatchState,
+  dreambreakerActive,
   finalGamesWon,
   hydrateCompletedState,
+  hydrateFromSeriesGames,
   isMlpDivision,
 } from "./mlpScoring";
 import {
+  applyStandingsPoints,
   classifyDivisionProgress,
   fetchFinalStandings,
   fetchOrCreatePlayoffs,
   loadScoreEntryBracket,
+  resetMatchScore,
+  updateCourtAssignment,
   updateMatchScore,
 } from "@/lib/bracketProgression";
 import { fetchDivisions } from "@/lib/divisions";
@@ -136,6 +141,9 @@ function PoolOverviewTab({ pools, onScoreMatches }) {
     <div className={styles.standingsStack}>
       {pools.map((pool) => {
         const teams = [...(pool.teams || [])].sort((a, b) => {
+          const ap = a.stats?.standingsPoints ?? 0;
+          const bp = b.stats?.standingsPoints ?? 0;
+          if (bp !== ap) return bp - ap;
           const aw = a.stats?.wins ?? 0;
           const bw = b.stats?.wins ?? 0;
           if (bw !== aw) return bw - aw;
@@ -176,6 +184,7 @@ function PoolOverviewTab({ pools, onScoreMatches }) {
               <thead>
                 <tr>
                   <th>Team</th>
+                  <th>Pts</th>
                   <th>W</th>
                   <th>L</th>
                   <th>PF</th>
@@ -193,6 +202,9 @@ function PoolOverviewTab({ pools, onScoreMatches }) {
                           <span className={styles.standingsRank}>{i + 1}</span>
                           <strong>{t.teamName || `Team ${t.id}`}</strong>
                         </div>
+                      </td>
+                      <td className={styles.standingsNum}>
+                        {t.stats?.standingsPoints ?? 0}
                       </td>
                       <td className={styles.standingsNum}>{t.stats?.wins ?? 0}</td>
                       <td className={styles.standingsMuted}>{t.stats?.losses ?? 0}</td>
@@ -232,6 +244,7 @@ function PoolOverviewTab({ pools, onScoreMatches }) {
                     {done ? (
                       <span className={styles.matchStatusScore}>
                         games {m.scoreTeam1}–{m.scoreTeam2}
+                        {m.isSeries ? " (series)" : ""}
                       </span>
                     ) : null}
                     <span
@@ -404,10 +417,14 @@ export default function ScoreEntryScreen() {
     (allMatches, duprOn) => {
       const next = {};
       for (const m of allMatches) {
-        if (m.status === "completed") {
+        if (m.isSeries && m.games?.length) {
+          next[m.matchId] = hydrateFromSeriesGames(m, duprOn);
+        } else if (m.status === "completed") {
           next[m.matchId] = hydrateCompletedState(m, duprOn);
         } else {
-          next[m.matchId] = emptyMlpMatchState(duprOn);
+          const empty = emptyMlpMatchState(duprOn);
+          empty.court = m.courtAssignment || "";
+          next[m.matchId] = empty;
         }
       }
       setMatchStates(next);
@@ -415,37 +432,49 @@ export default function ScoreEntryScreen() {
     []
   );
 
-  const loadBracket = useCallback(async () => {
-    if (!tournamentId || !bracketId) return;
-    setLoading(true);
-    setError("");
-    try {
-      const data = await loadScoreEntryBracket(tournamentId, bracketId);
-      setPools(data.pools);
-      setPlayoffMatches(data.playoffMatches);
-      const p = classifyDivisionProgress(data.poolMatches, data.playoffMatches);
-      setProgressByDiv((prev) => ({ ...prev, [String(bracketId)]: p }));
+  const loadBracket = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!tournamentId || !bracketId) return;
+      if (!silent) {
+        setLoading(true);
+        setError("");
+      }
+      try {
+        const data = await loadScoreEntryBracket(tournamentId, bracketId);
+        setPools(data.pools);
+        setPlayoffMatches(data.playoffMatches);
+        const p = classifyDivisionProgress(data.poolMatches, data.playoffMatches);
+        setProgressByDiv((prev) => ({ ...prev, [String(bracketId)]: p }));
 
-      const all = [...data.poolMatches, ...data.playoffMatches];
-      setDrafts((prev) => {
-        const next = { ...prev };
-        for (const m of all) {
-          next[m.matchId] = {
-            scoreTeam1: m.scoreTeam1,
-            scoreTeam2: m.scoreTeam2,
-          };
+        const all = [...data.poolMatches, ...data.playoffMatches];
+        setDrafts((prev) => {
+          const next = { ...prev };
+          for (const m of all) {
+            next[m.matchId] = {
+              scoreTeam1: m.scoreTeam1,
+              scoreTeam2: m.scoreTeam2,
+            };
+          }
+          return next;
+        });
+        // Full remount of card state only on initial/division load — not after each save
+        if (!silent) {
+          initMatchStates(all, duprDefault);
         }
-        return next;
-      });
-      initMatchStates(all, duprDefault);
-    } catch (err) {
-      setError(err.message || "Failed to load matches");
-      setPools([]);
-      setPlayoffMatches([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tournamentId, bracketId, duprDefault, initMatchStates]);
+      } catch (err) {
+        if (!silent) {
+          setError(err.message || "Failed to load matches");
+          setPools([]);
+          setPlayoffMatches([]);
+        } else {
+          console.warn("Silent refresh failed:", err?.message || err);
+        }
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    [tournamentId, bracketId, duprDefault, initMatchStates]
+  );
 
   const loadBracketStandings = useCallback(async () => {
     if (!tournamentId || !bracketId) return;
@@ -466,7 +495,7 @@ export default function ScoreEntryScreen() {
   }, [loadDivisions, loadCourts]);
 
   useEffect(() => {
-    loadBracket();
+    loadBracket({ silent: false });
   }, [loadBracket]);
 
   useEffect(() => {
@@ -484,7 +513,83 @@ export default function ScoreEntryScreen() {
     setStandingsSub("pool");
   };
 
-  const handleSave = async (match, scoreTeam1, scoreTeam2) => {
+  const patchSeriesGameLocal = (
+    seriesKey,
+    gameMatchId,
+    { scoreTeam1, scoreTeam2, saved }
+  ) => {
+    setMatchStates((prev) => {
+      const cur = prev[seriesKey] || emptyMlpMatchState(duprDefault);
+      const games = (cur.games || []).map((g) =>
+        String(g.matchId) === String(gameMatchId)
+          ? {
+              ...g,
+              a: saved ? String(scoreTeam1 ?? "") : "",
+              b: saved ? String(scoreTeam2 ?? "") : "",
+              saved: Boolean(saved),
+            }
+          : g
+      );
+      return { ...prev, [seriesKey]: { ...cur, games } };
+    });
+
+    setPools((prev) =>
+      prev.map((pool) => ({
+        ...pool,
+        matches: (pool.matches || []).map((series) => {
+          if (
+            !series.games?.some(
+              (g) => String(g.matchId) === String(gameMatchId)
+            )
+          ) {
+            return series;
+          }
+          const games = (series.games || []).map((g) =>
+            String(g.matchId) === String(gameMatchId)
+              ? {
+                  ...g,
+                  scoreTeam1: saved ? Number(scoreTeam1) || 0 : 0,
+                  scoreTeam2: saved ? Number(scoreTeam2) || 0 : 0,
+                  status: saved ? "completed" : "not_started",
+                  winnerTeamId: saved
+                    ? Number(scoreTeam1) > Number(scoreTeam2)
+                      ? series.team1Id
+                      : series.team2Id
+                    : null,
+                }
+              : g
+          );
+          let homeWins = 0;
+          let awayWins = 0;
+          for (const g of games) {
+            if (g.status !== "completed") continue;
+            if (g.scoreTeam1 > g.scoreTeam2) homeWins += 1;
+            else if (g.scoreTeam2 > g.scoreTeam1) awayWins += 1;
+          }
+          return {
+            ...series,
+            games,
+            scoreTeam1: homeWins,
+            scoreTeam2: awayWins,
+            winnerTeamId:
+              homeWins >= 3
+                ? series.team1Id
+                : awayWins >= 3
+                  ? series.team2Id
+                  : null,
+            status:
+              homeWins >= 3 || awayWins >= 3
+                ? "completed"
+                : games.some((g) => g.status === "completed")
+                  ? "ongoing"
+                  : "not_started",
+          };
+        }),
+      }))
+    );
+  };
+
+  const handleSave = async (match, scoreTeam1, scoreTeam2, options = {}) => {
     const draft = drafts[match.matchId] || {
       scoreTeam1: match.scoreTeam1,
       scoreTeam2: match.scoreTeam2,
@@ -495,12 +600,42 @@ export default function ScoreEntryScreen() {
     setError("");
     setMessage("");
     try {
+      const dreamBreaker =
+        typeof options.dreamBreaker === "boolean"
+          ? options.dreamBreaker
+          : Math.max(Number(s1) || 0, Number(s2) || 0) === 3 &&
+            Math.min(Number(s1) || 0, Number(s2) || 0) === 2;
+
       await updateMatchScore(bracketId, match.matchId, {
         scoreTeam1: Number(s1) || 0,
         scoreTeam2: Number(s2) || 0,
+        mlp: options.mlp === true,
+        dreamBreaker: match.poolId ? dreamBreaker : undefined,
       });
-      setMessage(`Score saved — ${match.team1Name} vs ${match.team2Name}`);
-      await loadBracket();
+
+      if (match.poolId) {
+        try {
+          await applyStandingsPoints(bracketId, match.matchId, {
+            dreamBreaker,
+          });
+        } catch (ptsErr) {
+          console.warn("Standings points not applied:", ptsErr?.message || ptsErr);
+        }
+      }
+
+      setDrafts((prev) => ({
+        ...prev,
+        [match.matchId]: {
+          scoreTeam1: Number(s1) || 0,
+          scoreTeam2: Number(s2) || 0,
+        },
+      }));
+      setMessage(
+        match.poolId
+          ? `Match saved — standings points updated (${match.team1Name} vs ${match.team2Name})`
+          : `Score saved — ${match.team1Name} vs ${match.team2Name}`
+      );
+      await loadBracket({ silent: true });
     } catch (err) {
       setError(err.message || "Failed to save score");
     } finally {
@@ -511,8 +646,158 @@ export default function ScoreEntryScreen() {
   const handleMlpComplete = async (match, st) => {
     const w = finalGamesWon(st);
     if (w.home < 3 && w.away < 3) return false;
-    await handleSave(match, w.home, w.away);
+    await handleSave(match, w.home, w.away, {
+      mlp: true,
+      dreamBreaker: dreambreakerActive(st) || Boolean(st.games?.[4]?.saved),
+    });
     return true;
+  };
+
+  const handleGameSave = async (series, gameMatchId, scoreTeam1, scoreTeam2) => {
+    if (!bracketId || !gameMatchId) return false;
+    setSavingId(String(series.matchId));
+    setError("");
+    setMessage("");
+    try {
+      await updateMatchScore(bracketId, gameMatchId, {
+        scoreTeam1: Number(scoreTeam1) || 0,
+        scoreTeam2: Number(scoreTeam2) || 0,
+      });
+      try {
+        await applyStandingsPoints(bracketId, gameMatchId);
+      } catch (ptsErr) {
+        console.warn("Standings points not applied:", ptsErr?.message || ptsErr);
+      }
+      patchSeriesGameLocal(series.matchId, gameMatchId, {
+        scoreTeam1,
+        scoreTeam2,
+        saved: true,
+      });
+      setMessage(
+        `Game saved — standings updated (${series.team1Name} vs ${series.team2Name})`
+      );
+      // Refresh standings Pts in the background without clearing the card UI
+      loadBracket({ silent: true });
+      return true;
+    } catch (err) {
+      setError(err.message || "Failed to save game score");
+      return false;
+    } finally {
+      setSavingId("");
+    }
+  };
+
+  const handleGameReset = async (series, gameMatchId) => {
+    if (!gameMatchId) return;
+    setSavingId(String(series.matchId));
+    setError("");
+    setMessage("");
+    try {
+      await resetMatchScore(gameMatchId);
+      patchSeriesGameLocal(series.matchId, gameMatchId, {
+        scoreTeam1: 0,
+        scoreTeam2: 0,
+        saved: false,
+      });
+      setMessage(
+        `Game reset — standings points removed (${series.team1Name} vs ${series.team2Name})`
+      );
+      loadBracket({ silent: true });
+    } catch (err) {
+      setError(err.message || "Failed to reset game");
+    } finally {
+      setSavingId("");
+    }
+  };
+
+  const handleMatchReset = async (match) => {
+    if (!match?.matchId || !match.poolId) return;
+
+    // Series: reset every game row
+    if (match.isSeries && match.games?.length) {
+      setSavingId(String(match.matchId));
+      setError("");
+      setMessage("");
+      try {
+        for (const g of match.games) {
+          if (
+            g.status === "completed" ||
+            g.status === "ongoing" ||
+            Number(g.scoreTeam1) > 0 ||
+            Number(g.scoreTeam2) > 0
+          ) {
+            await resetMatchScore(g.matchId);
+          }
+        }
+        const cleared = emptyMlpMatchState(duprDefault);
+        cleared.court = match.courtAssignment || "";
+        setMatchStates((prev) => ({
+          ...prev,
+          [match.matchId]: cleared,
+        }));
+        setMessage(
+          `Match reset — standings points removed (${match.team1Name} vs ${match.team2Name})`
+        );
+        await loadBracket({ silent: true });
+      } catch (err) {
+        setError(err.message || "Failed to reset match");
+      } finally {
+        setSavingId("");
+      }
+      return;
+    }
+
+    const hasSavedScore =
+      match.status === "completed" ||
+      match.status === "ongoing" ||
+      Number(match.scoreTeam1) > 0 ||
+      Number(match.scoreTeam2) > 0;
+    if (!hasSavedScore) return;
+
+    setSavingId(String(match.matchId));
+    setError("");
+    setMessage("");
+    try {
+      await resetMatchScore(match.matchId);
+      setMatchStates((prev) => ({
+        ...prev,
+        [match.matchId]: emptyMlpMatchState(duprDefault),
+      }));
+      setDrafts((prev) => ({
+        ...prev,
+        [match.matchId]: { scoreTeam1: 0, scoreTeam2: 0 },
+      }));
+      setMessage(
+        `Match reset — standings points removed (${match.team1Name} vs ${match.team2Name})`
+      );
+      await loadBracket({ silent: true });
+    } catch (err) {
+      setError(err.message || "Failed to reset match");
+    } finally {
+      setSavingId("");
+    }
+  };
+
+  const handleCourtChange = async (match, courtAssignment) => {
+    const matchId =
+      match?.matchId ||
+      match?.games?.[0]?.matchId ||
+      null;
+    if (!matchId) return;
+
+    setMatchStates((prev) => {
+      const cur = prev[match.matchId] || emptyMlpMatchState(duprDefault);
+      return {
+        ...prev,
+        [match.matchId]: { ...cur, court: courtAssignment || "" },
+      };
+    });
+
+    try {
+      await updateCourtAssignment(matchId, courtAssignment || null);
+    } catch (err) {
+      setError(err.message || "Failed to save court assignment");
+    }
   };
 
   const handleGeneratePlayoffs = async () => {
@@ -547,6 +832,44 @@ export default function ScoreEntryScreen() {
       for (const pool of pools) {
         for (const m of pool.matches) {
           if (m.status === "completed") continue;
+
+          if (m.isSeries && m.games?.length) {
+            const goesDb = Math.random() < 0.25;
+            // Build game winners: 3–1 or 3–2 via DB
+            const winners = goesDb
+              ? [1, 1, 2, 2, Math.random() < 0.5 ? 1 : 2]
+              : Math.random() < 0.5
+                ? [1, 1, 1, 2]
+                : [2, 2, 2, 1];
+            for (let i = 0; i < m.games.length; i++) {
+              const g = m.games[i];
+              if (g.status === "completed") continue;
+              if (Number(g.gameType) === 5 && !goesDb) continue;
+              if (Number(g.gameType) === 5 && winners.length < 5) continue;
+              const homeWinsGame =
+                winners[Math.min(i, winners.length - 1)] === 1;
+              if (Number(g.gameType) <= 4) {
+                const idx = Number(g.gameType) - 1;
+                const hw = winners[idx] === 1;
+                await updateMatchScore(bracketId, g.matchId, {
+                  scoreTeam1: hw ? 11 : 9,
+                  scoreTeam2: hw ? 9 : 11,
+                });
+              } else {
+                await updateMatchScore(bracketId, g.matchId, {
+                  scoreTeam1: homeWinsGame ? 21 : 19,
+                  scoreTeam2: homeWinsGame ? 19 : 21,
+                });
+              }
+              try {
+                await applyStandingsPoints(bracketId, g.matchId);
+              } catch {
+                /* ignore */
+              }
+            }
+            continue;
+          }
+
           const goesDb = Math.random() < 0.25;
           let h = goesDb ? 2 : 3;
           let a = goesDb ? 2 : 1;
@@ -558,7 +881,16 @@ export default function ScoreEntryScreen() {
           await updateMatchScore(bracketId, m.matchId, {
             scoreTeam1: h,
             scoreTeam2: a,
+            mlp: isMlp,
+            dreamBreaker: goesDb,
           });
+          try {
+            await applyStandingsPoints(bracketId, m.matchId, {
+              dreamBreaker: goesDb,
+            });
+          } catch {
+            /* score update already applies points when completed */
+          }
         }
       }
       setMessage("Demo scores filled — open Playoffs to generate the bracket.");
@@ -643,12 +975,16 @@ export default function ScoreEntryScreen() {
           String(id) === String(m.matchId) ? "" : String(m.matchId)
         )
       }
-      isMlp={isMlp}
+      isMlp={isMlp || Boolean(m.isSeries)}
       mlpState={matchStates[m.matchId] || emptyMlpMatchState(duprDefault)}
       onMlpStateChange={(next) =>
         setMatchStates((prev) => ({ ...prev, [m.matchId]: next }))
       }
       onMlpComplete={handleMlpComplete}
+      onMatchReset={handleMatchReset}
+      onGameSave={handleGameSave}
+      onGameReset={handleGameReset}
+      onCourtChange={handleCourtChange}
       team1Players={playersByTeamId[m.team1Id] || []}
       team2Players={playersByTeamId[m.team2Id] || []}
       courts={courts}

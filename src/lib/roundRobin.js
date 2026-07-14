@@ -24,3 +24,19 @@ export async function deleteRoundRobin(tournamentId, bracketId) {
     method: "DELETE",
   });
 }
+
+export async function publishRoundRobin(tournamentId, bracketId) {
+  const response = await apiRequest(
+    `/api/round-robin/${tournamentId}/brackets/${bracketId}/publish`,
+    { method: "PATCH" }
+  );
+  return response?.data;
+}
+
+export async function unpublishRoundRobin(tournamentId, bracketId) {
+  const response = await apiRequest(
+    `/api/round-robin/${tournamentId}/brackets/${bracketId}/unpublish`,
+    { method: "PATCH" }
+  );
+  return response?.data;
+}

@@ -6,6 +6,7 @@ const COPY = {
   publish: {
     title: "Publish draw?",
     confirm: "Publish Draw",
+    confirmBusy: "Publishing…",
     body: (name) => (
       <>
         Publish draw for <strong>{name}</strong>? This locks seeding and the roster — no
@@ -16,6 +17,7 @@ const COPY = {
   unpublish: {
     title: "Unpublish draw?",
     confirm: "Unpublish",
+    confirmBusy: "Unpublishing…",
     body: (name) => (
       <>
         Unpublish draw for <strong>{name}</strong>? The bracket will be hidden from
@@ -26,6 +28,7 @@ const COPY = {
   bulkPublish: {
     title: "Publish all drafts?",
     confirm: "Publish All",
+    confirmBusy: "Publishing…",
     body: (names) => (
       <>
         Publish {names.length} draft draw{names.length !== 1 ? "s" : ""}? All seeds will
@@ -45,6 +48,7 @@ export default function PublishDrawConfirmModal({
   mode = "publish",
   divisionName,
   divisionNames = [],
+  submitting = false,
   onCancel,
   onConfirm,
 }) {
@@ -58,7 +62,7 @@ export default function PublishDrawConfirmModal({
     <div
       className={styles.modalOverlay}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onCancel();
+        if (e.target === e.currentTarget && !submitting) onCancel();
       }}
     >
       <div
@@ -81,15 +85,21 @@ export default function PublishDrawConfirmModal({
         <div className={styles.modalFooter}>
           <div />
           <div className={styles.modalFooterActions}>
-            <button type="button" className="btn btn-ghost btn-md" onClick={onCancel}>
+            <button
+              type="button"
+              className="btn btn-ghost btn-md"
+              onClick={onCancel}
+              disabled={submitting}
+            >
               Cancel
             </button>
             <button
               type="button"
               className={mode === "unpublish" ? "btn btn-ghost btn-md" : "btn btn-primary btn-md"}
               onClick={onConfirm}
+              disabled={submitting}
             >
-              {meta.confirm}
+              {submitting ? meta.confirmBusy : meta.confirm}
             </button>
           </div>
         </div>

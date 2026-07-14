@@ -325,6 +325,10 @@ export default function MatchScoreCard({
   mlpState,
   onMlpStateChange,
   onMlpComplete,
+  onMatchReset,
+  onGameSave,
+  onGameReset,
+  onCourtChange,
   team1Players = [],
   team2Players = [],
   courts = [],
@@ -365,6 +369,8 @@ export default function MatchScoreCard({
   const submitGated = !isPlayoff && !court;
   const meta = statusMeta(match, st, court, true);
   const phaseLabel = isPlayoff ? "Playoff" : "Round Robin";
+  // Series rows are persisted per game — allow all regulation games even after clinch
+  const lockAfterClinch = !match.isSeries;
 
   const setGameScore = (gi, side, val) => {
     const n = parseInt(val, 10);
@@ -390,6 +396,19 @@ export default function MatchScoreCard({
       window.alert("A game cannot end in a tie — check the score.");
       return;
     }
+
+    // Persisted series: each row is its own Match
+    if (match.isSeries && typeof onGameSave === "function") {
+      const gameMatchId = g.matchId || match.games?.[gi]?.matchId;
+      if (!gameMatchId) {
+        window.alert("This game is missing a match id — regenerate the draw.");
+        return;
+      }
+      const ok = await onGameSave(match, gameMatchId, g.a, g.b);
+      if (!ok) return;
+      return;
+    }
+
     const games = st.games.map((gm, i) => (i === gi ? { ...gm, saved: true } : gm));
     const next = { ...st, games };
     onMlpStateChange(next);
@@ -398,11 +417,33 @@ export default function MatchScoreCard({
     onMlpStateChange(next);
   };
 
-  const resetGame = (gi) => {
-    const games = st.games.map((g, i) =>
-      i === gi ? { a: "", b: "", saved: false } : g
+  const resetGame = async (gi) => {
+    if (readOnly) return;
+
+    const g = st.games[gi];
+    if (match.isSeries && typeof onGameReset === "function") {
+      const gameMatchId = g?.matchId || match.games?.[gi]?.matchId;
+      if (gameMatchId && (g?.saved || match.games?.[gi]?.status === "completed")) {
+        await onGameReset(match, gameMatchId);
+        return;
+      }
+    }
+
+    const games = st.games.map((row, i) =>
+      i === gi ? { ...row, a: "", b: "", saved: false } : row
     );
-    onMlpStateChange({ ...st, games });
+    const next = { ...st, games };
+    onMlpStateChange(next);
+
+    const matchWasSaved =
+      match.status === "completed" ||
+      match.status === "ongoing" ||
+      Number(match.scoreTeam1) > 0 ||
+      Number(match.scoreTeam2) > 0;
+
+    if (!match.isSeries && matchWasSaved && typeof onMatchReset === "function") {
+      await onMatchReset(match);
+    }
   };
 
   const submitAll = async () => {
@@ -427,11 +468,29 @@ export default function MatchScoreCard({
     });
     if (wAfter.home === 2 && wAfter.away === 2) {
       const db = st.games[4];
-      if (!db.saved || db.a === "" || db.b === "") {
+      if (db.a === "" || db.b === "") {
         window.alert("Games are tied 2–2 — enter and submit the Dreambreaker.");
         return;
       }
     }
+
+    if (match.isSeries && typeof onGameSave === "function") {
+      const toSave = [];
+      for (let i = 0; i < 4; i++) {
+        toSave.push(i);
+      }
+      if (wAfter.home === 2 && wAfter.away === 2) toSave.push(4);
+      for (const gi of toSave) {
+        const g = st.games[gi];
+        if (g.saved) continue;
+        const gameMatchId = g.matchId || match.games?.[gi]?.matchId;
+        if (!gameMatchId) continue;
+        const ok = await onGameSave(match, gameMatchId, g.a, g.b);
+        if (!ok) return;
+      }
+      return;
+    }
+
     const games = st.games.map((g, i) => (i < 4 ? { ...g, saved: true } : g));
     const next = { ...st, games };
     onMlpStateChange(next);
@@ -442,7 +501,7 @@ export default function MatchScoreCard({
 
   const renderGame = (gi, gDef, isDb) => {
     const game = { ...st.games[gi], label: gDef.label };
-    const clinchedLock = clinched && !game.saved;
+    const clinchedLock = lockAfterClinch && clinched && !game.saved;
     const disabled =
       (isDb && !dbActive && !game.saved) || clinchedLock || readOnly;
     const homePair = isDb
@@ -579,7 +638,13 @@ export default function MatchScoreCard({
                 value={court}
                 disabled={readOnly}
                 onClick={(e) => e.stopPropagation()}
-                onChange={(e) => onMlpStateChange({ ...st, court: e.target.value })}
+                onChange={(e) => {
+                  const nextCourt = e.target.value;
+                  onMlpStateChange({ ...st, court: nextCourt });
+                  if (typeof onCourtChange === "function") {
+                    onCourtChange(match, nextCourt);
+                  }
+                }}
               >
                 <option value="">— Unassigned —</option>
                 {courts.map((c) => (

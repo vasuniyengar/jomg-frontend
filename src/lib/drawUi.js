@@ -60,11 +60,21 @@ export function mergeDrawRow(row, poolData = {}) {
   const bracket = poolData.bracket ?? null;
   const hasPools = Boolean(poolData.hasPools ?? bracket?.generated);
 
-  let drawStatus = "none";
-  if (row.poolStarted) {
+  // poolData.bracketStatus is set optimistically by useDrawState's
+  // publishDraw/unpublishDraw right after a successful API call, and takes
+  // priority over the initial row.poolStarted snapshot (which only reflects
+  // whatever was true at the last full load / page refresh).
+  let drawStatus;
+  if (poolData.bracketStatus === "published") {
+    drawStatus = "published";
+  } else if (poolData.bracketStatus === "draft") {
+    drawStatus = "draft";
+  } else if (row.poolStarted) {
     drawStatus = "published";
   } else if (hasPools) {
     drawStatus = "draft";
+  } else {
+    drawStatus = "none";
   }
 
   return {
@@ -98,13 +108,28 @@ export function mapPoolsApiToBracket(poolsPayload) {
     const teamMap = new Map();
     const matches = [];
     let matchNum = 0;
+    // Collapse WD/MD/X1/X2/DB rows into one visible matchup per team pairing
+    const seenSeries = new Set();
 
     for (const round of rounds) {
       const roundNum = round.roundNumber ?? round.round_number ?? 1;
-      for (const m of round.matches || []) {
-        matchNum += 1;
+      const roundMatches = [...(round.matches || [])].sort(
+        (a, b) =>
+          (Number(a.gameType) || 0) - (Number(b.gameType) || 0) ||
+          (a.id || 0) - (b.id || 0)
+      );
+
+      for (const m of roundMatches) {
         if (m.team1) teamMap.set(m.team1.id, m.team1);
         if (m.team2) teamMap.set(m.team2.id, m.team2);
+
+        const t1 = m.team1Id ?? m.team1?.id;
+        const t2 = m.team2Id ?? m.team2?.id;
+        const seriesKey = `${round.id ?? roundNum}:${t1}:${t2}`;
+        if (seenSeries.has(seriesKey)) continue;
+        seenSeries.add(seriesKey);
+
+        matchNum += 1;
         matches.push({
           id: m.id ?? `m-${poolIndex}-${matchNum}`,
           matchNumInPool: matchNum,
@@ -112,6 +137,7 @@ export function mapPoolsApiToBracket(poolsPayload) {
           home: teamLabel(m.team1, matchNum),
           away: teamLabel(m.team2, matchNum + 1),
           status: m.status || "pending",
+          gameType: m.gameType ?? null,
         });
       }
     }
@@ -253,12 +279,12 @@ export function getDrawStatusCounts(rows) {
 
 export function applyDrawFilters(rows, { filterDay = "all", filterStatus = "all" }) {
   return rows.filter((d) => {
-    if (d.drawStatus === "published") return false;
     if (filterDay !== "all" && (d.startDate || "") !== filterDay) return false;
     if (filterStatus !== "all") {
       const v = validateDivisionForDraw(d);
       let st;
-      if (d.drawStatus === "draft") st = "draft";
+      if (d.drawStatus === "published") st = "published";
+      else if (d.drawStatus === "draft") st = "draft";
       else if (v.ok) st = "ready";
       else st = "blocked";
       if (st !== filterStatus) return false;

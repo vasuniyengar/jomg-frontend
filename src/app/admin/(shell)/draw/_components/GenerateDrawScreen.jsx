@@ -215,21 +215,22 @@ export default function GenerateDrawScreen({ tournamentId }) {
                   <div key={row.id}>
                     {dayHeader}
                     <DrawDivisionRow
-                      row={row}
-                      expanded={expandedId === row.id}
-                      busy={isRowBusy(row.id)}
-                      rowError={rowErrors[row.id]}
-                      onToggle={(id) =>
-                        setExpandedId((prev) => (prev === id ? null : id))
-                      }
-                      tournamentId={tournamentId}
-                      mode="generate"
-                      onGenerate={handleGenerate}
-                      onPublish={(r) => setConfirm({ mode: "publish", row: r })}
-                      onPreview={(r) => setExpandedId(r.id)}
-                      onRegenerate={regenerateBracket}
-                      onDelete={deleteBracket}
-                    />
+                        row={row}
+                        expanded={expandedId === row.id}
+                        busy={isRowBusy(row.id)}
+                        rowError={rowErrors[row.id]}
+                        onToggle={(id) =>
+                          setExpandedId((prev) => (prev === id ? null : id))
+                        }
+                        tournamentId={tournamentId}
+                        mode="generate"
+                        onGenerate={handleGenerate}
+                        onPublish={(r) => setConfirm({ mode: "publish", row: r })}
+                        onUnpublish={(r) => setConfirm({ mode: "unpublish", row: r })}
+                        onPreview={(r) => setExpandedId(r.id)}
+                        onRegenerate={regenerateBracket}
+                        onDelete={deleteBracket}
+                      />
                   </div>
                 );
               })

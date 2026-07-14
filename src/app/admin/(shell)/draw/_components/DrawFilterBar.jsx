@@ -122,7 +122,6 @@ export default function DrawFilterBar({
         ) : null}
       </div>
       <span className={styles.filterCount}>
-        Showing {filtered.length} of {unpublishedTotal} unpublished division
         {unpublishedTotal !== 1 ? "s" : ""}
       </span>
     </div>
